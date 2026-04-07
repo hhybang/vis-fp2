@@ -32,6 +32,7 @@ export default function MapPanel({
   monthlyIncome,
   affordabilityPct,
   onMapClick,
+  mapLayer,
 }) {
   const mapRef = useRef(null)
   const mapInstanceRef = useRef(null)
@@ -247,13 +248,34 @@ export default function MapPanel({
         <div className="map-instruction">Click anywhere on the map to explore commute times</div>
       )}
       <div className="map-legend">
-        <h4>Transit Stops</h4>
-        {Object.entries(VEHICLE_LABELS).map(([type, label]) => (
-          <div className="legend-item" key={type}>
-            <div className="legend-dot" style={{ background: VEHICLE_COLORS[type] }} />
-            <span>{label}</span>
-          </div>
-        ))}
+        {mapLayer === 'transit' && (
+          <>
+            <h4>Transit Stops</h4>
+            {Object.entries(VEHICLE_LABELS).map(([type, label]) => (
+              <div className="legend-item" key={type}>
+                <div className="legend-dot" style={{ background: VEHICLE_COLORS[type] }} />
+                <span>{label}</span>
+              </div>
+            ))}
+          </>
+        )}
+        {mapLayer === 'housing' && (
+          <>
+            <h4>Housing Affordability</h4>
+            <div className="legend-item">
+              <div className="legend-dot" style={{ background: '#2ecc71' }} />
+              <span>Affordable</span>
+            </div>
+            <div className="legend-item">
+              <div className="legend-dot" style={{ background: '#f39c12' }} />
+              <span>Moderate</span>
+            </div>
+            <div className="legend-item">
+              <div className="legend-dot" style={{ background: '#e74c3c' }} />
+              <span>Above Budget</span>
+            </div>
+          </>
+        )}
         {isochroneData && (
           <>
             <h4 style={{ marginTop: 10 }}>Isochrone</h4>

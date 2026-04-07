@@ -20,6 +20,7 @@ function App() {
   const [rentData, setRentData] = useState([])
   const [tractBoundaries, setTractBoundaries] = useState(null)
 
+  const [mapLayer, setMapLayer] = useState('transit') // 'transit' or 'housing'
   const [travelMode, setTravelMode] = useState('public_transport')
   const [clickedPoint, setClickedPoint] = useState(null)
   const [isochroneData, setIsochroneData] = useState(null)
@@ -128,29 +129,32 @@ function App() {
           <span>Work: {workAddress}</span>
         </div>
       </header>
-      <Toolbar
-        travelMode={travelMode}
-        onTravelModeChange={setTravelMode}
-        affordabilityPct={affordabilityPct}
-        onAffordabilityChange={setAffordabilityPct}
-        isLoading={isLoading}
-        commuteTime={commuteTime}
-      />
       <div className="panels">
         <div className="panel-left">
           <MapPanel
-            mbtaStops={mbtaStops}
+            mbtaStops={mapLayer === 'transit' ? mbtaStops : []}
             isochroneData={isochroneData}
             routeData={routeData}
-            filteredHousing={filteredHousing}
+            filteredHousing={mapLayer === 'housing' ? filteredHousing : []}
             clickedPoint={clickedPoint}
             workLocation={workLocation}
             monthlyIncome={monthlyIncome}
             affordabilityPct={affordabilityPct}
             onMapClick={setClickedPoint}
+            mapLayer={mapLayer}
           />
         </div>
         <div className="panel-right">
+          <Toolbar
+            travelMode={travelMode}
+            onTravelModeChange={setTravelMode}
+            affordabilityPct={affordabilityPct}
+            onAffordabilityChange={setAffordabilityPct}
+            isLoading={isLoading}
+            commuteTime={commuteTime}
+            mapLayer={mapLayer}
+            onMapLayerChange={setMapLayer}
+          />
           <ChartsPanel
             filteredTracts={filteredTracts}
             rentData={rentData}
