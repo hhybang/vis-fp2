@@ -195,10 +195,10 @@ export default function MapPanel({
     filteredHousing.forEach((h) => {
       const color = getAffordabilityColor(h, annualIncome)
       L.circleMarker([h.lat, h.lng], {
-        radius: 6,
+        radius: 3,
         fillColor: color,
         color: '#fff',
-        weight: 1.5,
+        weight: 0.5,
         fillOpacity: 0.85,
       })
         .bindTooltip(

@@ -2,6 +2,20 @@ const ORS_KEY = import.meta.env.VITE_OPENROUTE_KEY
 const TT_APP_ID = import.meta.env.VITE_TRAVELTIME_APP_ID
 const TT_API_KEY = import.meta.env.VITE_TRAVELTIME_API_KEY
 
+export async function autocompleteAddress(text) {
+  const url = `https://api.openrouteservice.org/geocode/autocomplete?api_key=${ORS_KEY}&text=${encodeURIComponent(text)}&boundary.country=US&boundary.rect.min_lon=-71.5&boundary.rect.min_lat=42.0&boundary.rect.max_lon=-70.8&boundary.rect.max_lat=42.7&size=5`
+  const res = await fetch(url)
+  const data = await res.json()
+  if (data.features) {
+    return data.features.map((f) => ({
+      label: f.properties.label,
+      lat: f.geometry.coordinates[1],
+      lng: f.geometry.coordinates[0],
+    }))
+  }
+  return []
+}
+
 export async function geocodeAddress(address) {
   const url = `https://api.openrouteservice.org/geocode/search?api_key=${ORS_KEY}&text=${encodeURIComponent(address)}&boundary.country=US&size=1`
   const res = await fetch(url)

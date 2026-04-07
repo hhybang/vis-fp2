@@ -135,7 +135,7 @@ function App() {
             mbtaStops={mapLayer === 'transit' ? mbtaStops : []}
             isochroneData={isochroneData}
             routeData={routeData}
-            filteredHousing={mapLayer === 'housing' ? filteredHousing : []}
+            filteredHousing={mapLayer === 'housing' ? (isochroneData ? filteredHousing : massBuilds) : []}
             clickedPoint={clickedPoint}
             workLocation={workLocation}
             monthlyIncome={monthlyIncome}
