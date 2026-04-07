@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   return {
-    base: process.env.GITHUB_ACTIONS ? '/fp2/' : '/',
+    base: process.env.GITHUB_ACTIONS ? '/vis-fp2/' : '/',
     plugins: [react()],
     define: {
       'import.meta.env.VITE_OPENROUTE_KEY': JSON.stringify(env.OPENROUTE_KEY),
