@@ -120,7 +120,7 @@ export async function fetchCensusRentData() {
 
 export async function fetchTractBoundaries() {
   // Load pre-downloaded tract boundaries for Greater Boston area
-  const res = await fetch('/data/boston_tracts.geojson')
+  const res = await fetch(import.meta.env.BASE_URL + 'data/boston_tracts.geojson')
   if (!res.ok) throw new Error('Failed to load tract boundaries')
   return res.json()
 }

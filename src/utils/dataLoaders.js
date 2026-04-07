@@ -1,7 +1,8 @@
 import Papa from 'papaparse'
 
 async function loadCSV(url) {
-  const res = await fetch(url)
+  const fullUrl = import.meta.env.BASE_URL + url.replace(/^\//, '')
+  const res = await fetch(fullUrl)
   const text = await res.text()
   // Remove BOM if present (handles both UTF-8 and UTF-16 BOM)
   const clean = text.replace(/^\uFEFF/, '')
