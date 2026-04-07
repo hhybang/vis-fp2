@@ -266,15 +266,19 @@ export default function MapPanel({
         {mapLayer === 'housing' && (
           <>
             <h4>Housing Affordability</h4>
-            <div className="legend-item">
+            <p className="legend-explainer">
+              Based on your income relative to Boston Area Median Income (AMI: $140,200).
+              Colors show whether a project has units designated for your income tier.
+            </p>
+            <div className="legend-item" title="This project has units designated for your AMI tier or below — you are likely eligible.">
               <div className="legend-dot" style={{ background: '#27ae60' }} />
               <span>Affordable</span>
             </div>
-            <div className="legend-item">
+            <div className="legend-item" title="This project has units one AMI tier above yours — you may qualify depending on availability.">
               <div className="legend-dot" style={{ background: '#f39c12' }} />
               <span>Moderate</span>
             </div>
-            <div className="legend-item">
+            <div className="legend-item" title="This project has no units at or near your AMI tier — unlikely to be affordable for your income.">
               <div className="legend-dot" style={{ background: '#e74c3c' }} />
               <span>Above Budget</span>
             </div>
