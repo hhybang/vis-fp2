@@ -35,7 +35,7 @@ export default function BudgetComparison({ monthlyIncome, affordabilityPct }) {
       .append('rect')
       .attr('width', 2.5)
       .attr('height', 6)
-      .attr('fill', '#80276C')
+      .attr('fill', '#9B6A8C')
       .attr('opacity', 0.5)
 
     const margin = { top: 30, right: 20, bottom: 40, left: 70 }
@@ -74,7 +74,7 @@ export default function BudgetComparison({ monthlyIncome, affordabilityPct }) {
         .attr('y', y(scenario.label))
         .attr('width', x(rent))
         .attr('height', y.bandwidth())
-        .attr('fill', '#003DA5')
+        .attr('fill', '#5B7FA5')
         .attr('rx', 3)
 
       if (rent / maxTotal > 0.08) {
@@ -96,7 +96,7 @@ export default function BudgetComparison({ monthlyIncome, affordabilityPct }) {
           .attr('y', y(scenario.label))
           .attr('width', x(transportWithin))
           .attr('height', y.bandwidth())
-          .attr('fill', '#80276C')
+          .attr('fill', '#9B6A8C')
           .attr('rx', 3)
 
         if (transportWithin / maxTotal > 0.08) {
@@ -124,7 +124,7 @@ export default function BudgetComparison({ monthlyIncome, affordabilityPct }) {
           .attr('width', overWidth)
           .attr('height', y.bandwidth())
           .attr('fill', 'url(#stripe-pattern)')
-          .attr('stroke', '#80276C')
+          .attr('stroke', '#9B6A8C')
           .attr('stroke-width', 1)
           .attr('stroke-dasharray', '4,3')
           .attr('rx', 3)
@@ -137,7 +137,7 @@ export default function BudgetComparison({ monthlyIncome, affordabilityPct }) {
           .attr('y', y(scenario.label))
           .attr('width', x(remaining))
           .attr('height', y.bandwidth())
-          .attr('fill', '#FFD700')
+          .attr('fill', '#C4B078')
           .attr('rx', 3)
 
         if (remaining / maxTotal > 0.08) {
@@ -180,9 +180,9 @@ export default function BudgetComparison({ monthlyIncome, affordabilityPct }) {
 
     // Legend
     const legendData = [
-      { name: 'Rent', color: '#003DA5' },
+      { name: 'Rent', color: '#5B7FA5' },
       { name: 'Transport', color: '#e67e22' },
-      { name: 'Remaining', color: '#FFD700' },
+      { name: 'Remaining', color: '#C4B078' },
       { name: 'Over budget', color: null, striped: true },
     ]
 
@@ -196,7 +196,7 @@ export default function BudgetComparison({ monthlyIncome, affordabilityPct }) {
           .attr('width', 10)
           .attr('height', 10)
           .attr('fill', 'url(#stripe-pattern)')
-          .attr('stroke', '#80276C')
+          .attr('stroke', '#9B6A8C')
           .attr('stroke-width', 0.5)
           .attr('rx', 2)
       } else {

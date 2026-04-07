@@ -50,7 +50,7 @@
 .panel-right {
   width: 45%;
   overflow-y: auto;
-  background: #f8f9fa;
+  background: #F5F0E8;
   border-left: 1px solid #e0e0e0;
   padding: 20px;
 }
@@ -393,7 +393,7 @@
   padding: 14px 16px;
   background: #f0f3f8;
   border-radius: 8px;
-  border-left: 4px solid #80276C;
+  border-left: 4px solid #9B6A8C;
 }
 
 .summary-stats {

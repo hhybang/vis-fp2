@@ -91,7 +91,7 @@ export default function IncomeHistogram({ filteredTracts, monthlyIncome }) {
       .attr('y', (d) => y(d.count))
       .attr('height', (d) => height - y(d.count))
       .attr('fill', (d, i) => {
-        if (i === userBracketIdx) return '#003DA5'
+        if (i === userBracketIdx) return '#5B7FA5'
         if (i < userBracketIdx) return '#a0d2db'
         return '#dfe6e9'
       })
@@ -105,10 +105,10 @@ export default function IncomeHistogram({ filteredTracts, monthlyIncome }) {
       g.append('line')
         .attr('x1', mx).attr('x2', mx)
         .attr('y1', -8).attr('y2', height)
-        .attr('stroke', '#80276C').attr('stroke-width', 2)
+        .attr('stroke', '#9B6A8C').attr('stroke-width', 2)
       g.append('text')
         .attr('x', mx).attr('y', -12)
-        .attr('text-anchor', 'middle').attr('fill', '#80276C')
+        .attr('text-anchor', 'middle').attr('fill', '#9B6A8C')
         .attr('font-size', 10).attr('font-weight', 600)
         .text(`Median ~$${(estMedian / 1000).toFixed(0)}k`)
     }
@@ -123,7 +123,7 @@ export default function IncomeHistogram({ filteredTracts, monthlyIncome }) {
     g.append('line')
       .attr('x1', ux).attr('x2', ux)
       .attr('y1', -8).attr('y2', height)
-      .attr('stroke', '#003DA5').attr('stroke-width', 2.5)
+      .attr('stroke', '#5B7FA5').attr('stroke-width', 2.5)
       .attr('stroke-dasharray', '6,3')
 
     // Label with smart positioning and white halo for readability
@@ -141,7 +141,7 @@ export default function IncomeHistogram({ filteredTracts, monthlyIncome }) {
       .text(labelText)
     g.append('text')
       .attr('x', ux + labelNudge).attr('y', height - 6)
-      .attr('text-anchor', labelAnchor).attr('fill', '#003DA5')
+      .attr('text-anchor', labelAnchor).attr('fill', '#5B7FA5')
       .attr('font-size', 10).attr('font-weight', 600)
       .text(labelText)
 
@@ -185,11 +185,11 @@ export default function IncomeHistogram({ filteredTracts, monthlyIncome }) {
         <div class="chart-summary">
           <div class="summary-stats">
             <div class="stat">
-              <span class="stat-value" style="color:#003DA5">$${(annualIncome / 1000).toFixed(0)}k</span>
+              <span class="stat-value" style="color:#5B7FA5">$${(annualIncome / 1000).toFixed(0)}k</span>
               <span class="stat-label">Your income</span>
             </div>
             <div class="stat">
-              <span class="stat-value" style="color:#80276C">~$${(estMedian / 1000).toFixed(0)}k</span>
+              <span class="stat-value" style="color:#9B6A8C">~$${(estMedian / 1000).toFixed(0)}k</span>
               <span class="stat-label">Area median</span>
             </div>
             <div class="stat">
@@ -200,7 +200,7 @@ export default function IncomeHistogram({ filteredTracts, monthlyIncome }) {
           <p class="summary-insight">
             You're <strong>~$${absDiff}k ${direction}</strong> the area median.
             ${context}
-            <span style="color:#003DA5">Dark blue bar</span> = your bracket, <span style="color:#a0d2db">light blue</span> = below you.
+            <span style="color:#5B7FA5">Dark blue bar</span> = your bracket, <span style="color:#a0d2db">light blue</span> = below you.
           </p>
         </div>
       `
