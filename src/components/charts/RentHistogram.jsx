@@ -77,7 +77,7 @@ export default function RentHistogram({
       .attr('width', (d) => Math.max(0, x(d.x1) - x(d.x0) - 2))
       .attr('y', (d) => y(d.length))
       .attr('height', (d) => height - y(d.length))
-      .attr('fill', (d) => (d.x1 <= yourBudget ? '#003DA5' : d.x0 < yourBudget ? '#FFD700' : '#e0e0e0'))
+      .attr('fill', (d) => (d.x1 <= yourBudget ? '#00843D' : d.x0 < yourBudget ? '#ED8B00' : '#e0e0e0'))
       .attr('rx', 2)
       .attr('opacity', 0.85)
 
@@ -156,7 +156,7 @@ export default function RentHistogram({
           <p class="summary-insight">
             Your rent budget is <strong>$${absDiff.toLocaleString()} ${direction}</strong> the area median
             &mdash; ${emoji}.
-            <span style="color:#003DA5">Blue bars</span> = tracts within your budget.
+            <span style="color:#00843D">Green bars</span> = tracts within your budget.
           </p>
         </div>
       `

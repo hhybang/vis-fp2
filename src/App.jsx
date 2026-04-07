@@ -20,7 +20,7 @@ function App() {
   const [rentData, setRentData] = useState([])
   const [tractBoundaries, setTractBoundaries] = useState(null)
 
-  const [mapLayer, setMapLayer] = useState('transit') // 'transit' or 'housing'
+  const [mapLayer, setMapLayer] = useState('housing') // 'transit' or 'housing'
   const [travelMode, setTravelMode] = useState('public_transport')
   const [clickedPoint, setClickedPoint] = useState(null)
   const [isochroneData, setIsochroneData] = useState(null)
