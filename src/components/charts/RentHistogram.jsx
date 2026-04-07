@@ -77,7 +77,7 @@ export default function RentHistogram({
       .attr('width', (d) => Math.max(0, x(d.x1) - x(d.x0) - 2))
       .attr('y', (d) => y(d.length))
       .attr('height', (d) => height - y(d.length))
-      .attr('fill', (d) => (d.x1 <= yourBudget ? '#00843D' : d.x0 < yourBudget ? '#ED8B00' : '#e0e0e0'))
+      .attr('fill', (d) => (d.x1 <= yourBudget ? '#00843D' : d.x0 < yourBudget ? '#ED8B00' : '#DA291C'))
       .attr('rx', 2)
       .attr('opacity', 0.85)
 

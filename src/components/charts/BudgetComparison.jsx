@@ -181,7 +181,7 @@ export default function BudgetComparison({ monthlyIncome, affordabilityPct }) {
     // Legend
     const legendData = [
       { name: 'Rent', color: '#5B7FA5' },
-      { name: 'Transport', color: '#e67e22' },
+      { name: 'Transport', color: '#9B6A8C' },
       { name: 'Remaining', color: '#C4B078' },
       { name: 'Over budget', color: null, striped: true },
     ]

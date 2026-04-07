@@ -49,9 +49,10 @@ export default function MapPanel({
   useEffect(() => {
     if (mapInstanceRef.current) return
 
+    const center = workLocation ? [workLocation.lat, workLocation.lng] : [42.36, -71.06]
     const map = L.map(mapRef.current, {
-      center: [42.36, -71.06],
-      zoom: 12,
+      center,
+      zoom: 13,
       zoomControl: true,
     })
 
