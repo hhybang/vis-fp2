@@ -36,7 +36,7 @@ export default function ChartsPanel({
         {hasIsochrone ? (
           <BudgetComparison
             monthlyIncome={monthlyIncome}
-            avgRent={avgRent}
+            affordabilityPct={affordabilityPct}
           />
         ) : (
           <p className="empty-state">Click on the map to compare commute costs</p>

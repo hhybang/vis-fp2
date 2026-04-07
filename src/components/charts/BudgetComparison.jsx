@@ -4,13 +4,13 @@ import * as d3 from 'd3'
 const CAR_COST = 1000
 const MBTA_PASS = 90
 
-export default function BudgetComparison({ monthlyIncome, avgRent }) {
+export default function BudgetComparison({ monthlyIncome, affordabilityPct }) {
   const svgRef = useRef()
 
   useEffect(() => {
     if (!svgRef.current || !monthlyIncome) return
 
-    const rent = Math.round(avgRent || 2300)
+    const rent = Math.round(monthlyIncome * (affordabilityPct / 100))
     const drivingRemaining = Math.max(0, monthlyIncome - rent - CAR_COST)
     const transitRemaining = Math.max(0, monthlyIncome - rent - MBTA_PASS)
 
@@ -127,8 +127,8 @@ export default function BudgetComparison({ monthlyIncome, avgRent }) {
       .attr('text-anchor', 'middle')
       .attr('font-size', 10)
       .attr('fill', '#666')
-      .text(`Avg rent: $${rent.toLocaleString()} | Car: $${CAR_COST}/mo | MBTA: $${MBTA_PASS}/mo`)
-  }, [monthlyIncome, avgRent])
+      .text(`Rent budget: $${rent.toLocaleString()} (${affordabilityPct}% of income) | Car: $${CAR_COST}/mo | MBTA: $${MBTA_PASS}/mo`)
+  }, [monthlyIncome, affordabilityPct])
 
   return <svg ref={svgRef} className="chart-svg" />
 }
