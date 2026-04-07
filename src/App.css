@@ -14,23 +14,25 @@
   letter-spacing: -0.02em;
 }
 
+/* Serious masthead — neutral, no color field */
 .app-header {
-  background: var(--masthead-bg);
-  color: #fff;
-  padding: 14px 28px;
+  background: var(--paper-card);
+  color: var(--ink);
+  padding: 12px 28px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-shrink: 0;
-  border-bottom: 4px solid var(--mbta-red);
-  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid var(--paper-rule-strong);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
 .app-header h1 {
-  font-size: clamp(17px, 2.2vw, 22px);
+  font-size: clamp(17px, 2.2vw, 21px);
   font-weight: 900;
   margin: 0;
   line-height: 1.15;
+  color: var(--ink);
 }
 
 .header-info {
@@ -39,7 +41,7 @@
   font-size: 13px;
   font-family: var(--font-label);
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.88);
+  color: var(--ink-muted);
 }
 
 .panels {
@@ -61,19 +63,18 @@
   padding: 20px 22px;
 }
 
-/* Toolbar — inset “newspaper tools” strip */
+/* Toolbar — neutral chrome */
 .toolbar {
   background: var(--paper-card);
   color: var(--ink);
   border-radius: 0;
   border: 1px solid var(--paper-rule);
-  border-top: 3px solid var(--mbta-blue);
   padding: 16px 20px;
   margin-bottom: 20px;
   display: flex;
   flex-direction: column;
   gap: 14px;
-  box-shadow: 0 1px 0 rgba(26, 26, 26, 0.06);
+  box-shadow: 0 1px 0 rgba(26, 26, 26, 0.04);
 }
 
 .toolbar-row {
@@ -93,7 +94,7 @@
   font-family: var(--font-label);
   font-size: 11px;
   font-weight: 700;
-  color: var(--mbta-blue);
+  color: var(--ink-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -110,21 +111,21 @@
 }
 
 .toolbar select:focus {
-  outline: 2px solid var(--mbta-blue);
-  outline-offset: 1px;
+  outline: 1px solid var(--paper-rule-strong);
+  outline-offset: 2px;
 }
 
 .toolbar .slider-group {
   flex: 1;
 }
 
-.toolbar input[type="range"] {
+.toolbar input[type='range'] {
   width: 100%;
-  accent-color: var(--mbta-blue);
+  accent-color: var(--ink-muted);
 }
 
 .toolbar .loading {
-  color: var(--mbta-orange);
+  color: var(--ink-muted);
   font-size: 13px;
   font-family: var(--font-label);
   font-weight: 600;
@@ -157,7 +158,7 @@
 }
 
 .layer-toggle button.active {
-  background: var(--mbta-blue);
+  background: var(--ink);
   color: #fff;
 }
 
@@ -168,14 +169,14 @@
 
 .toolbar .commute-time {
   margin-left: auto;
-  background: var(--mbta-orange);
-  color: #1a1a1a;
+  background: var(--paper-bg);
+  color: var(--ink);
   padding: 8px 14px;
   border-radius: 0;
   font-size: 13px;
   font-family: var(--font-label);
   font-weight: 700;
-  border: 1px solid #c77800;
+  border: 1px solid var(--paper-rule-strong);
 }
 
 @keyframes pulse {
@@ -188,11 +189,11 @@
   }
 }
 
-/* Onboarding Modal */
+/* Onboarding — restrained */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 61, 165, 0.45);
+  background: rgba(26, 26, 26, 0.45);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -206,16 +207,14 @@
   max-width: 480px;
   width: 90%;
   border: 1px solid var(--paper-rule-strong);
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.6) inset,
-    12px 12px 0 rgba(0, 61, 165, 0.12);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
 }
 
 .modal h2 {
   margin: 0 0 8px;
   font-size: 28px;
   font-weight: 900;
-  color: var(--mbta-blue);
+  color: var(--ink);
 }
 
 .modal p {
@@ -235,7 +234,7 @@
   font-size: 12px;
   font-family: var(--font-label);
   font-weight: 700;
-  color: var(--mbta-blue);
+  color: var(--ink-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: 6px;
@@ -254,8 +253,8 @@
 
 .modal input:focus {
   outline: none;
-  border-color: var(--mbta-blue);
-  box-shadow: 0 0 0 2px rgba(0, 61, 165, 0.2);
+  border-color: var(--paper-rule-strong);
+  box-shadow: 0 0 0 2px rgba(26, 26, 26, 0.08);
 }
 
 .autocomplete-wrapper {
@@ -294,13 +293,13 @@
 
 .autocomplete-list li:hover {
   background: var(--paper-bg);
-  color: var(--mbta-blue);
+  color: var(--ink);
 }
 
 .modal button {
   width: 100%;
   padding: 12px;
-  background: var(--mbta-blue);
+  background: var(--ink);
   color: #fff;
   border: none;
   border-radius: 0;
@@ -309,11 +308,11 @@
   font-weight: 700;
   cursor: pointer;
   transition: background 0.2s;
-  border: 1px solid #002a75;
+  border: 1px solid var(--paper-rule-strong);
 }
 
 .modal button:hover {
-  background: #002f87;
+  background: #333;
 }
 
 .modal button:disabled {
@@ -348,18 +347,17 @@
   z-index: 1000;
   pointer-events: none;
   border: 1px solid var(--paper-rule-strong);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Charts — white columns on newsprint */
+/* Charts */
 .chart-card {
   background: var(--paper-card);
   border-radius: 0;
   padding: 22px 22px 24px;
   margin-bottom: 20px;
   border: 1px solid var(--paper-rule);
-  border-top: 3px solid var(--mbta-purple);
-  box-shadow: 0 1px 0 rgba(26, 26, 26, 0.05);
+  box-shadow: 0 1px 0 rgba(26, 26, 26, 0.04);
 }
 
 .chart-card h3 {
@@ -384,9 +382,8 @@
   overflow: visible;
 }
 
-/* Tooltip */
 .housing-tooltip {
-  background: var(--masthead-bg);
+  background: #2c2c2c;
   color: #fff;
   padding: 10px 14px;
   border-radius: 0;
@@ -396,7 +393,7 @@
   pointer-events: none;
   z-index: 2000;
   font-family: var(--font-sans);
-  border: 1px solid #002a75;
+  border: 1px solid #1a1a1a;
 }
 
 .housing-tooltip strong {
@@ -406,7 +403,6 @@
   font-family: var(--font-label);
 }
 
-/* Legend */
 .map-legend {
   position: absolute;
   bottom: 60px;
@@ -418,7 +414,7 @@
   font-family: var(--font-sans);
   z-index: 1000;
   border: 1px solid var(--paper-rule-strong);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
   max-width: 200px;
 }
 
@@ -426,7 +422,7 @@
   margin: 0 0 8px;
   font-size: 12px;
   font-weight: 900;
-  color: var(--mbta-blue);
+  color: var(--ink);
 }
 
 .legend-explainer {
@@ -452,14 +448,13 @@
   border: 1px solid rgba(0, 0, 0, 0.15);
 }
 
-/* Chart summary callouts */
 .chart-summary {
   margin-top: 14px;
   padding: 16px 18px;
   background: var(--paper-bg);
   border-radius: 0;
   border: 1px solid var(--paper-rule);
-  border-left: 4px solid var(--mbta-blue);
+  border-left: 3px solid var(--paper-rule-strong);
 }
 
 .summary-stats {
@@ -502,34 +497,68 @@
 }
 
 .summary-insight strong {
-  color: var(--mbta-blue);
+  color: var(--ink);
+  font-weight: 700;
+}
+
+/* Inline summary colors from D3 templates → match chart blue family */
+.chart-summary .stat-value[style*='5B7FA5' i],
+.chart-summary span[style*='5B7FA5' i] {
+  color: var(--chart-blue) !important;
+}
+
+.chart-summary span[style*='a0d2db' i] {
+  color: var(--chart-blue-soft) !important;
+}
+
+.chart-summary .stat-value[style*='9B6A8C' i] {
+  color: var(--ink-muted) !important;
 }
 
 /* -------------------------------------------------------------------------
-   Horizontal bar chart (Budget: Driving vs Transit) — MBTA palette only:
-   blue / orange / gold / purple stripes. No green or red bar fills.
-   Targets second chart card; uses D3’s inline fills as hooks.
+   Plots: one blue for “you” / budget / rent bars & markers; soft = same hue
+   (D3 still emits #5B7FA5 / #a0d2db — we normalize here.)
    ------------------------------------------------------------------------- */
-.charts-panel > .chart-card:nth-child(2) svg.chart-svg rect[fill='#5B7FA5' i] {
-  fill: var(--mbta-blue) !important;
+.charts-panel svg.chart-svg rect[fill='#5B7FA5' i] {
+  fill: var(--chart-blue) !important;
 }
 
+.charts-panel svg.chart-svg rect[fill='#a0d2db' i] {
+  fill: var(--chart-blue-soft) !important;
+}
+
+.charts-panel svg.chart-svg line[stroke='#5B7FA5' i] {
+  stroke: var(--chart-blue) !important;
+}
+
+.charts-panel svg.chart-svg text[fill='#5B7FA5' i] {
+  fill: var(--chart-blue) !important;
+}
+
+.charts-panel svg.chart-svg line[stroke='#9B6A8C' i] {
+  stroke: var(--ink-muted) !important;
+}
+
+.charts-panel svg.chart-svg text[fill='#9B6A8C' i] {
+  fill: var(--ink-muted) !important;
+}
+
+/* Budget comparison: rent = same blue; other segments neutral (no rainbow) */
 .charts-panel > .chart-card:nth-child(2) svg.chart-svg rect[fill='#5A8A8A' i] {
-  fill: var(--mbta-orange) !important;
+  fill: #7a8490 !important;
 }
 
 .charts-panel > .chart-card:nth-child(2) svg.chart-svg rect[fill='#C4B078' i] {
-  /* Deeper gold for contrast with white segment labels */
-  fill: #e8b923 !important;
+  fill: #b0a69a !important;
 }
 
 .charts-panel > .chart-card:nth-child(2) svg.chart-svg defs pattern#stripe-pattern rect {
-  fill: var(--mbta-purple) !important;
-  opacity: 0.45 !important;
+  fill: #5c636b !important;
+  opacity: 0.35 !important;
 }
 
 .charts-panel > .chart-card:nth-child(2) svg.chart-svg rect[stroke='#5A8A8A' i] {
-  stroke: var(--mbta-purple) !important;
+  stroke: #5c636b !important;
 }
 
 .charts-panel > .chart-card:nth-child(2) svg.chart-svg line[stroke='#1a1a2e' i] {
@@ -537,5 +566,5 @@
 }
 
 .charts-panel > .chart-card:nth-child(2) svg.chart-svg rect[fill='url(#stripe-pattern)' i] {
-  stroke: var(--mbta-purple) !important;
+  stroke: #5c636b !important;
 }

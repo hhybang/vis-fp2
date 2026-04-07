@@ -1,4 +1,4 @@
-/* MBTA / TOD palette + newspaper base */
+/* Editorial base + one data blue family (plots only) */
 :root {
   --paper-bg: #f5f0e0;
   --paper-card: #ffffff;
@@ -6,16 +6,10 @@
   --paper-rule-strong: #1a1a1a;
   --ink: #1a1a1a;
   --ink-muted: #595959;
-  --ink-secondary: #800000;
-  --mbta-blue: #003da5;
-  --mbta-red: #da291c;
-  --mbta-orange: #ed8b00;
-  --mbta-yellow: #ffd700;
-  --mbta-green: #7bc67e;
-  --mbta-purple: #80276c;
-  --mbta-green-dark: #00843d;
-  --masthead-bg: #003da5;
-  --accent-ui: #ed8b00;
+  --ink-faint: #6e6e6e;
+  /* Single hue for “you” / budget / rent / darker bars — not UI chrome */
+  --chart-blue: #4a6282;
+  --chart-blue-soft: color-mix(in srgb, var(--chart-blue) 34%, #ffffff);
   --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-label: 'DM Sans', var(--font-sans);
@@ -43,7 +37,6 @@ body {
   height: 100vh;
 }
 
-/* Tabular figures for data-heavy UI */
 .app-header,
 .toolbar,
 .chart-card,
