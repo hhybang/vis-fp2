@@ -77,7 +77,7 @@ export default function RentHistogram({
       .attr('width', (d) => Math.max(0, x(d.x1) - x(d.x0) - 2))
       .attr('y', (d) => y(d.length))
       .attr('height', (d) => height - y(d.length))
-      .attr('fill', (d) => (d.x1 <= yourBudget ? '#2ecc71' : d.x0 < yourBudget ? '#f39c12' : '#e0e0e0'))
+      .attr('fill', (d) => (d.x1 <= yourBudget ? '#003DA5' : d.x0 < yourBudget ? '#FFD700' : '#e0e0e0'))
       .attr('rx', 2)
       .attr('opacity', 0.85)
 
@@ -86,10 +86,10 @@ export default function RentHistogram({
       g.append('line')
         .attr('x1', x(median)).attr('x2', x(median))
         .attr('y1', -8).attr('y2', height)
-        .attr('stroke', '#6c5ce7').attr('stroke-width', 2)
+        .attr('stroke', '#80276C').attr('stroke-width', 2)
       g.append('text')
         .attr('x', x(median)).attr('y', -12)
-        .attr('text-anchor', 'middle').attr('fill', '#6c5ce7')
+        .attr('text-anchor', 'middle').attr('fill', '#80276C')
         .attr('font-size', 10).attr('font-weight', 600)
         .text(`Median $${Math.round(median).toLocaleString()}`)
     }
@@ -99,7 +99,7 @@ export default function RentHistogram({
       g.append('line')
         .attr('x1', x(yourBudget)).attr('x2', x(yourBudget))
         .attr('y1', -8).attr('y2', height)
-        .attr('stroke', '#e94560').attr('stroke-width', 2.5)
+        .attr('stroke', '#003DA5').attr('stroke-width', 2.5)
         .attr('stroke-dasharray', '6,3')
 
       const labelX = x(yourBudget)
@@ -107,7 +107,7 @@ export default function RentHistogram({
       const anchor = labelX > width * 0.7 ? 'end' : 'start'
       g.append('text')
         .attr('x', labelX + nudge).attr('y', height - 6)
-        .attr('text-anchor', anchor).attr('fill', '#e94560')
+        .attr('text-anchor', anchor).attr('fill', '#003DA5')
         .attr('font-size', 10).attr('font-weight', 600)
         .text(`You: $${Math.round(yourBudget).toLocaleString()}`)
     }
@@ -141,11 +141,11 @@ export default function RentHistogram({
         <div class="chart-summary">
           <div class="summary-stats">
             <div class="stat">
-              <span class="stat-value" style="color:#e94560">$${Math.round(yourBudget).toLocaleString()}</span>
+              <span class="stat-value" style="color:#003DA5">$${Math.round(yourBudget).toLocaleString()}</span>
               <span class="stat-label">Your budget (${affordabilityPct}%)</span>
             </div>
             <div class="stat">
-              <span class="stat-value" style="color:#6c5ce7">$${Math.round(median).toLocaleString()}</span>
+              <span class="stat-value" style="color:#80276C">$${Math.round(median).toLocaleString()}</span>
               <span class="stat-label">Area median rent</span>
             </div>
             <div class="stat">
@@ -156,7 +156,7 @@ export default function RentHistogram({
           <p class="summary-insight">
             Your rent budget is <strong>$${absDiff.toLocaleString()} ${direction}</strong> the area median
             &mdash; ${emoji}.
-            <span style="color:#2ecc71">Green bars</span> = tracts within your budget.
+            <span style="color:#003DA5">Blue bars</span> = tracts within your budget.
           </p>
         </div>
       `

@@ -271,15 +271,15 @@ export default function MapPanel({
               Colors show whether a project has units designated for your income tier.
             </p>
             <div className="legend-item" title="This project has units designated for your AMI tier or below — you are likely eligible.">
-              <div className="legend-dot" style={{ background: '#27ae60' }} />
+              <div className="legend-dot" style={{ background: '#00843D' }} />
               <span>Affordable</span>
             </div>
             <div className="legend-item" title="This project has units one AMI tier above yours — you may qualify depending on availability.">
-              <div className="legend-dot" style={{ background: '#f39c12' }} />
+              <div className="legend-dot" style={{ background: '#ED8B00' }} />
               <span>Moderate</span>
             </div>
             <div className="legend-item" title="This project has no units at or near your AMI tier — unlikely to be affordable for your income.">
-              <div className="legend-dot" style={{ background: '#e74c3c' }} />
+              <div className="legend-dot" style={{ background: '#DA291C' }} />
               <span>Above Budget</span>
             </div>
           </>

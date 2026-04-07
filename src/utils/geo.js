@@ -80,7 +80,7 @@ export function getAffordabilityColor(project, annualIncome) {
     hasModerateUnits = false
   }
 
-  if (hasAffordableUnits) return '#27ae60'
-  if (hasModerateUnits) return '#f39c12'
-  return '#e74c3c'
+  if (hasAffordableUnits) return '#00843D'
+  if (hasModerateUnits) return '#ED8B00'
+  return '#DA291C'
 }
