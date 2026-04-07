@@ -192,10 +192,14 @@ export default function MapPanel({
     const annualIncome = monthlyIncome * 12
     const layer = L.layerGroup()
 
+    const units = filteredHousing.map((h) => h.hu).filter((u) => u > 0)
+    const maxUnits = Math.max(...units, 1)
+
     filteredHousing.forEach((h) => {
       const color = getAffordabilityColor(h, annualIncome)
+      const radius = 2 + Math.sqrt(h.hu / maxUnits) * 6
       L.circleMarker([h.lat, h.lng], {
-        radius: 3,
+        radius,
         fillColor: color,
         color: '#fff',
         weight: 0.5,
@@ -263,7 +267,7 @@ export default function MapPanel({
           <>
             <h4>Housing Affordability</h4>
             <div className="legend-item">
-              <div className="legend-dot" style={{ background: '#2ecc71' }} />
+              <div className="legend-dot" style={{ background: '#27ae60' }} />
               <span>Affordable</span>
             </div>
             <div className="legend-item">

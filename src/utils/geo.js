@@ -61,9 +61,26 @@ export function filterHousingByAffordability(projects, annualIncome) {
 export function getAffordabilityColor(project, annualIncome) {
   const AMI = 140200
   const ratio = annualIncome / AMI
-  if (ratio < 0.3 && project.affU30 > 0) return '#2ecc71'
-  if (ratio < 0.5 && project.aff3050 > 0) return '#3498db'
-  if (ratio < 0.8 && project.aff5080 > 0) return '#9b59b6'
-  if (project.aff80p > 0) return '#e67e22'
-  return '#95a5a6'
+
+  // Check if this project has units at or below the user's AMI tier
+  let hasAffordableUnits = false
+  let hasModerateUnits = false
+
+  if (ratio < 0.3) {
+    hasAffordableUnits = project.affU30 > 0
+    hasModerateUnits = project.aff3050 > 0
+  } else if (ratio < 0.5) {
+    hasAffordableUnits = project.affU30 > 0 || project.aff3050 > 0
+    hasModerateUnits = project.aff5080 > 0
+  } else if (ratio < 0.8) {
+    hasAffordableUnits = project.affU30 > 0 || project.aff3050 > 0 || project.aff5080 > 0
+    hasModerateUnits = project.aff80p > 0
+  } else {
+    hasAffordableUnits = project.affrdUnit > 0
+    hasModerateUnits = false
+  }
+
+  if (hasAffordableUnits) return '#27ae60'
+  if (hasModerateUnits) return '#f39c12'
+  return '#e74c3c'
 }

@@ -42,7 +42,7 @@ export default function Toolbar({
       <div className="toolbar-row">
         <div className="toolbar-group slider-group">
           <span className="toolbar-label">
-            Affordability: <strong>{affordabilityPct}%</strong> of income
+            Rent Budget: <strong>{affordabilityPct}%</strong> of income
           </span>
           <input
             type="range"

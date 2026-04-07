@@ -32,18 +32,6 @@ export default function ChartsPanel({
       </div>
 
       <div className="chart-card">
-        <h3>Household Income Distribution</h3>
-        {hasIsochrone && filteredTracts.length > 0 ? (
-          <IncomeHistogram
-            filteredTracts={filteredTracts}
-            monthlyIncome={monthlyIncome}
-          />
-        ) : (
-          <p className="empty-state">Click on the map to see income data for the area</p>
-        )}
-      </div>
-
-      <div className="chart-card">
         <h3>Monthly Budget: Driving vs. Transit</h3>
         {hasIsochrone ? (
           <BudgetComparison
@@ -52,6 +40,18 @@ export default function ChartsPanel({
           />
         ) : (
           <p className="empty-state">Click on the map to compare commute costs</p>
+        )}
+      </div>
+
+      <div className="chart-card">
+        <h3>Household Income Distribution</h3>
+        {hasIsochrone && filteredTracts.length > 0 ? (
+          <IncomeHistogram
+            filteredTracts={filteredTracts}
+            monthlyIncome={monthlyIncome}
+          />
+        ) : (
+          <p className="empty-state">Click on the map to see income data for the area</p>
         )}
       </div>
     </div>
