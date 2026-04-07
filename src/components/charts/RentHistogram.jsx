@@ -105,11 +105,20 @@ export default function RentHistogram({
       const labelX = x(yourBudget)
       const nudge = labelX > width * 0.7 ? -4 : 4
       const anchor = labelX > width * 0.7 ? 'end' : 'start'
+      const labelText = `You: $${Math.round(yourBudget).toLocaleString()}`
+      g.append('text')
+        .attr('x', labelX + nudge).attr('y', height - 6)
+        .attr('text-anchor', anchor)
+        .attr('font-size', 10).attr('font-weight', 600)
+        .attr('stroke', '#fff').attr('stroke-width', 3.5)
+        .attr('stroke-linejoin', 'round')
+        .attr('fill', 'none')
+        .text(labelText)
       g.append('text')
         .attr('x', labelX + nudge).attr('y', height - 6)
         .attr('text-anchor', anchor).attr('fill', '#5B7FA5')
         .attr('font-size', 10).attr('font-weight', 600)
-        .text(`You: $${Math.round(yourBudget).toLocaleString()}`)
+        .text(labelText)
     }
 
     // Axes
