@@ -1,0 +1,169 @@
+import { useState, useEffect, useCallback } from 'react'
+import OnboardingModal from './components/OnboardingModal'
+import MapPanel from './components/MapPanel'
+import ChartsPanel from './components/ChartsPanel'
+import Toolbar from './components/Toolbar'
+import { loadMBTAStops, loadMassBuilds, loadACSIncomeData } from './utils/dataLoaders'
+import { fetchIsochrone, fetchDirections, fetchCensusRentData, fetchTractBoundaries } from './utils/api'
+import { getOuterIsochrone, pointInPolygon, tractIntersectsIsochrone } from './utils/geo'
+import './App.css'
+
+function App() {
+  const [onboarded, setOnboarded] = useState(false)
+  const [monthlyIncome, setMonthlyIncome] = useState(0)
+  const [workLocation, setWorkLocation] = useState(null)
+  const [workAddress, setWorkAddress] = useState('')
+
+  const [mbtaStops, setMbtaStops] = useState([])
+  const [massBuilds, setMassBuilds] = useState([])
+  const [acsData, setAcsData] = useState([])
+  const [rentData, setRentData] = useState([])
+  const [tractBoundaries, setTractBoundaries] = useState(null)
+
+  const [travelMode, setTravelMode] = useState('public_transport')
+  const [clickedPoint, setClickedPoint] = useState(null)
+  const [isochroneData, setIsochroneData] = useState(null)
+  const [routeData, setRouteData] = useState(null)
+  const [affordabilityPct, setAffordabilityPct] = useState(30)
+  const [isLoading, setIsLoading] = useState(false)
+  const [commuteTime, setCommuteTime] = useState(null)
+
+  const [filteredTracts, setFilteredTracts] = useState([])
+  const [filteredHousing, setFilteredHousing] = useState([])
+  const [avgRent, setAvgRent] = useState(0)
+
+  useEffect(() => {
+    if (!onboarded) return
+    Promise.all([
+      loadMBTAStops(),
+      loadMassBuilds(),
+      loadACSIncomeData(),
+      fetchCensusRentData().catch(() => []),
+      fetchTractBoundaries().catch(() => null),
+    ]).then(([stops, builds, acs, rent, tracts]) => {
+      setMbtaStops(stops)
+      setMassBuilds(builds)
+      setAcsData(acs)
+      setRentData(rent)
+      setTractBoundaries(tracts)
+    })
+  }, [onboarded])
+
+  useEffect(() => {
+    if (!clickedPoint) return
+    setIsLoading(true)
+    setIsochroneData(null)
+    setRouteData(null)
+    setCommuteTime(null)
+    fetchIsochrone(clickedPoint.lat, clickedPoint.lng, travelMode)
+      .then(setIsochroneData)
+      .catch((err) => console.error('Isochrone error:', err))
+      .finally(() => setIsLoading(false))
+  }, [clickedPoint, travelMode])
+
+  useEffect(() => {
+    if (!clickedPoint || !workLocation) return
+    const profile = travelMode === 'driving-car' ? 'driving-car' : 'foot-walking'
+    fetchDirections(clickedPoint.lat, clickedPoint.lng, workLocation.lat, workLocation.lng, profile)
+      .then((data) => {
+        setRouteData(data)
+        if (data.features && data.features[0]) {
+          const mins = Math.round(data.features[0].properties.summary.duration / 60)
+          setCommuteTime(mins)
+        }
+      })
+      .catch((err) => console.error('Route error:', err))
+  }, [clickedPoint, workLocation, travelMode])
+
+  useEffect(() => {
+    if (!isochroneData) {
+      setFilteredHousing([])
+      setFilteredTracts([])
+      setAvgRent(0)
+      return
+    }
+    const outerIso = getOuterIsochrone(isochroneData)
+    if (!outerIso) return
+
+    const housing = massBuilds.filter((h) => pointInPolygon(h.lat, h.lng, outerIso))
+    setFilteredHousing(housing)
+
+    // Find tract IDs that intersect the isochrone using local GeoJSON boundaries
+    const intersectingIds = (tractBoundaries?.features || [])
+      .filter((tf) => tractIntersectsIsochrone(tf, outerIso))
+      .map((tf) => tf.properties.GEOID)
+
+    const matched = acsData.filter((d) => intersectingIds.includes(d.tractId))
+    setFilteredTracts(matched)
+
+    // Compute avg rent from Census DP04 data for matching tracts
+    const tractIdSet = new Set(intersectingIds)
+    const matchedRent = rentData.filter((r) => {
+      const geoId = r.GEO_ID
+        ? r.GEO_ID.replace('1400000US', '')
+        : `25${r.state}${r.county}${r.tract}`
+      return tractIdSet.has(geoId)
+    })
+    const rents = matchedRent.map((r) => parseInt(r.DP04_0134E)).filter((v) => v > 0)
+    setAvgRent(rents.length > 0 ? rents.reduce((a, b) => a + b, 0) / rents.length : 2300)
+  }, [isochroneData, massBuilds, acsData, rentData, tractBoundaries])
+
+  const handleOnboard = useCallback((income, location, address) => {
+    setMonthlyIncome(income)
+    setWorkLocation(location)
+    setWorkAddress(address)
+    setOnboarded(true)
+  }, [])
+
+  if (!onboarded) {
+    return <OnboardingModal onSubmit={handleOnboard} />
+  }
+
+  return (
+    <div className="app">
+      <header className="app-header">
+        <h1>Boston Housing Affordability & Commute Explorer</h1>
+        <div className="header-info">
+          <span>Income: ${monthlyIncome.toLocaleString()}/mo</span>
+          <span>Work: {workAddress}</span>
+        </div>
+      </header>
+      <Toolbar
+        travelMode={travelMode}
+        onTravelModeChange={setTravelMode}
+        affordabilityPct={affordabilityPct}
+        onAffordabilityChange={setAffordabilityPct}
+        isLoading={isLoading}
+        commuteTime={commuteTime}
+      />
+      <div className="panels">
+        <div className="panel-left">
+          <MapPanel
+            mbtaStops={mbtaStops}
+            isochroneData={isochroneData}
+            routeData={routeData}
+            filteredHousing={filteredHousing}
+            clickedPoint={clickedPoint}
+            workLocation={workLocation}
+            monthlyIncome={monthlyIncome}
+            affordabilityPct={affordabilityPct}
+            onMapClick={setClickedPoint}
+          />
+        </div>
+        <div className="panel-right">
+          <ChartsPanel
+            filteredTracts={filteredTracts}
+            rentData={rentData}
+            isochroneData={isochroneData}
+            tractBoundaries={tractBoundaries}
+            monthlyIncome={monthlyIncome}
+            affordabilityPct={affordabilityPct}
+            avgRent={avgRent}
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default App
