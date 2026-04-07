@@ -3,37 +3,43 @@
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: var(--font-sans);
 }
 
 .app-header h1,
 .modal h2,
 .chart-card h3,
 .map-legend h4 {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-serif);
+  letter-spacing: -0.02em;
 }
 
 .app-header {
-  background: #1a1a2e;
+  background: var(--masthead-bg);
   color: #fff;
-  padding: 12px 24px;
+  padding: 14px 28px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-shrink: 0;
+  border-bottom: 4px solid var(--mbta-red);
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .app-header h1 {
-  font-size: 18px;
-  font-weight: 600;
+  font-size: clamp(17px, 2.2vw, 22px);
+  font-weight: 900;
   margin: 0;
+  line-height: 1.15;
 }
 
 .header-info {
   display: flex;
-  gap: 20px;
+  gap: 24px;
   font-size: 13px;
-  color: #a0a0c0;
+  font-family: var(--font-label);
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.88);
 }
 
 .panels {
@@ -50,21 +56,24 @@
 .panel-right {
   width: 45%;
   overflow-y: auto;
-  background: #F5F0E8;
-  border-left: 1px solid #e0e0e0;
-  padding: 20px;
+  background: var(--paper-bg);
+  border-left: 1px solid var(--paper-rule);
+  padding: 20px 22px;
 }
 
-/* Toolbar */
+/* Toolbar — inset “newspaper tools” strip */
 .toolbar {
-  background: #1a1a2e;
-  color: #fff;
-  border-radius: 8px;
+  background: var(--paper-card);
+  color: var(--ink);
+  border-radius: 0;
+  border: 1px solid var(--paper-rule);
+  border-top: 3px solid var(--mbta-blue);
   padding: 16px 20px;
   margin-bottom: 20px;
   display: flex;
   flex-direction: column;
   gap: 14px;
+  box-shadow: 0 1px 0 rgba(26, 26, 26, 0.06);
 }
 
 .toolbar-row {
@@ -81,20 +90,28 @@
 }
 
 .toolbar-label {
-  font-size: 12px;
-  color: #a0a0c0;
+  font-family: var(--font-label);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--mbta-blue);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.06em;
 }
 
 .toolbar select {
-  background: #0f3460;
-  color: #fff;
-  border: 1px solid #335;
-  border-radius: 6px;
+  background: var(--paper-card);
+  color: var(--ink);
+  border: 1px solid var(--paper-rule);
+  border-radius: 0;
   padding: 8px 12px;
   font-size: 14px;
+  font-family: var(--font-sans);
   cursor: pointer;
+}
+
+.toolbar select:focus {
+  outline: 2px solid var(--mbta-blue);
+  outline-offset: 1px;
 }
 
 .toolbar .slider-group {
@@ -103,61 +120,79 @@
 
 .toolbar input[type="range"] {
   width: 100%;
-  accent-color: #e94560;
+  accent-color: var(--mbta-blue);
 }
 
 .toolbar .loading {
-  color: #e94560;
+  color: var(--mbta-orange);
   font-size: 13px;
+  font-family: var(--font-label);
+  font-weight: 600;
   animation: pulse 1s infinite;
 }
 
 .layer-toggle {
   display: flex;
   gap: 0;
-  border-radius: 6px;
+  border-radius: 0;
   overflow: hidden;
-  border: 1px solid #335;
+  border: 1px solid var(--paper-rule-strong);
 }
 
 .layer-toggle button {
-  background: #0f3460;
-  color: #a0a0c0;
+  background: var(--paper-bg);
+  color: var(--ink-muted);
   border: none;
+  border-right: 1px solid var(--paper-rule);
   padding: 8px 16px;
-  font-size: 14px;
+  font-size: 13px;
+  font-family: var(--font-label);
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+  transition: background 0.15s, color 0.15s;
+}
+
+.layer-toggle button:last-child {
+  border-right: none;
 }
 
 .layer-toggle button.active {
-  background: #e94560;
+  background: var(--mbta-blue);
   color: #fff;
 }
 
 .layer-toggle button:not(.active):hover {
-  background: #1a4a7a;
+  background: #e8e4d8;
+  color: var(--ink);
 }
 
 .toolbar .commute-time {
   margin-left: auto;
-  background: #0f3460;
-  padding: 6px 14px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
+  background: var(--mbta-orange);
+  color: #1a1a1a;
+  padding: 8px 14px;
+  border-radius: 0;
+  font-size: 13px;
+  font-family: var(--font-label);
+  font-weight: 700;
+  border: 1px solid #c77800;
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
 }
 
 /* Onboarding Modal */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 61, 165, 0.45);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -165,24 +200,30 @@
 }
 
 .modal {
-  background: #fff;
-  border-radius: 12px;
-  padding: 40px;
-  max-width: 460px;
+  background: var(--paper-card);
+  border-radius: 0;
+  padding: 40px 44px;
+  max-width: 480px;
   width: 90%;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--paper-rule-strong);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.6) inset,
+    12px 12px 0 rgba(0, 61, 165, 0.12);
 }
 
 .modal h2 {
   margin: 0 0 8px;
-  font-size: 24px;
-  color: #1a1a2e;
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--mbta-blue);
 }
 
 .modal p {
   margin: 0 0 24px;
-  color: #666;
+  color: var(--ink-muted);
   font-size: 14px;
+  line-height: 1.55;
+  font-weight: 400;
 }
 
 .modal .form-group {
@@ -191,25 +232,30 @@
 
 .modal label {
   display: block;
-  font-size: 13px;
-  font-weight: 600;
-  color: #333;
+  font-size: 12px;
+  font-family: var(--font-label);
+  font-weight: 700;
+  color: var(--mbta-blue);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   margin-bottom: 6px;
 }
 
 .modal input {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  border: 1px solid var(--paper-rule);
+  border-radius: 0;
   font-size: 15px;
+  font-family: var(--font-sans);
   box-sizing: border-box;
+  background: var(--paper-bg);
 }
 
 .modal input:focus {
   outline: none;
-  border-color: #e94560;
-  box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.1);
+  border-color: var(--mbta-blue);
+  box-shadow: 0 0 0 2px rgba(0, 61, 165, 0.2);
 }
 
 .autocomplete-wrapper {
@@ -224,11 +270,11 @@
   margin: 0;
   padding: 0;
   list-style: none;
-  background: #fff;
-  border: 1px solid #ddd;
+  background: var(--paper-card);
+  border: 1px solid var(--paper-rule);
   border-top: none;
-  border-radius: 0 0 6px 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 0;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
   z-index: 10;
   max-height: 200px;
   overflow-y: auto;
@@ -237,9 +283,9 @@
 .autocomplete-list li {
   padding: 10px 12px;
   font-size: 14px;
-  color: #333;
+  color: var(--ink);
   cursor: pointer;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--paper-rule);
 }
 
 .autocomplete-list li:last-child {
@@ -247,29 +293,32 @@
 }
 
 .autocomplete-list li:hover {
-  background: #f0f3f8;
-  color: #1a1a2e;
+  background: var(--paper-bg);
+  color: var(--mbta-blue);
 }
 
 .modal button {
   width: 100%;
   padding: 12px;
-  background: #e94560;
+  background: var(--mbta-blue);
   color: #fff;
   border: none;
-  border-radius: 6px;
+  border-radius: 0;
   font-size: 16px;
-  font-weight: 600;
+  font-family: var(--font-label);
+  font-weight: 700;
   cursor: pointer;
   transition: background 0.2s;
+  border: 1px solid #002a75;
 }
 
 .modal button:hover {
-  background: #c73a52;
+  background: #002f87;
 }
 
 .modal button:disabled {
-  background: #ccc;
+  background: #b8b4a8;
+  border-color: #9e9a8e;
   cursor: not-allowed;
 }
 
@@ -284,41 +333,50 @@
   width: 100%;
 }
 
-/* Click instruction overlay */
 .map-instruction {
   position: absolute;
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(26, 26, 46, 0.9);
-  color: #fff;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 13px;
+  background: var(--paper-card);
+  color: var(--ink);
+  padding: 10px 18px;
+  border-radius: 0;
+  font-size: 12px;
+  font-family: var(--font-label);
+  font-weight: 700;
   z-index: 1000;
   pointer-events: none;
+  border: 1px solid var(--paper-rule-strong);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
-/* Charts */
+/* Charts — white columns on newsprint */
 .chart-card {
-  background: #fff;
-  border-radius: 8px;
-  padding: 20px;
+  background: var(--paper-card);
+  border-radius: 0;
+  padding: 22px 22px 24px;
   margin-bottom: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--paper-rule);
+  border-top: 3px solid var(--mbta-purple);
+  box-shadow: 0 1px 0 rgba(26, 26, 26, 0.05);
 }
 
 .chart-card h3 {
-  margin: 0 0 16px;
-  font-size: 15px;
-  color: #1a1a2e;
+  margin: 0 0 18px;
+  font-size: 17px;
+  font-weight: 900;
+  color: var(--ink);
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--paper-rule);
 }
 
 .chart-card .empty-state {
-  color: #999;
+  color: var(--ink-muted);
   font-size: 13px;
   text-align: center;
   padding: 40px 0;
+  font-style: italic;
 }
 
 .chart-svg {
@@ -328,21 +386,24 @@
 
 /* Tooltip */
 .housing-tooltip {
-  background: rgba(26, 26, 46, 0.95);
+  background: var(--masthead-bg);
   color: #fff;
   padding: 10px 14px;
-  border-radius: 6px;
+  border-radius: 0;
   font-size: 12px;
   line-height: 1.5;
   max-width: 250px;
   pointer-events: none;
   z-index: 2000;
+  font-family: var(--font-sans);
+  border: 1px solid #002a75;
 }
 
 .housing-tooltip strong {
   display: block;
   font-size: 13px;
   margin-bottom: 4px;
+  font-family: var(--font-label);
 }
 
 /* Legend */
@@ -350,26 +411,29 @@
   position: absolute;
   bottom: 60px;
   right: 16px;
-  background: rgba(255, 255, 255, 0.95);
-  padding: 10px 12px;
-  border-radius: 8px;
+  background: var(--paper-card);
+  padding: 12px 14px;
+  border-radius: 0;
   font-size: 11px;
+  font-family: var(--font-sans);
   z-index: 1000;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  max-width: 180px;
+  border: 1px solid var(--paper-rule-strong);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  max-width: 200px;
 }
 
 .map-legend h4 {
   margin: 0 0 8px;
   font-size: 12px;
-  color: #333;
+  font-weight: 900;
+  color: var(--mbta-blue);
 }
 
 .legend-explainer {
   margin: 0 0 6px;
   font-size: 9px;
-  line-height: 1.3;
-  color: #666;
+  line-height: 1.35;
+  color: var(--ink-muted);
   word-wrap: break-word;
 }
 
@@ -385,15 +449,17 @@
   height: 10px;
   border-radius: 50%;
   flex-shrink: 0;
+  border: 1px solid rgba(0, 0, 0, 0.15);
 }
 
 /* Chart summary callouts */
 .chart-summary {
-  margin-top: 12px;
-  padding: 14px 16px;
-  background: #f0f3f8;
-  border-radius: 8px;
-  border-left: 4px solid #9B6A8C;
+  margin-top: 14px;
+  padding: 16px 18px;
+  background: var(--paper-bg);
+  border-radius: 0;
+  border: 1px solid var(--paper-rule);
+  border-left: 4px solid var(--mbta-blue);
 }
 
 .summary-stats {
@@ -410,7 +476,7 @@
 }
 
 .summary-stats .stat-value {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: var(--font-sans);
   font-size: 20px;
   font-weight: 700;
   line-height: 1.2;
@@ -422,13 +488,54 @@
 
 .summary-stats .stat-label {
   font-size: 11px;
-  color: #666;
+  font-family: var(--font-label);
+  font-weight: 600;
+  color: var(--ink-muted);
   margin-top: 2px;
 }
 
 .summary-insight {
   font-size: 12.5px;
-  color: #444;
-  line-height: 1.5;
+  color: var(--ink);
+  line-height: 1.55;
   margin: 0;
+}
+
+.summary-insight strong {
+  color: var(--mbta-blue);
+}
+
+/* -------------------------------------------------------------------------
+   Horizontal bar chart (Budget: Driving vs Transit) — MBTA palette only:
+   blue / orange / gold / purple stripes. No green or red bar fills.
+   Targets second chart card; uses D3’s inline fills as hooks.
+   ------------------------------------------------------------------------- */
+.charts-panel > .chart-card:nth-child(2) svg.chart-svg rect[fill='#5B7FA5' i] {
+  fill: var(--mbta-blue) !important;
+}
+
+.charts-panel > .chart-card:nth-child(2) svg.chart-svg rect[fill='#5A8A8A' i] {
+  fill: var(--mbta-orange) !important;
+}
+
+.charts-panel > .chart-card:nth-child(2) svg.chart-svg rect[fill='#C4B078' i] {
+  /* Deeper gold for contrast with white segment labels */
+  fill: #e8b923 !important;
+}
+
+.charts-panel > .chart-card:nth-child(2) svg.chart-svg defs pattern#stripe-pattern rect {
+  fill: var(--mbta-purple) !important;
+  opacity: 0.45 !important;
+}
+
+.charts-panel > .chart-card:nth-child(2) svg.chart-svg rect[stroke='#5A8A8A' i] {
+  stroke: var(--mbta-purple) !important;
+}
+
+.charts-panel > .chart-card:nth-child(2) svg.chart-svg line[stroke='#1a1a2e' i] {
+  stroke: var(--ink) !important;
+}
+
+.charts-panel > .chart-card:nth-child(2) svg.chart-svg rect[fill='url(#stripe-pattern)' i] {
+  stroke: var(--mbta-purple) !important;
 }
