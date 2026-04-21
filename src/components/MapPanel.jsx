@@ -32,6 +32,9 @@ export default function MapPanel({
   monthlyIncome,
   affordabilityPct,
   onMapClick,
+  onHousingClick,
+  selectedHousingId,
+  mapBusy,
   mapLayer,
 }) {
   const mapRef = useRef(null)
@@ -44,6 +47,8 @@ export default function MapPanel({
   const workMarkerRef = useRef(null)
   const onMapClickRef = useRef(onMapClick)
   onMapClickRef.current = onMapClick
+  const onHousingClickRef = useRef(onHousingClick)
+  onHousingClickRef.current = onHousingClick
 
   // Initialize map
   useEffect(() => {
@@ -199,11 +204,12 @@ export default function MapPanel({
     filteredHousing.forEach((h) => {
       const color = getAffordabilityColor(h, annualIncome)
       const radius = 2 + Math.sqrt(h.hu / maxUnits) * 6
-      L.circleMarker([h.lat, h.lng], {
-        radius,
+      const isSel = selectedHousingId != null && String(h.id) === String(selectedHousingId)
+      const m = L.circleMarker([h.lat, h.lng], {
+        radius: isSel ? radius + 2 : radius,
         fillColor: color,
-        color: '#fff',
-        weight: 0.5,
+        color: isSel ? '#1a1a2e' : '#fff',
+        weight: isSel ? 2.5 : 0.5,
         fillOpacity: 0.85,
       })
         .bindTooltip(
@@ -215,12 +221,16 @@ export default function MapPanel({
           </div>`,
           { direction: 'top', offset: [0, -8] }
         )
-        .addTo(layer)
+        .on('click', (e) => {
+          L.DomEvent.stopPropagation(e)
+          onHousingClickRef.current?.(h)
+        })
+      m.addTo(layer)
     })
 
     layer.addTo(map)
     housingLayerRef.current = layer
-  }, [filteredHousing, monthlyIncome])
+  }, [filteredHousing, monthlyIncome, selectedHousingId])
 
   // Route polyline
   useEffect(() => {
@@ -249,6 +259,12 @@ export default function MapPanel({
   return (
     <div className="map-container">
       <div ref={mapRef} style={{ height: '100%', width: '100%' }} />
+      {mapBusy && (
+        <div className="map-loading-overlay" role="status" aria-live="polite">
+          <div className="map-loading-spinner" />
+          <span>Updating routes and reach area…</span>
+        </div>
+      )}
       {!clickedPoint && (
         <div className="map-instruction">Click anywhere on the map to explore commute times</div>
       )}
@@ -271,15 +287,15 @@ export default function MapPanel({
               Based on your income relative to Boston Area Median Income (AMI: $140,200).
               Colors show whether a project has units designated for your income tier.
             </p>
-            <div className="legend-item" title="This project has units designated for your AMI tier or below — you are likely eligible.">
+            <div className="legend-item" title="This project has units designated for your AMI tier or below. You are likely eligible.">
               <div className="legend-dot" style={{ background: '#00843D' }} />
               <span>Affordable</span>
             </div>
-            <div className="legend-item" title="This project has units one AMI tier above yours — you may qualify depending on availability.">
+            <div className="legend-item" title="This project has units one AMI tier above yours. You may qualify depending on availability.">
               <div className="legend-dot" style={{ background: '#ED8B00' }} />
               <span>Moderate</span>
             </div>
-            <div className="legend-item" title="This project has no units at or near your AMI tier — unlikely to be affordable for your income.">
+            <div className="legend-item" title="This project has no units at or near your AMI tier, so it is unlikely to be affordable for your income.">
               <div className="legend-dot" style={{ background: '#DA291C' }} />
               <span>Above Budget</span>
             </div>

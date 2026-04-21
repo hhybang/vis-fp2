@@ -1,6 +1,7 @@
 import RentHistogram from './charts/RentHistogram'
 import IncomeHistogram from './charts/IncomeHistogram'
 import BudgetComparison from './charts/BudgetComparison'
+import ExplorerIntro from './ExplorerIntro'
 
 export default function ChartsPanel({
   filteredTracts,
@@ -15,7 +16,8 @@ export default function ChartsPanel({
 
   return (
     <div className="charts-panel">
-      <div className="chart-card">
+      <ExplorerIntro />
+      <div className="chart-card chart-card-rent">
         <h3>Monthly Rent Distribution</h3>
         {hasIsochrone ? (
           <RentHistogram
@@ -31,7 +33,7 @@ export default function ChartsPanel({
         )}
       </div>
 
-      <div className="chart-card">
+      <div className="chart-card chart-card-budget">
         <h3>Monthly Budget: Driving vs. Transit</h3>
         {hasIsochrone ? (
           <BudgetComparison
@@ -43,7 +45,7 @@ export default function ChartsPanel({
         )}
       </div>
 
-      <div className="chart-card">
+      <div className="chart-card chart-card-income">
         <h3>Household Income Distribution</h3>
         {hasIsochrone && filteredTracts.length > 0 ? (
           <IncomeHistogram

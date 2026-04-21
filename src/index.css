@@ -7,12 +7,15 @@
   --ink: #1a1a1a;
   --ink-muted: #595959;
   --ink-faint: #6e6e6e;
-  /* Single hue for “you” / budget / rent / darker bars — not UI chrome */
+  /* Single hue for “you” / budget / rent / darker bars (not UI chrome) */
   --chart-blue: #4a6282;
   --chart-blue-soft: color-mix(in srgb, var(--chart-blue) 34%, #ffffff);
   --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-label: 'DM Sans', var(--font-sans);
+  /* Match dashboard panels: flat cards, dark frame (same as layer toggle / map legend) */
+  --ui-card-shadow: 0 1px 0 rgba(26, 26, 26, 0.04);
+  --ui-card-border: 1px solid var(--paper-rule-strong);
 }
 
 * {
@@ -34,7 +37,7 @@ body {
 
 #root {
   width: 100%;
-  height: 100vh;
+  min-height: 100vh;
 }
 
 .app-header,

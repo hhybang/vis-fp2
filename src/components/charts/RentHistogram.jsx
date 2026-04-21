@@ -163,8 +163,7 @@ export default function RentHistogram({
             </div>
           </div>
           <p class="summary-insight">
-            Your rent budget is <strong>$${absDiff.toLocaleString()} ${direction}</strong> the area median
-            &mdash; ${emoji}.
+            Your rent budget is <strong>$${absDiff.toLocaleString()} ${direction}</strong> the area median: ${emoji}.
             <span style="color:#00843D">Green bars</span> = tracts within your budget.
           </p>
         </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import ScrollyStory from './components/ScrollyStory'
 import OnboardingModal from './components/OnboardingModal'
 import MapPanel from './components/MapPanel'
 import ChartsPanel from './components/ChartsPanel'
@@ -9,6 +10,7 @@ import { getOuterIsochrone, pointInPolygon, tractIntersectsIsochrone } from './u
 import './App.css'
 
 function App() {
+  const [storyComplete, setStoryComplete] = useState(false)
   const [onboarded, setOnboarded] = useState(false)
   const [monthlyIncome, setMonthlyIncome] = useState(0)
   const [workLocation, setWorkLocation] = useState(null)
@@ -27,11 +29,14 @@ function App() {
   const [routeData, setRouteData] = useState(null)
   const [affordabilityPct, setAffordabilityPct] = useState(30)
   const [isLoading, setIsLoading] = useState(false)
+  const [routeLoading, setRouteLoading] = useState(false)
   const [commuteTime, setCommuteTime] = useState(null)
+  const [selectedHousing, setSelectedHousing] = useState(null)
 
   const [filteredTracts, setFilteredTracts] = useState([])
   const [filteredHousing, setFilteredHousing] = useState([])
   const [avgRent, setAvgRent] = useState(0)
+  const [editProfileOpen, setEditProfileOpen] = useState(false)
 
   useEffect(() => {
     if (!onboarded) return
@@ -64,6 +69,9 @@ function App() {
 
   useEffect(() => {
     if (!clickedPoint || !workLocation) return
+    setRouteLoading(true)
+    setRouteData(null)
+    setCommuteTime(null)
     const profile = travelMode === 'driving-car' ? 'driving-car' : 'foot-walking'
     fetchDirections(clickedPoint.lat, clickedPoint.lng, workLocation.lat, workLocation.lng, profile)
       .then((data) => {
@@ -74,6 +82,7 @@ function App() {
         }
       })
       .catch((err) => console.error('Route error:', err))
+      .finally(() => setRouteLoading(false))
   }, [clickedPoint, workLocation, travelMode])
 
   useEffect(() => {
@@ -116,18 +125,94 @@ function App() {
     setOnboarded(true)
   }, [])
 
+  const handleProfileSave = useCallback((income, location, address) => {
+    setMonthlyIncome(income)
+    setWorkLocation(location)
+    setWorkAddress(address)
+    setEditProfileOpen(false)
+  }, [])
+
+  const handleMapClick = useCallback((pt) => {
+    setSelectedHousing(null)
+    setClickedPoint(pt)
+  }, [])
+
+  const handleHousingClick = useCallback((h) => {
+    setSelectedHousing((prev) => (prev?.id === h.id ? null : h))
+  }, [])
+
+  const handleClearExploration = useCallback(() => {
+    setClickedPoint(null)
+    setIsochroneData(null)
+    setRouteData(null)
+    setCommuteTime(null)
+  }, [])
+
+  const handleClearHousingSelection = useCallback(() => {
+    setSelectedHousing(null)
+  }, [])
+
+  useEffect(() => {
+    if (!storyComplete) return
+    const id = requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    })
+    return () => cancelAnimationFrame(id)
+  }, [storyComplete])
+
+  if (!storyComplete) {
+    return (
+      <ScrollyStory
+        onComplete={() => {
+          setStoryComplete(true)
+        }}
+      />
+    )
+  }
+
   if (!onboarded) {
-    return <OnboardingModal onSubmit={handleOnboard} />
+    return (
+      <OnboardingModal
+        onSubmit={handleOnboard}
+        onBackToStory={() => setStoryComplete(false)}
+      />
+    )
   }
 
   return (
     <div className="app">
+      {editProfileOpen && workLocation && (
+        <OnboardingModal
+          variant="edit"
+          initialProfile={{
+            monthlyIncome,
+            workAddress,
+            workLocation,
+          }}
+          onSubmit={handleProfileSave}
+          onCancel={() => setEditProfileOpen(false)}
+        />
+      )}
       <header className="app-header">
-        <h1>Boston Housing Affordability & Commute Explorer</h1>
-        <div className="header-info">
-          <span>Income: ${monthlyIncome.toLocaleString()}/mo</span>
-          <span>Work: {workAddress}</span>
+        <div className="app-header-title-row">
+          <h1>Boston Housing Affordability & Commute Explorer</h1>
+          <button
+            type="button"
+            className="app-header-back"
+            onClick={() => setStoryComplete(false)}
+          >
+            Back to story
+          </button>
         </div>
+        <button
+          type="button"
+          className="header-info"
+          onClick={() => setEditProfileOpen(true)}
+          aria-label="Edit income and workplace"
+        >
+          <span>Income: ${monthlyIncome.toLocaleString()}/mo</span>
+          <span>Work: {workAddress || 'Not set'}</span>
+        </button>
       </header>
       <div className="panels">
         <div className="panel-left">
@@ -140,30 +225,42 @@ function App() {
             workLocation={workLocation}
             monthlyIncome={monthlyIncome}
             affordabilityPct={affordabilityPct}
-            onMapClick={setClickedPoint}
+            onMapClick={handleMapClick}
+            onHousingClick={handleHousingClick}
+            selectedHousingId={selectedHousing?.id ?? null}
+            mapBusy={isLoading || routeLoading}
             mapLayer={mapLayer}
           />
         </div>
         <div className="panel-right">
-          <Toolbar
-            travelMode={travelMode}
-            onTravelModeChange={setTravelMode}
-            affordabilityPct={affordabilityPct}
-            onAffordabilityChange={setAffordabilityPct}
-            isLoading={isLoading}
-            commuteTime={commuteTime}
-            mapLayer={mapLayer}
-            onMapLayerChange={setMapLayer}
-          />
-          <ChartsPanel
-            filteredTracts={filteredTracts}
-            rentData={rentData}
-            isochroneData={isochroneData}
-            tractBoundaries={tractBoundaries}
-            monthlyIncome={monthlyIncome}
-            affordabilityPct={affordabilityPct}
-            avgRent={avgRent}
-          />
+          <div className="panel-right-toolbar-wrap">
+            <Toolbar
+              travelMode={travelMode}
+              onTravelModeChange={setTravelMode}
+              affordabilityPct={affordabilityPct}
+              onAffordabilityChange={setAffordabilityPct}
+              isLoading={isLoading}
+              routeLoading={routeLoading}
+              commuteTime={commuteTime}
+              mapLayer={mapLayer}
+              onMapLayerChange={setMapLayer}
+              clickedPoint={clickedPoint}
+              onClearExploration={handleClearExploration}
+              selectedHousing={selectedHousing}
+              onClearHousingSelection={handleClearHousingSelection}
+            />
+          </div>
+          <div className="charts-panel-scroll">
+            <ChartsPanel
+              filteredTracts={filteredTracts}
+              rentData={rentData}
+              isochroneData={isochroneData}
+              tractBoundaries={tractBoundaries}
+              monthlyIncome={monthlyIncome}
+              affordabilityPct={affordabilityPct}
+              avgRent={avgRent}
+            />
+          </div>
         </div>
       </div>
     </div>

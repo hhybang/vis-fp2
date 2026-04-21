@@ -2,3 +2,7 @@ node_modules
 dist
 .env
 .DS_Store
+
+# GTFS feeds (large; download locally or from MBTA, do not commit)
+mbta_gtfs_full/
+mbta_gtfs.zip
