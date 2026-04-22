@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import StoryMap from './StoryMap'
 import DailyNeedsPanel from './DailyNeedsPanel'
 import JobAccessPanel from './JobAccessPanel'
+import MotivationPanels from './MotivationPanels'
 import tree1 from '../imgs/trees/cartoon-tree-1.png'
 import tree2 from '../imgs/trees/cartoon-tree-2.png'
 import tree3 from '../imgs/trees/cartoon-tree-3.png'
@@ -654,32 +655,31 @@ export default function ScrollyStory({ onComplete }) {
         </div>
       </section>
 
-      {/* Section 4 · Motivation (scaffold) */}
+      {/* Section 4 · Motivation */}
       <div className="section-divider" />
       <section className="scrolly-section" ref={addRef(3)}>
         <span className="section-eyebrow">Motivation</span>
         <h2>But Who Benefits?</h2>
         <p>
-          More housing near transit can improve access for many. But does it
-          reach the people who need it most? And what are the tradeoffs for
-          those who already live in these neighborhoods?
+          Massachusetts has zoned for and funded more housing near transit. But
+          the housing that has actually been built tells a narrower story about
+          who gets to live near a train. To see it, we pulled every completed
+          and under-construction project in the state&rsquo;s MassBuilds
+          inventory and asked two questions: <em>what income levels</em> do
+          these new units serve, and <em>which transit modes</em> are they
+          clustered around?
         </p>
 
-        <div className="scaffold-placeholder">
-          <div className="scaffold-label">Section content (to be completed)</div>
-          <div className="scaffold-desc">
-            This section will examine who current TOD housing actually serves,
-            including visualizations of affordability gaps and displacement
-            risks.
-          </div>
-        </div>
-        <div className="scaffold-placeholder">
-          <div className="scaffold-label">Visualization placeholder</div>
-          <div className="scaffold-desc">
-            Visualization(s) showing the downside of current TOD patterns for
-            existing residents.
-          </div>
-        </div>
+        <MotivationPanels />
+
+        <p>
+          Put together, the two charts sharpen the paradox from the background
+          section. Zoning reform and bond financing are moving housing into
+          station areas, but without an affordability requirement, the
+          neighborhoods with the best transit are the ones where the new
+          housing is most likely to be priced beyond reach of the renters who
+          would benefit most from it.
+        </p>
       </section>
 
       {/* Section 5 · Body (scaffold) */}
