@@ -3,6 +3,7 @@ import StoryMap from './StoryMap'
 import DailyNeedsPanel from './DailyNeedsPanel'
 import JobAccessPanel from './JobAccessPanel'
 import MotivationPanels from './MotivationPanels'
+import PolicyGapPanels from './PolicyGapPanels'
 import tree1 from '../imgs/trees/cartoon-tree-1.png'
 import tree2 from '../imgs/trees/cartoon-tree-2.png'
 import tree3 from '../imgs/trees/cartoon-tree-3.png'
@@ -682,30 +683,46 @@ export default function ScrollyStory({ onComplete }) {
         </p>
       </section>
 
-      {/* Section 5 · Body (scaffold) */}
+      {/* Section 5 · Analysis: What's Missing */}
       <div className="section-divider" />
       <section className="scrolly-section" ref={addRef(4)}>
         <span className="section-eyebrow">Analysis</span>
         <h2>What&rsquo;s Missing?</h2>
         <p>
-          If transit-oriented development alone doesn&rsquo;t guarantee
-          affordability, what additional policies or design approaches are
-          needed?
+          The two landmark laws move real levers. The MBTA Communities Act
+          unlocked multi-family zoning in 177 transit-served communities. The
+          Affordable Homes Act committed a historic $5.4&nbsp;billion to housing.
+          But when you look at what actually gets built under those rules,
+          a pattern emerges: both policies regulate <em>capacity</em> and{' '}
+          <em>capital</em>, and neither regulates <em>who</em> gets to live in
+          the housing that results.
         </p>
 
-        <div className="scaffold-placeholder">
-          <div className="scaffold-label">Section content (to be completed)</div>
-          <div className="scaffold-desc">
-            This section will analyze what existing TOD housing policies lack
-            and what benefits they do provide, with supporting visualizations.
-          </div>
-        </div>
-        <div className="scaffold-placeholder">
-          <div className="scaffold-label">Visualization placeholder</div>
-          <div className="scaffold-desc">
-            Visualization(s) illustrating the benefits of existing policies and
-            the gaps that remain.
-          </div>
+        <PolicyGapPanels />
+
+        <p>
+          Peer states have closed this gap with explicit TOD affordability
+          floors: Washington&rsquo;s 2025 law requires affordable units in every
+          transit-station-area development, and Colorado pairs density with a
+          menu of mandatory anti-displacement strategies. Massachusetts has the
+          zoning and the money. What it&rsquo;s still missing are the rules
+          that make sure the homes built near transit are ones that
+          transit-dependent households can afford.
+        </p>
+      </section>
+
+      {/* Transition · systemic gap → personal calculus */}
+      <section className="scrolly-bridge" aria-hidden="false">
+        <div className="scrolly-bridge-inner">
+          <span className="scrolly-bridge-eyebrow">Meanwhile</span>
+          <p className="scrolly-bridge-text">
+            Policy change is slow. Until Massachusetts pairs its zoning with a
+            real affordability floor, the tradeoffs don&rsquo;t disappear
+            &mdash; they move downstream, from legislators to tenants, and
+            get made <em>one budget, one commute, one lease at a time</em>.
+          </p>
+          <div className="scrolly-bridge-rule" />
+          <p className="scrolly-bridge-cue">So what does the map look like for you?</p>
         </div>
       </section>
 
@@ -715,11 +732,10 @@ export default function ScrollyStory({ onComplete }) {
           <span className="section-eyebrow">Explore</span>
           <h2>The Tradeoffs Are Personal</h2>
           <p className="scrolly-cta-lead">
-            Policies shape the landscape of housing options. But the right
-            tradeoff depends on your situation: your income, your workplace,
-            your priorities. How far are you willing to commute? What can you
-            afford to spend on housing? Is a car worth the cost if it means a
-            cheaper apartment further out?
+            The right tradeoff depends on your situation: your income, your
+            workplace, your priorities. How far are you willing to commute?
+            What can you afford to spend on housing? Is a car worth the cost
+            if it means a cheaper apartment further out?
           </p>
           <p className="scrolly-cta-sub">
             Use the interactive explorer to test what transit-oriented housing
