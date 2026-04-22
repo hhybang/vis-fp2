@@ -57,32 +57,51 @@ function App() {
 
   useEffect(() => {
     if (!clickedPoint) return
+    let active = true
     setIsLoading(true)
     setIsochroneData(null)
     setRouteData(null)
     setCommuteTime(null)
     fetchIsochrone(clickedPoint.lat, clickedPoint.lng, travelMode)
-      .then(setIsochroneData)
-      .catch((err) => console.error('Isochrone error:', err))
-      .finally(() => setIsLoading(false))
+      .then((data) => {
+        if (active) setIsochroneData(data)
+      })
+      .catch((err) => {
+        if (active) console.error('Isochrone error:', err)
+      })
+      .finally(() => {
+        if (active) setIsLoading(false)
+      })
+    return () => {
+      active = false
+    }
   }, [clickedPoint, travelMode])
 
   useEffect(() => {
     if (!clickedPoint || !workLocation) return
+    let active = true
     setRouteLoading(true)
     setRouteData(null)
     setCommuteTime(null)
     const profile = travelMode === 'driving-car' ? 'driving-car' : 'foot-walking'
     fetchDirections(clickedPoint.lat, clickedPoint.lng, workLocation.lat, workLocation.lng, profile)
       .then((data) => {
+        if (!active) return
         setRouteData(data)
         if (data.features && data.features[0]) {
           const mins = Math.round(data.features[0].properties.summary.duration / 60)
           setCommuteTime(mins)
         }
       })
-      .catch((err) => console.error('Route error:', err))
-      .finally(() => setRouteLoading(false))
+      .catch((err) => {
+        if (active) console.error('Route error:', err)
+      })
+      .finally(() => {
+        if (active) setRouteLoading(false)
+      })
+    return () => {
+      active = false
+    }
   }, [clickedPoint, workLocation, travelMode])
 
   useEffect(() => {
