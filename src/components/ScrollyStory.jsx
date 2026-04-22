@@ -283,22 +283,44 @@ export default function ScrollyStory({ onComplete }) {
             <span className="scrolly-hero-title-accent">Transit</span>
           </h1>
           <p className="subtitle">
-            Access, affordability, and the policies that shape both
+            Why the apartments near your T stop keep getting more expensive
+            &mdash; and what&rsquo;s not being done about it
           </p>
           <p className="scrolly-hero-authors">
             Gabriela Miranda, Arnav Verma, Helen Bang
           </p>
           <p className="intro">
-            In Greater Boston, living near public transit opens doors to jobs,
-            services, and opportunity. But as demand for transit-accessible
-            neighborhoods grows, so does the question: who can afford to live
-            there?
+            If you rent in Greater Boston, you already know the tradeoff: the
+            closer you live to a T stop, the more you pay. Transit means
+            jobs, groceries, healthcare &mdash; your whole daily life without
+            a car. But the neighborhoods with the best access are
+            increasingly out of reach for the people who depend on it most.
+            This is the story of how that happened, what the state promised
+            to do about it, and what it means for you.
           </p>
         </div>
         <div className="scroll-hint">Scroll to explore ↓</div>
       </div>
 
-      {/* Section 1 · Background: Why Transit Matters */}
+      {/* Renter voices — surfaced early so the audience hears real people first */}
+      <section className="renter-voices" ref={addRef(0)}>
+        <div className="renter-voices-inner">
+          {QUOTES.map((q, i) => (
+            <blockquote key={i} className="renter-voice-card">
+              <p className="renter-voice-text">{q.text}</p>
+              <footer className="renter-voice-attr">
+                <span className="renter-voice-name">{q.name}</span>
+                <span className="renter-voice-area">{q.area}</span>
+                <cite className="renter-voice-source">
+                  {q.source}, <em>{q.sourceTitle}</em> ({q.date})
+                </cite>
+              </footer>
+            </blockquote>
+          ))}
+        </div>
+      </section>
+
+      {/* Section 1 · Why Transit Matters to You */}
       <div className="section-divider" />
       <section className="scrolly-section section-with-map" ref={mapSectionRef}>
         <div className="section-map-bg">
@@ -306,13 +328,14 @@ export default function ScrollyStory({ onComplete }) {
         </div>
         <div className="section-map-tint" />
         <div className="section-content">
-          <span className="section-eyebrow">Background</span>
-          <h2>Access Starts With Transit</h2>
+          <span className="section-eyebrow">Why It Matters</span>
+          <h2>Your T Stop Is More Than a Commute</h2>
           <p>
-            Public transit is more than a way to get to work. It connects people
-            to healthcare, education, grocery stores, and community. For
-            households without a car, transit access can define the boundaries of
-            daily life.
+            If you don&rsquo;t own a car &mdash; or can&rsquo;t afford one &mdash;
+            your nearest transit stop shapes everything: which jobs you can get
+            to, where you buy groceries, how you reach a doctor. Living close
+            to a station isn&rsquo;t a luxury. For many renters in Greater
+            Boston, it&rsquo;s the infrastructure that makes daily life work.
           </p>
 
           <div className="hover-hint">Hover over each card to explore</div>
@@ -323,15 +346,16 @@ export default function ScrollyStory({ onComplete }) {
               onMouseLeave={() => setCostVisible(false)}
             >
               <div className="benefit-icon">$</div>
-              <div className="benefit-title">Lower Cost</div>
+              <div className="benefit-title">Your Savings</div>
               <div className="benefit-desc">
-                An MBTA pass costs ~$90/month. Car ownership averages over
-                $1,000/month in Greater Boston.
+                A car costs you ~$1,000/month in Greater Boston. An MBTA pass
+                is $90. That gap is rent money.
               </div>
               <div className="benefit-expand">
                 <div className="expand-saving">
-                  Switching saves <strong>$910/month</strong>. That&rsquo;s{' '}
-                  <strong>$10,920/year</strong> back in your pocket.
+                  Without a car, you keep <strong>$910/month</strong> &mdash;{' '}
+                  <strong>$10,920/year</strong> that can go toward rent instead
+                  of a car payment.
                 </div>
                 <div className="expand-source">
                   Data: AAA 2024 driving costs (Northeast) &amp; MBTA fare schedule
@@ -344,16 +368,17 @@ export default function ScrollyStory({ onComplete }) {
               onMouseLeave={() => setJobsVisible(false)}
             >
               <div className="benefit-icon">&#9719;</div>
-              <div className="benefit-title">Job Access</div>
+              <div className="benefit-title">Your Job Options</div>
               <div className="benefit-desc">
-                Boston&rsquo;s transit network connects riders to major employment
-                centers across 175 municipalities.
+                Living near a T stop puts you within reach of the region&rsquo;s
+                biggest job centers &mdash; without needing a car to get there.
               </div>
               <div className="benefit-expand">
                 <div className="expand-saving">
-                  Boston&rsquo;s biggest employment hubs (Financial District,
-                  Kendall Square, Back Bay, Longwood) are each just{' '}
-                  <strong>minutes on foot</strong> from a T station.
+                  The Financial District, Kendall Square, Back Bay, Longwood
+                  &mdash; each is just <strong>minutes on foot</strong> from
+                  a T station. Move away from transit and those commutes get
+                  longer, costlier, or impossible.
                 </div>
                 <div className="expand-source">
                   Data: MBTA station locations &amp; BLS employment estimates
@@ -366,16 +391,18 @@ export default function ScrollyStory({ onComplete }) {
               onMouseLeave={() => setNeedsVisible(false)}
             >
               <div className="benefit-icon">&#9878;</div>
-              <div className="benefit-title">Daily Needs</div>
+              <div className="benefit-title">Your Daily Errands</div>
               <div className="benefit-desc">
-                Groceries, healthcare, schools, and parks are all more accessible
-                within a short walk of a transit stop.
+                Groceries, a clinic, your kid&rsquo;s school &mdash; near a T
+                stop, these are a walk away. Further out, each errand becomes a
+                trip.
               </div>
               <div className="benefit-expand">
                 <div className="expand-saving">
                   Near <strong>{needsStop?.name || 'Harvard Square'}</strong>, there are{' '}
                   <strong>{needsStop?.total || '150+'} daily-need destinations</strong> within
-                  a 10-minute walk, from groceries to clinics to parks.
+                  a 10-minute walk. That&rsquo;s the kind of access you lose
+                  when you&rsquo;re priced out of a transit neighborhood.
                 </div>
                 <div className="expand-source">
                   Data: OpenStreetMap amenities, 800m radius
@@ -388,10 +415,10 @@ export default function ScrollyStory({ onComplete }) {
               onMouseLeave={() => setTreesVisible(false)}
             >
               <div className="benefit-icon">&#9729;</div>
-              <div className="benefit-title">Less Emissions</div>
+              <div className="benefit-title">The Planet, Too</div>
               <div className="benefit-desc">
-                Switching from driving to transit can cut a household&rsquo;s
-                transportation emissions by over 50%.
+                Taking the T instead of driving cuts your transportation
+                emissions by more than half.
               </div>
               <div className="benefit-expand">
                 <div className="expand-label">5-mile commute, round trip, 250 days/year</div>
@@ -423,14 +450,15 @@ export default function ScrollyStory({ onComplete }) {
           </div>
 
           <p>
-            In the Greater Boston area, the MBTA network (subway, commuter rail,
-            bus, and light rail) serves as the backbone of regional mobility.
+            The MBTA &mdash; subway, commuter rail, bus, and light rail &mdash;
+            is the backbone of how you get around Greater Boston. But not
+            everyone has the same access.
           </p>
 
           <p>
-            But transit access is not evenly distributed. Some neighborhoods have
-            stations every few blocks; others have none at all. And where transit
-            does exist, living nearby comes at a premium.
+            Some neighborhoods have stations every few blocks. Others have
+            none. And where transit does exist, living nearby comes at a
+            premium &mdash; one that keeps climbing.
           </p>
         </div>
       </section>
@@ -465,13 +493,14 @@ export default function ScrollyStory({ onComplete }) {
           </div>
         )}
         <div className="section-content revealed">
-          <span className="section-eyebrow">Background</span>
-          <h2>Access Is Not Equally Affordable</h2>
+          <span className="section-eyebrow">The Squeeze</span>
+          <h2>The Closer to Transit, the Higher Your Rent</h2>
           <p>
-            As cities invest in transit infrastructure, the neighborhoods around
-            stations become more desirable, and more expensive.
-            Research consistently shows that housing costs near transit tend to
-            rise faster than in less-connected areas.
+            Every time a new station opens or a line improves, the apartments
+            nearby get more expensive. It&rsquo;s not a mystery &mdash; better
+            transit makes a neighborhood more desirable, and landlords price
+            accordingly. Rents near MBTA stations have been climbing faster
+            than rents everywhere else.
           </p>
 
           <div className="stat-row">
@@ -496,20 +525,22 @@ export default function ScrollyStory({ onComplete }) {
           </div>
 
           <p className="section-note">
-            In the Greater Boston area, an estimated <strong>59.5%</strong> of
-            households earn above that threshold. That means roughly
-            <strong> 4 in 10 households</strong> fall below the income needed to
-            afford a typical transit-adjacent rent without becoming cost-burdened.
+            If you earn less than $92,000 a year, a typical apartment near an
+            MBTA station would eat more than 30% of your income. That&rsquo;s
+            the textbook definition of being &ldquo;cost-burdened.&rdquo;
+            Roughly <strong>4 in 10 households</strong> in Greater Boston fall
+            below that line.
           </p>
           <p>
-            This creates a paradox: the people who would benefit most from
-            transit access are often lower-income households who are less likely
-            to own cars, yet they are often priced out of the neighborhoods
-            where that access exists.
+            So the people who need transit the most &mdash; renters without
+            cars, working hourly jobs, cobbling together bus-and-train commutes
+            &mdash; are exactly the ones being priced out of the neighborhoods
+            where transit actually exists.
           </p>
           <p>
-            The result is a growing disconnect between where affordable housing
-            is needed and where it is being built.
+            You&rsquo;re not imagining the squeeze. The gap between where you
+            can afford to live and where the T can take you is real, and
+            it&rsquo;s growing.
           </p>
         </div>
       </section>
@@ -519,12 +550,14 @@ export default function ScrollyStory({ onComplete }) {
       <section className="scrolly-section scrolly-section-wide policy-section-editorial" ref={addRef(2)}>
         <div className="policy-section-inner">
           <header className="policy-section-header">
-            <span className="section-eyebrow">Policy Context</span>
-            <h2>What Massachusetts Is Doing</h2>
+            <span className="section-eyebrow">What the State Promised</span>
+            <h2>Two Big Laws. Neither Guarantees You a Home.</h2>
             <p className="policy-section-lead">
-              The state has responded with two landmark policies. Together they
-              represent the most ambitious push for transit-oriented housing in
-              Massachusetts history, but each has a critical blind spot.
+              Massachusetts passed two landmark housing policies &mdash; the
+              most ambitious in state history. They sound like good news for
+              renters. But look closer, and you&rsquo;ll find a critical blind
+              spot in both: neither one requires that the new housing near your
+              T stop is something you can actually afford.
             </p>
           </header>
 
@@ -566,12 +599,12 @@ export default function ScrollyStory({ onComplete }) {
                   </p>
                 </div>
                 <div className="policy-misses">
-                  <span className="policy-tag policy-tag-misses">What it misses</span>
+                  <span className="policy-tag policy-tag-misses">What it means for you</span>
                   <p>
                     The law mandates <em>zoning</em>, not construction, and
-                    critically, it sets <strong>no income targets</strong>. New
-                    housing can be entirely market-rate, leaving lower-income
-                    residents no better off.
+                    sets <strong>no income targets</strong>. Every new building
+                    near your station can be entirely market-rate. More
+                    apartments, same unaffordable rents.
                   </p>
                 </div>
               </div>
@@ -622,12 +655,12 @@ export default function ScrollyStory({ onComplete }) {
                   </p>
                 </div>
                 <div className="policy-misses">
-                  <span className="policy-tag policy-tag-misses">What it misses</span>
+                  <span className="policy-tag policy-tag-misses">What it means for you</span>
                   <p>
-                    Despite the scale, the Act does not mandate that developments
-                    near stations include <strong>affordable units</strong>.
-                    Funding flows to projects statewide. Transit-adjacent
-                    affordability is encouraged, not ensured.
+                    $5.4 billion sounds like a lot. But nothing in the law says
+                    that money has to produce <strong>affordable units</strong>{' '}
+                    near your station. The funding goes statewide. Affordability
+                    near transit is encouraged, not required.
                   </p>
                 </div>
               </div>
@@ -645,12 +678,12 @@ export default function ScrollyStory({ onComplete }) {
 
           <div className="policy-takeaway">
             <p className="policy-takeaway-intro">
-              Both policies move in the right direction. But neither fully
-              addresses the core tension:
+              Both laws move in the right direction. But if you&rsquo;re a renter
+              watching new buildings go up near your stop, the bottom line is:
             </p>
             <p className="policy-quote policy-quote--synthesis">
-              More housing near transit does not automatically mean
-              <em> affordable</em> housing near transit.
+              More housing near transit does not mean housing
+              <em> you</em> can afford near transit.
             </p>
           </div>
         </div>
@@ -659,67 +692,62 @@ export default function ScrollyStory({ onComplete }) {
       {/* Section 4 · Motivation */}
       <div className="section-divider" />
       <section className="scrolly-section" ref={addRef(3)}>
-        <span className="section-eyebrow">Motivation</span>
-        <h2>But Who Benefits?</h2>
+        <span className="section-eyebrow">Who Actually Gets In</span>
+        <h2>New Buildings, Same Problem</h2>
         <p>
-          Massachusetts has zoned for and funded more housing near transit. But
-          the housing that has actually been built tells a narrower story about
-          who gets to live near a train. To see it, we pulled every completed
-          and under-construction project in the state&rsquo;s MassBuilds
-          inventory and asked two questions: <em>what income levels</em> do
-          these new units serve, and <em>which transit modes</em> are they
-          clustered around?
+          So new housing <em>is</em> going up near transit. But who is it for?
+          We looked at every completed and in-progress project in the
+          state&rsquo;s MassBuilds database and asked two simple questions: at
+          what income level are these apartments priced, and which T lines
+          are they near? The answers show why the new construction you see
+          near your stop probably isn&rsquo;t making your rent any cheaper.
         </p>
 
         <MotivationPanels />
 
         <p>
-          Put together, the two charts sharpen the paradox from the background
-          section. Zoning reform and bond financing are moving housing into
-          station areas, but without an affordability requirement, the
-          neighborhoods with the best transit are the ones where the new
-          housing is most likely to be priced beyond reach of the renters who
-          would benefit most from it.
+          The pattern is clear: the stations with the best service &mdash; the
+          ones you depend on most &mdash; are surrounded by the most
+          market-rate housing. The new buildings going up near your Red Line
+          or Orange Line stop are overwhelmingly not priced for you. They&rsquo;re
+          priced for someone earning twice what you do.
         </p>
       </section>
 
       {/* Section 5 · Analysis: What's Missing */}
       <div className="section-divider" />
       <section className="scrolly-section" ref={addRef(4)}>
-        <span className="section-eyebrow">Analysis</span>
-        <h2>What&rsquo;s Missing?</h2>
+        <span className="section-eyebrow">The Missing Piece</span>
+        <h2>Why Nobody Required Affordable Units</h2>
         <p>
-          The two landmark laws move real levers. The MBTA Communities Act
-          unlocked multi-family zoning in 177 transit-served communities. The
-          Affordable Homes Act committed a historic $5.4&nbsp;billion to housing.
-          But when you look at what actually gets built under those rules,
-          a pattern emerges: both policies regulate <em>capacity</em> and{' '}
-          <em>capital</em>, and neither regulates <em>who</em> gets to live in
-          the housing that results.
+          The state changed zoning in 177 communities and committed
+          $5.4&nbsp;billion to housing. Both are real steps. But here&rsquo;s
+          what neither law does: require that a single unit near your T stop
+          be priced at a rent you can afford. They control <em>where</em>{' '}
+          housing can be built and <em>how much</em> money flows to it. They
+          don&rsquo;t control <em>who gets to live there</em>.
         </p>
 
         <PolicyGapPanels />
 
         <p>
-          Peer states have closed this gap with explicit TOD affordability
-          floors: Washington&rsquo;s 2025 law requires affordable units in every
-          transit-station-area development, and Colorado pairs density with a
-          menu of mandatory anti-displacement strategies. Massachusetts has the
-          zoning and the money. What it&rsquo;s still missing are the rules
-          that make sure the homes built near transit are ones that
-          transit-dependent households can afford.
+          Other states have figured this out. Washington now requires affordable
+          units in every development near a transit station. California
+          fast-tracks projects that include them. Massachusetts has the zoning
+          and the money &mdash; what it&rsquo;s still missing is the rule that
+          says some of those new apartments near your stop have to be ones you
+          can actually sign a lease on.
         </p>
       </section>
 
       {/* Transition · systemic gap → personal calculus */}
       <section className="scrolly-bridge" aria-hidden="false">
         <div className="scrolly-bridge-inner">
-          <span className="scrolly-bridge-eyebrow">Meanwhile</span>
+          <span className="scrolly-bridge-eyebrow">In the Meantime</span>
           <p className="scrolly-bridge-text">
-            Policy change is slow. Until Massachusetts pairs its zoning with a
-            real affordability floor, the tradeoffs don&rsquo;t disappear
-            &mdash; they move downstream, from legislators to tenants, and
-            get made <em>one budget, one commute, one lease at a time</em>.
+            Policy change is slow. And while legislators debate, you&rsquo;re
+            the one making the tradeoffs &mdash;{' '}
+            <em>one budget, one commute, one lease at a time</em>.
           </p>
           <div className="scrolly-bridge-rule" />
           <p className="scrolly-bridge-cue">So what does the map look like for you?</p>

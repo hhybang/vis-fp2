@@ -116,6 +116,71 @@
   50%      { transform: translateX(-50%) translateY(8px); }
 }
 
+/* ----- Renter voices strip (early quote callouts) ----- */
+.renter-voices {
+  padding: clamp(40px, 7vh, 72px) clamp(24px, 5vw, 56px);
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.renter-voices.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+.renter-voices-inner {
+  max-width: 980px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 28px;
+}
+.renter-voice-card {
+  margin: 0;
+  padding: 28px 24px 22px;
+  background: var(--paper-card);
+  border-left: 3px solid #DA291C;
+  border-radius: 0 6px 6px 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.renter-voice-text {
+  font-family: var(--font-serif);
+  font-size: clamp(1rem, 1.6vw, 1.15rem);
+  line-height: 1.55;
+  color: var(--ink);
+  margin: 0 0 14px;
+}
+.renter-voice-attr {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.renter-voice-name {
+  font-family: var(--font-label);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.renter-voice-area {
+  font-family: var(--font-label);
+  font-size: 11px;
+  color: var(--ink-muted);
+}
+.renter-voice-source {
+  font-family: var(--font-body);
+  font-size: 10.5px;
+  font-style: normal;
+  color: var(--ink-muted);
+  margin-top: 4px;
+}
+
+@media (max-width: 600px) {
+  .renter-voices-inner {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ----- Section divider ----- */
 .section-divider {
   width: 60px;
