@@ -242,12 +242,13 @@ function CollapseBars({ funnel }) {
       },
     ]
 
-    const width = 680
-    const margin = { top: 18, right: 96, bottom: 48, left: 200 }
+    const width = 780
+    const margin = { top: 18, right: 110, bottom: 48, left: 270 }
     const rowH = 64
     const height = margin.top + margin.bottom + stages.length * rowH
 
     svg.attr('viewBox', `0 0 ${width} ${height}`)
+    svg.attr('preserveAspectRatio', 'xMidYMid meet')
     const chartW = width - margin.left - margin.right
 
     const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`)
