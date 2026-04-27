@@ -9,7 +9,7 @@ export const GLOSSARY = {
   },
   'inclusionary floor': {
     short: 'Inclusionary floor',
-    def: 'The minimum share of units in new development that must be affordable. A "floor" is a requirement; a "cap" is a ceiling. Massachusetts has a cap, not a floor.',
+    def: 'The minimum share of units in new development that must be affordable. A "floor" is a requirement.',
   },
   'affordability floor': {
     short: 'Affordability floor',

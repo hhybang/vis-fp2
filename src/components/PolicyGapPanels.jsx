@@ -252,17 +252,13 @@ const LEVERS = [
         20% <Jargon term="inclusionary floor">inclusionary floor</Jargon>
       </>
     ),
-    short: 'Affordability floor',
-    desc:
-      'Require every TOD project near MBTA to set aside at least 20% of units as deed-restricted affordable.',
-    peer: 'CA SB 35 · Bay Area',
+    desc: 'Every TOD project reserves \u226520% as deed-restricted.',
+    peer: 'CA SB\u00a035',
   },
   {
     id: 'deep',
-    title: 'Mandatory share + affordable-housing fund',
-    short: 'Mandatory share + fund',
-    desc:
-      'Pairs upzoning with a mandatory share rule: every new multifamily project must build affordable units or pay into a city affordable-housing fund — and those fund dollars stack with LIHTC to produce deeply-affordable units.',
+    title: 'Mandatory share + housing fund',
+    desc: 'Build affordable on-site or pay in; fund $ stack with LIHTC.',
     peer: 'Seattle MHA',
   },
 ]
@@ -332,15 +328,6 @@ function fundProjectionNumbers(totalUnits, fundActive) {
     fundTotal,
     fundedAffUnitsTotal,
   }
-}
-
-// The prescription's projected total affordable share (in pp of pipeline)
-// when both levers are pulled. Used by the peer chart's MA row to draw the
-// "where MA would land" diamond.
-function prescriptionAffShare(prescriptionPct) {
-  const onSite = prescriptionPct.u30 + prescriptionPct.a3050 + prescriptionPct.a5080 + prescriptionPct.a80p
-  const fundPp = NONAFF_SHARE_AFTER_FLOOR * (FEE_PER_NONAFF_UNIT / FUND_COST_PER_AFF_UNIT) * 100
-  return onSite + fundPp
 }
 
 function ScoreboardChart({ pct, totalUnits, levers }) {
@@ -610,7 +597,7 @@ function ScoreboardChart({ pct, totalUnits, levers }) {
 }
 
 function LeverPanel({ basePct, totalUnits }) {
-  const [levers, setLevers] = useState({ floor: true, deep: true })
+  const [levers, setLevers] = useState({ floor: false, deep: false })
   const result = useMemo(() => applyLevers(basePct, levers), [basePct, levers])
   const baseNorm = useMemo(
     () => applyLevers(basePct, { floor: false, deep: false }),
@@ -650,7 +637,7 @@ function LeverPanel({ basePct, totalUnits }) {
   return (
     <div className="lever-panel">
       <div className="lever-rack" role="group" aria-label="Policy levers">
-        {LEVERS.map((lv) => {
+        {LEVERS.map((lv, i) => {
           const on = levers[lv.id]
           return (
             <button
@@ -658,19 +645,76 @@ function LeverPanel({ basePct, totalUnits }) {
               type="button"
               className={`lever ${on ? 'lever-on' : ''}`}
               aria-pressed={on}
+              aria-label={`${lv.peer} lever: ${on ? 'pulled' : 'up'} — click to ${on ? 'release' : 'pull'}`}
               onClick={() => toggle(lv.id)}
             >
-              <div className="lever-switch" aria-hidden="true">
-                <span className="lever-knob" />
-                <span className="lever-glow" />
-              </div>
+              {/* "pull me" hint on the first lever — CSS hides it the
+                  moment any lever in the rack flips on. */}
+              {i === 0 && (
+                <span className="lever-pullme" aria-hidden="true">
+                  pull me <span className="lever-pullme-arrow">&darr;</span>
+                </span>
+              )}
+              <svg
+                viewBox="0 0 80 80"
+                className="lever-svg"
+                aria-hidden="true"
+              >
+                {/* ground rail */}
+                <line
+                  x1="4"
+                  y1="74"
+                  x2="40"
+                  y2="74"
+                  stroke="#3d4732"
+                  strokeWidth="1.25"
+                  strokeLinecap="round"
+                />
+                {/* fulcrum base — wider on the bottom, pivot at the top center */}
+                <polygon points="8,74 36,74 32,64 12,64" fill="#3d4732" />
+                {/* pivot bolt */}
+                <circle cx="22" cy="64" r="3.25" fill="#1a1a1a" />
+                {/* arm group — pivot at the local origin, translated to (22,64).
+                    The viewBox is wide enough on the right (≈58 units) so the
+                    arm doesn't clip when rotated up to 80°. */}
+                <g transform="translate(22 64)">
+                  <g className="lever-arm">
+                    <line
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="-42"
+                      stroke="#5a5346"
+                      strokeWidth="5"
+                      strokeLinecap="round"
+                      className="lever-arm-shaft"
+                    />
+                    <circle
+                      cx="0"
+                      cy="-42"
+                      r="6.5"
+                      fill="#fffaee"
+                      stroke="#3d4732"
+                      strokeWidth="2"
+                      className="lever-arm-knob"
+                    />
+                    <circle
+                      cx="0"
+                      cy="-42"
+                      r="2"
+                      fill="#3d4732"
+                      className="lever-arm-knob-dot"
+                    />
+                  </g>
+                </g>
+              </svg>
               <div className="lever-text">
-                <div className="lever-eyebrow">{lv.short}</div>
                 <div className="lever-title">{lv.title}</div>
-                <div className="lever-desc">{lv.desc}</div>
-                <div className="lever-peer">{lv.peer}</div>
+                <div className="lever-desc">
+                  {lv.desc}{' '}
+                  <span className="lever-peer">&middot; {lv.peer}</span>
+                </div>
               </div>
-              <div className="lever-state" aria-hidden="true">{on ? 'ON' : 'OFF'}</div>
             </button>
           )
         })}
@@ -684,14 +728,6 @@ function LeverPanel({ basePct, totalUnits }) {
           Pull both
         </button>
       </div>
-
-      <p className="lever-legend-captions" id="lever-legend-captions">
-        One scoreboard. The bottom four bands are the on-site affordable mix
-        from the inclusionary floor, broken out by AMI band; the top green
-        band is what the in-lieu fund buys on the remaining market-rate
-        units. Pull the levers and the bands grow off the bottom.
-      </p>
-
       <div className="lever-output" aria-describedby="lever-legend-captions">
         <ScoreboardChart
           pct={result.pct}
@@ -742,32 +778,6 @@ function LeverPanel({ basePct, totalUnits }) {
           </details>
         )}
 
-        <div className="lever-workers">
-          <div className="lever-workers-eyebrow">
-            {numLevers === 0
-              ? 'Illustrative: bold = ≥1 pp in deed bands for that income. Over 80% AMI, only the workforce (80%+) band counts&mdash;not the whole <80% stack'
-              : `Bolder: ≥1 pp in bands for that income · ${workersLitUp.length} of ${WORKERS.length}`}
-          </div>
-          <div className="lever-workers-grid">
-            {WORKERS.map((w) => {
-              const mixUp = newAccess(w) - baseAccess(w) >= 1
-              const wage = `$${(w.wage / 1000).toFixed(0)}k`
-              return (
-                <div
-                  key={w.name}
-                  className={`lever-worker ${mixUp ? 'lever-worker-on' : ''}`}
-                  title={`${w.name} · ${wage} (${w.ami.toFixed(0)}% AMI)`}
-                >
-                  <span className="lever-worker-icon" aria-hidden="true">
-                    {w.icon}
-                  </span>
-                  <span className="lever-worker-name">{w.name}</span>
-                  <span className="lever-worker-wage">{wage}</span>
-                </div>
-              )
-            })}
-          </div>
-        </div>
       </div>
     </div>
   )
@@ -1040,12 +1050,12 @@ const PEER_POLICIES = [
     usesRealized: true,
     pieces: {
       zoning: { has: true, label: 'By-right TOD zoning', detail: 'MBTA Communities Act' },
-      floor: { has: false, label: 'No statewide floor', detail: 'Local IZ effectively capped at 10% at 80% AMI' },
+      floor: { has: false, label: 'No statewide floor', detail: 'Cities can require at most ~10% affordable, and only for moderate-income (80% AMI) renters' },
     },
     stats: [
       { num: '0%', unit: '', label: 'required affordable share' },
       { num: '177', unit: '', label: 'communities subject to the law' },
-      { num: 'TBD', unit: '%', label: 'pipeline share realized', dynamic: 'affPctRealized' },
+      { num: 'TBD', unit: '%', label: 'actual share being built (no requirement)', dynamic: 'affPctRealized' },
     ],
     description:
       'Zones for density near transit but sets no statewide affordability requirement. Local inclusionary ordinances above 10% at 80% AMI risk losing their as-of-right status, so a community can comply by zoning a district of entirely market-rate towers.',
@@ -1056,7 +1066,7 @@ const PEER_POLICIES = [
   },
 ]
 
-function PeerComparison({ funnel, prescriptionShare = 0, activeKey, onSelect }) {
+function PeerComparison({ funnel, activeKey, onSelect }) {
   const svgRef = useRef(null)
 
   useEffect(() => {
@@ -1065,13 +1075,7 @@ function PeerComparison({ funnel, prescriptionShare = 0, activeKey, onSelect }) 
     svg.selectAll('*').remove()
 
     const data = PEER_POLICIES.map((p) =>
-      p.usesRealized
-        ? {
-            ...p,
-            realized: funnel.affPct,
-            prescription: prescriptionShare > 0 ? prescriptionShare : null,
-          }
-        : p
+      p.usesRealized ? { ...p, realized: funnel.affPct } : p
     )
 
     const width = 740
@@ -1083,13 +1087,12 @@ function PeerComparison({ funnel, prescriptionShare = 0, activeKey, onSelect }) 
     const chartW = width - margin.left - margin.right
     const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`)
 
-    // Stretch the x-domain so the prescription diamond (which can sit
-    // higher than every peer's required floor) has room to land with its
-    // label, but never compress the everyday peer comparison below 25%.
+    // Keep the everyday peer comparison anchored at 25% so the bars stay
+    // legible, but stretch if any value (required floor or MA's realized
+    // diamond) exceeds that.
     const maxFloor = d3.max(data, (d) => d.floor) || 0
     const maxRealized = d3.max(data, (d) => d.realized || 0) || 0
-    const maxPrescription = d3.max(data, (d) => d.prescription || 0) || 0
-    const xMax = Math.max(25, Math.ceil(Math.max(maxFloor, maxRealized, maxPrescription) * 1.1))
+    const xMax = Math.max(25, Math.ceil(Math.max(maxFloor, maxRealized) * 1.1))
     const x = d3.scaleLinear().domain([0, xMax]).range([0, chartW])
     const y = d3
       .scaleBand()
@@ -1195,21 +1198,6 @@ function PeerComparison({ funnel, prescriptionShare = 0, activeKey, onSelect }) 
           .attr('stroke-width', 1.75)
       })
 
-    // Arrow marker for the today→prescription connector
-    const defs = svg.append('defs')
-    defs
-      .append('marker')
-      .attr('id', 'peer-prescription-arrow')
-      .attr('viewBox', '0 -5 10 10')
-      .attr('refX', 9)
-      .attr('refY', 0)
-      .attr('markerWidth', 6)
-      .attr('markerHeight', 6)
-      .attr('orient', 'auto')
-      .append('path')
-      .attr('d', 'M0,-4 L8,0 L0,4 L2,0 Z')
-      .attr('fill', FUND_COLOR)
-
     // Faded "today" diamond — what MA's realized share is right now.
     rows
       .filter((d) => d.realized != null)
@@ -1233,44 +1221,7 @@ function PeerComparison({ funnel, prescriptionShare = 0, activeKey, onSelect }) 
       .attr('font-weight', 600)
       .attr('font-family', 'DM Sans, Inter, sans-serif')
       .attr('fill', '#6e6e6e')
-      .text((d) => `today · ${d.realized.toFixed(1)}%`)
-
-    // Connector arrow + prescription diamond — where MA would land with
-    // both levers + the in-lieu fund.
-    rows
-      .filter((d) => d.prescription != null && d.prescription > (d.realized || 0))
-      .append('line')
-      .attr('x1', (d) => x(Math.min(d.realized || 0, xMax)) + 8)
-      .attr('x2', (d) => x(Math.min(d.prescription, xMax)) - 9)
-      .attr('y1', y.bandwidth() / 2)
-      .attr('y2', y.bandwidth() / 2)
-      .attr('stroke', FUND_COLOR)
-      .attr('stroke-width', 1.25)
-      .attr('stroke-dasharray', '3 3')
-      .attr('marker-end', 'url(#peer-prescription-arrow)')
-
-    rows
-      .filter((d) => d.prescription != null)
-      .append('path')
-      .attr('d', d3.symbol().type(d3.symbolDiamond).size(150))
-      .attr(
-        'transform',
-        (d) => `translate(${x(Math.min(d.prescription, xMax))}, ${y.bandwidth() / 2})`
-      )
-      .attr('fill', FUND_COLOR)
-      .attr('stroke', '#fff')
-      .attr('stroke-width', 1.5)
-
-    rows
-      .filter((d) => d.prescription != null)
-      .append('text')
-      .attr('x', (d) => x(Math.min(d.prescription, xMax)) + 14)
-      .attr('y', y.bandwidth() / 2 - 4)
-      .attr('font-size', 11)
-      .attr('font-weight', 700)
-      .attr('font-family', 'Inter, sans-serif')
-      .attr('fill', FUND_COLOR)
-      .text((d) => `with the prescription · ${d.prescription.toFixed(0)}%`)
+      .text((d) => `actually built · ${d.realized.toFixed(1)}%`)
 
     rows
       .append('text')
@@ -1316,7 +1267,7 @@ function PeerComparison({ funnel, prescriptionShare = 0, activeKey, onSelect }) 
       .attr('fill', '#DA291C')
       .attr('font-family', 'Inter, sans-serif')
       .text('No statewide floor')
-  }, [funnel, prescriptionShare, activeKey, onSelect])
+  }, [funnel, activeKey, onSelect])
 
   return <svg ref={svgRef} className="policy-gap-svg" />
 }
@@ -1332,7 +1283,7 @@ function PeerComparison({ funnel, prescriptionShare = 0, activeKey, onSelect }) 
    consistent across the piece.
    ========================================================================= */
 
-function PolicyExplorer({ activeKey, onSelect, peers, funnel, prescriptionShare }) {
+function PolicyExplorer({ activeKey, onSelect, peers, funnel }) {
   const active = peers.find((p) => p.key === activeKey) || peers[0]
   const dynamicValue = (stat) => {
     if (!stat.dynamic) return null
@@ -1347,13 +1298,19 @@ function PolicyExplorer({ activeKey, onSelect, peers, funnel, prescriptionShare 
         aria-label="Required affordable share, all five jurisdictions"
       >
         <figcaption className="policy-explorer-compare-cap">
-          Hover any row to read about that bill. The grey diamond is where
-          MA&rsquo;s realized share sits today; the green diamond is where
-          the prescription below would land it &darr;
+          Each <strong>bar</strong> is the affordable share that policy
+          <em> requires</em> in new transit-area development. MA&rsquo;s bar is
+          empty because the law mandates none &mdash; so for MA we plot
+          <span className="policy-compare-legend">
+            <span className="policy-compare-legend-swatch policy-compare-legend-swatch-today" aria-hidden="true" />
+            the grey diamond
+          </span>
+          instead: the share actually being built in the MBTA-near pipeline
+          today ({funnel.affPct.toFixed(1)}%). Hover any row to read about
+          that bill &darr;
         </figcaption>
         <PeerComparison
           funnel={funnel}
-          prescriptionShare={prescriptionShare}
           activeKey={activeKey}
           onSelect={onSelect}
         />
@@ -1488,9 +1445,6 @@ export default function PolicyGapPanels({ view = 'all' }) {
   const newAffShare = sumAff(mixWithBoth.pct)
   const baseDeepShare = sumDeep(breakdownPct)
   const newDeepShare = sumDeep(mixWithBoth.pct)
-  // Total projected affordable share with both levers + the in-lieu fund —
-  // drives the green "prescription" diamond on the MA row of the peer chart.
-  const prescriptionShare = prescriptionAffShare(mixWithBoth.pct)
   const totalAdded = Math.max(
     0,
     Math.round(((newAffShare - baseAffShare) / 100) * totalUnits)
@@ -1518,9 +1472,9 @@ export default function PolicyGapPanels({ view = 'all' }) {
             Three other places already pair transit-area zoning with an{' '}
             <Jargon term="affordability floor">affordability floor</Jargon>{' '}
             and an in-lieu fund. Massachusetts has the zoning &mdash; the grey
-            diamond on the MA row is where the realized share actually lands
-            today. Pull both levers below and the green diamond shows where
-            it would land instead.
+            diamond on the MA row shows the affordable share actually being
+            built today. Pull the levers below to see what a peer-style policy
+            would change.
           </p>
         </header>
 
@@ -1529,7 +1483,6 @@ export default function PolicyGapPanels({ view = 'all' }) {
           activeKey={activePeer}
           onSelect={setActivePeer}
           funnel={funnel}
-          prescriptionShare={prescriptionShare}
         />
 
         <div className="motivation-subsection-divider" role="presentation">
@@ -1558,9 +1511,6 @@ export default function PolicyGapPanels({ view = 'all' }) {
         </div>
 
         <p className="policy-explorer-close">
-          Pull both levers and the diamond on the MA row above doesn&rsquo;t
-          just catch up to California &mdash; it sits above every peer in the
-          chart. Massachusetts already passed the density.{' '}
           <strong>The affordable-share floor and the in-lieu fund are the
           two pieces left to add.</strong>
         </p>
