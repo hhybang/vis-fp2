@@ -425,6 +425,8 @@ export default function ScrollyStory({ onComplete }) {
                     id={`t-line-tab-${s.id}`}
                     className={`t-line-stop${isActive ? ' t-line-stop-active' : ''}`}
                     style={{ '--station-color': s.color }}
+                    onMouseEnter={() => setActiveStation(s.id)}
+                    onFocus={() => setActiveStation(s.id)}
                     onClick={() => setActiveStation(s.id)}
                   >
                     <span className="t-line-dot" aria-hidden="true" />
