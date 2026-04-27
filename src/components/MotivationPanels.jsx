@@ -41,6 +41,31 @@ function Jargon({ term, children }) {
   )
 }
 
+// Explains the proportional split of "affordable, no band" units (same as PolicyGap / supply useMemo).
+function WaffleMethodInfo() {
+  return (
+    <span
+      className="jargon-term motivation-method-icon"
+      tabIndex={0}
+      aria-describedby="motivation-waffle-method-tip"
+    >
+      <span className="motivation-method-glyph" aria-hidden="true">i</span>
+      <span className="jargon-tooltip" role="tooltip" id="motivation-waffle-method-tip">
+        <span className="jargon-tooltip-label">How we count the mix</span>
+        <span className="jargon-tooltip-def">
+          MassBuilds usually tags deed-restricted units with an AMI band (&lt;30% through
+          80%+). A portion are only labeled <em>affordable</em> with no band. We distribute
+          those across the four bands in proportion to units that <em>do</em> have a band
+          (identical to the way the 100% strip on the next card is computed). The waffle,
+          the legend, and the &ldquo;X of 100&rdquo; line there use the same model.
+          Market-rate is unchanged. See the footnote for how much of the pipeline is
+          affected in this data pull.
+        </span>
+      </span>
+    </span>
+  )
+}
+
 // AMI tiers used in the waffle. Tooltip text is the inline explanation
 // shown under each legend row; phrased to lead with a concrete dollar
 // income (2-person household, Boston-area HUD limits) and add a short
@@ -496,14 +521,27 @@ export default function MotivationPanels({ view = 'all' }) {
     )
   }
 
-  const { breakdown, hu, devs } = stats
-  const deepCount = breakdown.u30 + breakdown.a3050
-  const pctDeep = (deepCount / hu) * 100
+  const { hu, devs, breakdown: rawBreakdown } = stats
+  const affOtherRaw = rawBreakdown.affOther
+  const affOtherPctOfPipeline = hu > 0 ? (affOtherRaw / hu) * 100 : 0
+  // Same effective mix as the occupations copy below: `affOther` (deed-restricted
+  // but no AMI band in the data) is split across the four affordable bands
+  // proportionally, so the waffle + legend are not 2/100 here and 4/100 there.
+  const displayBreakdown = {
+    u30: supply.values.u30,
+    a3050: supply.values.a3050,
+    a5080: supply.values.a5080,
+    a80p: supply.values.a80p,
+    affOther: 0,
+    market: supply.values.market,
+  }
+  const deepTotal = displayBreakdown.u30 + displayBreakdown.a3050
+  const pctDeep = (deepTotal / hu) * 100
 
   const waffleLegend = AMI_CATS.map((c) => {
-    const count = breakdown[c.key] || 0
+    const count = displayBreakdown[c.key] || 0
     return { ...c, count, pct: (count / hu) * 100 }
-  })
+  }).filter((l) => l.key !== 'affOther' || l.count > 0)
 
   return (
     <div className="motivation-stack">
@@ -511,17 +549,23 @@ export default function MotivationPanels({ view = 'all' }) {
       {showWaffle && (
       <article className="motivation-card">
         <header className="motivation-card-header">
-          <h3>Of every 100 new homes built near MBTA transit…</h3>
+          <h3 className="motivation-h3-with-method">
+            <span>Of every 100 new homes built near MBTA transit&hellip;</span>
+            <WaffleMethodInfo />
+          </h3>
           <p className="motivation-dek">
             Across <strong>{devs.toLocaleString()}</strong> completed and in-progress developments
             near rapid transit, commuter rail, ferry, and key bus routes, the income mix of{' '}
-            <strong>{hu.toLocaleString()}</strong> new units looks like this.
+            <strong>{hu.toLocaleString()}</strong> new units looks like this. The{' '}
+            <span className="motivation-inline-i" aria-hidden="true">(i)</span> next to the
+            title explains when we have to apportion &ldquo;affordable&rdquo; units that lack
+            a band in MassBuilds.
           </p>
         </header>
 
         <div className="motivation-waffle-layout">
           <WaffleChart
-            breakdown={breakdown}
+            breakdown={displayBreakdown}
             hovered={hoverKey}
             onHover={setHoverKey}
           />
@@ -559,12 +603,31 @@ export default function MotivationPanels({ view = 'all' }) {
 
         <div className="motivation-takeaway">
           Only <strong>{pctDeep.toFixed(1)}%</strong> of new units near MBTA transit are designated for households earning below 50% AMI. Those are the renters with the least ability to afford a car, and the most to gain from living near transit. 
-          The remaining <strong>{((breakdown.market / hu) * 100).toFixed(0)}%</strong> are market-rate, with no income restriction.
+          The remaining <strong>{((displayBreakdown.market / hu) * 100).toFixed(0)}%</strong> are market-rate, with no income restriction.
         </div>
 
         <footer className="motivation-source">
-          Source: MassBuilds development inventory (Mar 2026), filtered to completed &amp;
-          under-construction projects tagged near MBTA Rapid Transit, Commuter Rail, Ferry, or Key Bus routes.
+          <p>
+            Source: MassBuilds development inventory (Mar 2026), filtered to completed &amp;
+            under-construction projects tagged near MBTA Rapid Transit, Commuter Rail, Ferry, or Key Bus routes.
+          </p>
+          <p className="motivation-source-method">
+            <strong>Method.</strong> Deed-restricted units in MassBuilds with no specific AMI
+            band are distributed across the four reported bands in proportion to band-specific
+            unit counts, so the waffle, legend, and the share on the next card use one
+            model{affOtherRaw > 0 ? (
+              <>
+                {'. '}
+                In this dataset, that is <strong>{affOtherPctOfPipeline.toFixed(1)}%</strong> of
+                the pipeline (<strong>{affOtherRaw.toLocaleString()}</strong> of{' '}
+                <strong>{hu.toLocaleString()}</strong> units, reported only as affordable with no
+                specific band, before apportioning).
+              </>
+            ) : (
+              '.'
+            )}{' '}
+            Market-rate counts are not affected.
+          </p>
         </footer>
       </article>
       )}
@@ -588,15 +651,23 @@ export default function MotivationPanels({ view = 'all' }) {
         <div className="motivation-takeaway">
           Childcare workers, line cooks, and EMTs earn under 50% AMI: only{' '}
           <strong>{((supply.values.u30 + supply.values.a3050) / supply.total * 100).toFixed(0)}</strong>{' '}
-          of every 100 new MBTA-near units are priced for them. Only at the software-engineer tier (above 80% AMI) does
+          of every 100 new MBTA-near units are priced for them, using the same unit-mix
+          model as the chart above. Only at the software-engineer tier (above 80% AMI) does
           market-rate housing near transit start to feel within reach.
         </div>
 
         <footer className="motivation-source">
-          Sources. Wages: U.S. Bureau of Labor Statistics, Occupational Employment and
-          Wage Statistics (OEWS), May 2023, Boston-Cambridge-Nashua MA-NH MSA, median
-          annual wage by SOC code. AMI base: HUD FY2024 income limits, Boston HMFA,
-          2-person 100% AMI = $127,200. Hover any dot for the underlying numbers.
+          <p>
+            Wages: U.S. Bureau of Labor Statistics, Occupational Employment and
+            Wage Statistics (OEWS), May 2023, Boston-Cambridge-Nashua MA-NH MSA, median
+            annual wage by SOC code. AMI base: HUD FY2024 income limits, Boston HMFA,
+            2-person 100% AMI = $127,200. Hover any dot for the underlying numbers.
+          </p>
+          <p className="motivation-source-method">
+            <strong>Unit-mix line.</strong> The &ldquo;of 100&rdquo; line uses the
+            same MassBuilds allocation (including no-band units) as the 100-homes
+            card above.
+          </p>
         </footer>
       </article>
       )}

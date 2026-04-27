@@ -2860,6 +2860,72 @@
   border-top: 1px solid var(--paper-rule);
 }
 
+.motivation-source p {
+  margin: 0;
+}
+
+.motivation-source p + p {
+  margin-top: 0.65em;
+}
+
+.motivation-h3-with-method {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.motivation-h3-with-method > span:first-child {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.motivation-method-icon {
+  flex: 0 0 auto;
+  border-bottom: none !important;
+  width: 1.5em;
+  height: 1.5em;
+  border: 1px solid var(--ink-faint) !important;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.5em;
+  line-height: 1;
+  margin-top: 0.2em;
+  align-self: flex-start;
+  cursor: help;
+}
+
+.motivation-method-glyph {
+  font-style: normal;
+  font-weight: 800;
+  color: var(--ink-muted);
+}
+
+.motivation-source-method {
+  color: var(--ink-muted);
+  font-size: 11px;
+  line-height: 1.45;
+  letter-spacing: 0.02em;
+  transform: scale(0.7);
+  transform-origin: top left;
+  width: 142.86%;
+  margin-bottom: -1.4em;
+}
+
+.motivation-source-method strong {
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.motivation-inline-i {
+  font-style: italic;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
