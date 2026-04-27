@@ -771,35 +771,10 @@ const PEER_POLICIES = [
       { num: '~3,800', unit: '', label: 'affordable units built or funded' },
     ],
     description:
-      'Pairs upzoning with a mandatory share rule: every new multifamily project must build affordable units or pay into a city affordable-housing fund. Closest peer in design to what an MBTA-Communities-plus-floor would look like.',
+      'Pairs upzoning with a mandatory share rule: every new multifamily project must build affordable units or pay into a city affordable-housing fund. The closest peer in design to what an MBTA-Communities-plus-floor would look like \u2014 and in 2025 Washington took it statewide with HB 1491, requiring affordable units in every TOD across the state.',
     sources: [
       { label: 'Seattle Office of Housing', url: 'https://www.seattle.gov/housing/housing-developers/mandatory-housing-affordability' },
-    ],
-  },
-  {
-    key: 'wa',
-    place: 'Washington State',
-    policy: 'HB 1491 TOD Law',
-    policyShort: 'HB 1491',
-    policyUrl: 'https://app.leg.wa.gov/billsummary?BillNumber=1491&Year=2025',
-    year: 2025,
-    floor: 10,
-    floorLabel: 'Every TOD must include affordable',
-    accent: '#4d5a3f',
-    isFocus: false,
-    pieces: {
-      zoning: { has: true, label: 'By-right TOD zoning', detail: '½-mile radius around major stops' },
-      floor: { has: true, label: 'Affordability floor', detail: 'Required share + tax exemptions' },
-    },
-    stats: [
-      { num: '½', unit: 'mile', label: 'radius around transit stops' },
-      { num: '20', unit: 'yr', label: 'property-tax exemption' },
-      { num: 'New', unit: '', label: 'just passed in 2025' },
-    ],
-    description:
-      'Requires affordable units in every residential development inside transit station areas, paired with property-tax exemptions and fee reductions as incentives. The newest model — and the closest in scope to MBTA Communities.',
-    sources: [
-      { label: 'Washington HB 1491', url: 'https://app.leg.wa.gov/billsummary?BillNumber=1491&Year=2025' },
+      { label: 'Washington HB 1491 (2025 statewide TOD law)', url: 'https://app.leg.wa.gov/billsummary?BillNumber=1491&Year=2025' },
     ],
   },
   {
@@ -901,6 +876,8 @@ function PeerComparison({ funnel, activeKey, onSelect }) {
       .attr('aria-label', (d) => (onSelect ? `Show details for ${d.place} ${d.policy}` : null))
       .style('cursor', onSelect ? 'pointer' : null)
       .on('click', onSelect ? (_, d) => onSelect(d.key) : null)
+      .on('mouseenter', onSelect ? (_, d) => onSelect(d.key) : null)
+      .on('focus', onSelect ? (_, d) => onSelect(d.key) : null)
       .on('keydown', onSelect
         ? (event, d) => {
             if (event.key === 'Enter' || event.key === ' ') {
@@ -1050,33 +1027,21 @@ function PolicyExplorer({ activeKey, onSelect, peers, funnel }) {
 
   return (
     <div className="policy-explorer">
-      <div className="policy-explorer-tabs" role="tablist" aria-label="Policy comparison">
-        {peers.map((p) => {
-          const isActive = p.key === activeKey
-          return (
-            <button
-              key={p.key}
-              type="button"
-              role="tab"
-              aria-selected={isActive}
-              aria-controls="policy-explorer-panel"
-              id={`policy-explorer-tab-${p.key}`}
-              className={`policy-explorer-tab${isActive ? ' policy-explorer-tab-active' : ''}${p.isFocus ? ' policy-explorer-tab-focus' : ''}`}
-              style={{ '--peer-accent': p.accent }}
-              onClick={() => onSelect(p.key)}
-            >
-              <span className="policy-explorer-tab-place">{p.place}</span>
-              <span className="policy-explorer-tab-policy">{p.policyShort}</span>
-              <span className="policy-explorer-tab-year">{p.year}</span>
-            </button>
-          )
-        })}
-      </div>
+      <figure
+        className="policy-explorer-compare"
+        aria-label="Required affordable share, all five jurisdictions"
+      >
+        <figcaption className="policy-explorer-compare-cap">
+          Hover or click any row to read about that bill &darr;
+        </figcaption>
+        <PeerComparison funnel={funnel} activeKey={activeKey} onSelect={onSelect} />
+      </figure>
 
       <div
         id="policy-explorer-panel"
-        role="tabpanel"
-        aria-labelledby={`policy-explorer-tab-${active.key}`}
+        role="region"
+        aria-live="polite"
+        aria-label={`${active.place}: ${active.policy}`}
         className="policy-explorer-panel"
         style={{ '--peer-accent': active.accent }}
         key={active.key}
@@ -1218,11 +1183,11 @@ export default function PolicyGapPanels({ view = 'all' }) {
         <header className="motivation-card-header">
           <h3>How to actually build affordable homes near the MBTA</h3>
           <p className="motivation-dek">
-            Four other places already pair transit-area zoning with an{' '}
+            Three other places already pair transit-area zoning with an{' '}
             <Jargon term="affordability floor">affordability floor</Jargon>.
-            Massachusetts has the zoning. Click through each to see what the
-            missing piece looks like &mdash; then test the same idea on the
-            MBTA-near pipeline below.
+            Massachusetts has the zoning. Hover any row in the chart below to
+            see how that bill works &mdash; then test the same idea on the
+            MBTA-near pipeline.
           </p>
         </header>
 
@@ -1232,13 +1197,6 @@ export default function PolicyGapPanels({ view = 'all' }) {
           onSelect={setActivePeer}
           funnel={funnel}
         />
-
-        <figure className="policy-explorer-compare" aria-label="Required affordable share, all five jurisdictions compared">
-          <figcaption className="policy-explorer-compare-cap">
-            Compare required shares &mdash; click any row to switch the panel above.
-          </figcaption>
-          <PeerComparison funnel={funnel} activeKey={activePeer} onSelect={setActivePeer} />
-        </figure>
 
         <div className="motivation-subsection-divider" role="presentation">
           <span className="motivation-subsection-kicker">
