@@ -1487,7 +1487,7 @@ export default function PolicyGapPanels({ view = 'all' }) {
         <header className="motivation-card-header">
           <h3>How MBTA-near housing policies can help build affordable homes</h3>
           <p className="motivation-dek">
-            Three other places already solved this problem by pairing transit-area zoning with an{' '}
+            Three other places have tried to address this problem by pairing transit-area zoning with an{' '}
             affordability floor and an in-lieu fund. Hover any bar to read about that policy &darr;
           </p>
         </header>

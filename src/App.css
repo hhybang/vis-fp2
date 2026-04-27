@@ -361,7 +361,8 @@ button.header-info:focus-visible {
 .map-cf-banner {
   position: absolute;
   top: 12px;
-  left: 12px;
+  /* Clear Leaflet's zoom control (top-left, ~34px wide with ~10px margin). */
+  left: 56px;
   background: rgba(107, 43, 39, 0.94);
   color: #fffaee;
   padding: 7px 12px;
