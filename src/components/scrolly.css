@@ -490,146 +490,298 @@
   50%      { opacity: 1; }
 }
 
-/* ----- Benefit Cards ----- */
-.benefit-cards {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-auto-rows: min-content;
-  align-items: start;
-  gap: 16px;
-  margin: 36px 0;
+/* ----- T-Line · "Why It Matters" interactive subway diagram ----- */
+/* Four "stations" sit on a stylized T line. Clicking a stop selects it,
+   the dot fills with that line's official MBTA color, the panel below
+   crossfades to the matching content, and the corresponding companion
+   visualization (cost panels, jobs panel, daily-needs panel, trees) is
+   driven by the same activeStation state in the component. */
+.t-line {
+  margin: 32px 0 8px;
 }
 
-.benefit-card {
+.t-line-track {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0;
+}
+
+.t-line-rail {
+  position: absolute;
+  top: 9px; /* visually centers on the 22px-tall dot */
+  left: 12.5%;
+  right: 12.5%;
+  height: 4px;
+  background: var(--paper-rule-strong);
+  z-index: 0;
+}
+
+.t-line-stop {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 0;
+  background: none;
+  border: 0;
+  padding: 0 4px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-family: inherit;
+  color: inherit;
+  transition: transform 0.2s ease;
+}
+
+.t-line-stop:hover {
+  transform: translateY(-1px);
+}
+
+.t-line-stop:focus-visible {
+  outline: 2px solid var(--station-color);
+  outline-offset: 6px;
+}
+
+.t-line-dot {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
   background: var(--paper-card);
-  border: var(--ui-card-border);
-  border-radius: 0;
-  padding: 22px 20px;
-  text-align: center;
-  box-shadow: var(--ui-card-shadow);
+  border: 4px solid var(--paper-rule-strong);
+  box-sizing: border-box;
+  transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
 }
 
-.benefit-icon {
-  font-size: 28px;
-  line-height: 1;
-  margin-bottom: 8px;
-  color: var(--ink);
+.t-line-stop:hover .t-line-dot {
+  border-color: var(--station-color);
+  transform: scale(1.1);
 }
 
-.benefit-title {
+.t-line-stop-active .t-line-dot {
+  background: var(--station-color);
+  border-color: var(--station-color);
+  transform: scale(1.18);
+  animation: t-line-dot-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes t-line-dot-pulse {
+  0%, 100% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--station-color) 22%, transparent); }
+  50%      { box-shadow: 0 0 0 12px color-mix(in srgb, var(--station-color) 8%, transparent); }
+}
+
+.t-line-label {
   font-family: var(--font-label);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
-  color: var(--ink);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  margin-bottom: 6px;
+  color: var(--ink);
+  text-align: center;
+  margin-top: 4px;
+  line-height: 1.2;
 }
 
-.benefit-desc {
-  font-size: 13px;
-  line-height: 1.55;
+.t-line-line {
+  font-family: var(--font-label);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  font-weight: 600;
+  transition: color 0.25s ease;
+}
+
+.t-line-stop-active .t-line-line {
+  color: var(--station-color);
+}
+
+/* ----- T-Line panel ----- */
+.t-line-panel {
+  margin-top: 28px;
+  background: var(--paper-card);
+  border: var(--ui-card-border);
+  border-top: 4px solid var(--station-color, var(--paper-rule-strong));
+  padding: 26px 30px 22px;
+  min-height: 240px;
+  box-shadow: var(--ui-card-shadow);
+  transition: border-top-color 0.35s ease;
+}
+
+.t-line-content {
+  animation: t-line-content-fade 0.4s ease;
+}
+
+@keyframes t-line-content-fade {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.t-line-content-eyebrow {
+  font-family: var(--font-label);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--station-color);
+  margin-bottom: 12px;
+}
+
+.t-line-stat {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.t-line-stat-num {
+  font-family: var(--font-serif);
+  font-size: 56px;
+  line-height: 1;
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.t-line-stat-unit {
+  font-family: var(--font-label);
+  font-size: 12px;
+  font-weight: 600;
   color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
-/* ----- Expandable benefit card ----- */
-.benefit-card-expandable {
-  cursor: pointer;
-  transition: box-shadow 0.3s ease, transform 0.25s ease;
+.t-line-stat-sub {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink);
+  margin-bottom: 16px;
+  max-width: 62ch;
 }
 
-.benefit-card-expandable:hover {
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-  transform: translateY(-1px);
-  z-index: 5;
+.t-line-stat-sub strong {
+  color: var(--station-color);
 }
 
-.benefit-expand {
-  max-height: 0;
-  overflow: hidden;
-  opacity: 0;
-  transition: max-height 0.4s ease, opacity 0.3s ease, margin 0.4s ease;
-  margin-top: 0;
+.t-line-compare {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
-.benefit-card-expandable:hover .benefit-expand {
-  max-height: 260px;
-  opacity: 1;
-  margin-top: 14px;
+.t-line-compare-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.expand-label {
+.t-line-compare-label {
+  font-family: var(--font-label);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink);
+  width: 96px;
+  flex-shrink: 0;
+  text-align: right;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.t-line-compare-bar {
+  flex: 1;
+  height: 14px;
+  background: rgba(0, 0, 0, 0.05);
+  position: relative;
+  display: block;
+}
+
+.t-line-compare-fill {
+  display: block;
+  height: 100%;
+  transition: width 0.6s ease;
+}
+
+.t-line-compare-fill-car  { background: #8b4a4a; }
+.t-line-compare-fill-mbta { background: var(--station-color); }
+
+.t-line-compare-val {
+  font-family: var(--font-label);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  width: 96px;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.t-line-chips {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.t-line-chip {
+  font-family: var(--font-label);
+  font-size: 12px;
+  color: var(--ink);
+  padding: 8px 12px;
+  border: 1px solid var(--paper-rule);
+  border-left: 3px solid var(--station-color);
+  background: var(--paper-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.3;
+}
+
+.t-line-chip strong {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.t-line-icons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.t-line-iconpill {
+  font-family: var(--font-label);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 5px 10px;
+  background: color-mix(in srgb, var(--station-color) 12%, var(--paper-card));
+  color: var(--station-color);
+  border: 1px solid color-mix(in srgb, var(--station-color) 35%, transparent);
+}
+
+.t-line-source-context {
   font-family: var(--font-label);
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--ink-muted);
-  margin-bottom: 10px;
-  padding-top: 12px;
-  border-top: 1px solid var(--paper-rule);
+  margin: 4px 0 8px;
 }
 
-.expand-compare {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.expand-mode {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.expand-mode-name {
+.t-line-source {
   font-family: var(--font-label);
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--ink);
-  width: 52px;
-  flex-shrink: 0;
-  text-align: right;
-}
-
-.expand-bar-track {
-  flex: 1;
-  height: 14px;
-  background: rgba(0, 0, 0, 0.04);
-  position: relative;
-}
-
-.expand-bar {
-  height: 100%;
-  transition: width 0.5s ease;
-}
-
-.expand-value {
-  font-family: var(--font-label);
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--ink-muted);
-  width: 90px;
-  flex-shrink: 0;
-  font-variant-numeric: tabular-nums;
-}
-
-.expand-saving {
-  font-size: 12px;
-  line-height: 1.5;
-  color: var(--ink);
-}
-
-.expand-saving strong {
-  color: #00843D;
-}
-
-.expand-source {
-  font-family: var(--font-label);
-  font-size: 9px;
+  font-size: 10px;
   color: var(--ink-faint);
-  margin-top: 6px;
+  margin-top: 10px;
+  border-top: 1px solid var(--paper-rule);
+  padding-top: 8px;
 }
 
 /* ----- Fixed side cost panels ----- */
@@ -1881,9 +2033,40 @@
     gap: 20px;
   }
 
-  .benefit-cards {
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
+  .t-line-track {
+    padding: 0;
+  }
+  .t-line-rail {
+    left: 12.5%;
+    right: 12.5%;
+  }
+  .t-line-stop {
+    padding: 0 2px;
+  }
+  .t-line-label {
+    font-size: 10px;
+    letter-spacing: 0.02em;
+  }
+  .t-line-line {
+    font-size: 9px;
+  }
+  .t-line-panel {
+    padding: 20px 18px;
+    min-height: unset;
+  }
+  .t-line-stat-num {
+    font-size: 40px;
+  }
+  .t-line-compare-label {
+    width: 72px;
+    font-size: 10px;
+  }
+  .t-line-compare-val {
+    width: 78px;
+    font-size: 10px;
+  }
+  .t-line-chips {
+    grid-template-columns: 1fr;
   }
 
   .scaffold-placeholder {

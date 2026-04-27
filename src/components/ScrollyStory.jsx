@@ -100,16 +100,33 @@ function pickWaversNearEdge(data, count, side) {
 const LEFT_WAVERS = pickWaversNearEdge(LEFT_DATA, 2, 'left')
 const RIGHT_WAVERS = pickWaversNearEdge(RIGHT_DATA, 1, 'right')
 
+// Four "stations" on a stylized T line. Colors are official MBTA line
+// colors: Orange (savings/value), Blue (jobs/Financial District),
+// Red (errands -- the data is keyed to Harvard Square, on the Red Line),
+// Green (planet). This is the Why-It-Matters interaction metaphor.
+const STATIONS = [
+  { id: 'savings', label: 'Your Savings',      line: 'Orange', color: '#ED8B00' },
+  { id: 'jobs',    label: 'Your Job Options',  line: 'Blue',   color: '#003DA5' },
+  { id: 'errands', label: 'Your Daily Errands', line: 'Red',    color: '#DA291C' },
+  { id: 'planet',  label: 'The Planet, Too',   line: 'Green',  color: '#00843D' },
+]
+
 export default function ScrollyStory({ onComplete }) {
   const sectionsRef = useRef([])
   const mapSectionRef = useRef(null)
-  const [treesVisible, setTreesVisible] = useState(false)
-  const [costVisible, setCostVisible] = useState(false)
-  const [needsVisible, setNeedsVisible] = useState(false)
   const [needsStop, setNeedsStop] = useState(null)
-  const [jobsVisible, setJobsVisible] = useState(false)
+  // Single source of truth for the "Why It Matters" T-line. The four
+  // companion visualizations (cost panels, jobs panel, needs panel, trees)
+  // are derived from which station the reader has selected -- but only
+  // while the section itself is on screen, so they don't bleed into
+  // adjacent sections after the reader scrolls past.
+  const [activeStation, setActiveStation] = useState('savings')
   const peopleSectionRef = useRef(null)
   const [mapOn, setMapOn] = useState(false)
+  const costVisible = mapOn && activeStation === 'savings'
+  const jobsVisible = mapOn && activeStation === 'jobs'
+  const needsVisible = mapOn && activeStation === 'errands'
+  const treesVisible = mapOn && activeStation === 'planet'
   const [peopleSectionOn, setPeopleSectionOn] = useState(false)
   const [activeQuote, setActiveQuote] = useState(null)
 
@@ -377,114 +394,154 @@ export default function ScrollyStory({ onComplete }) {
             Boston, it&rsquo;s the infrastructure that makes daily life work.
           </p>
 
-          <div className="hover-hint">Hover over each card to explore</div>
-          <div className="benefit-cards">
-            <div
-              className="benefit-card benefit-card-expandable"
-              onMouseEnter={() => setCostVisible(true)}
-              onMouseLeave={() => setCostVisible(false)}
-            >
-              <div className="benefit-icon">$</div>
-              <div className="benefit-title">Your Savings</div>
-              <div className="benefit-desc">
-                A car costs you ~$1,000/month in Greater Boston. An MBTA pass
-                is $90. That gap is rent money.
-              </div>
-              <div className="benefit-expand">
-                <div className="expand-saving">
-                  Without a car, you keep <strong>$910/month</strong>, or{' '}
-                  <strong>$10,920/year</strong>, that can go toward rent instead
-                  of a car payment.
-                </div>
-                <div className="expand-source">
-                  Data: AAA 2024 driving costs (Northeast) &amp; MBTA fare schedule
-                </div>
-              </div>
+          <div className="t-line" role="tablist" aria-label="Why your T stop matters">
+            <div className="t-line-track">
+              <span className="t-line-rail" aria-hidden="true" />
+              {STATIONS.map((s) => {
+                const isActive = activeStation === s.id
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={isActive}
+                    aria-controls="t-line-panel"
+                    id={`t-line-tab-${s.id}`}
+                    className={`t-line-stop${isActive ? ' t-line-stop-active' : ''}`}
+                    style={{ '--station-color': s.color }}
+                    onClick={() => setActiveStation(s.id)}
+                  >
+                    <span className="t-line-dot" aria-hidden="true" />
+                    <span className="t-line-label">{s.label}</span>
+                    <span className="t-line-line">{s.line} Line</span>
+                  </button>
+                )
+              })}
             </div>
+
             <div
-              className="benefit-card benefit-card-expandable"
-              onMouseEnter={() => setJobsVisible(true)}
-              onMouseLeave={() => setJobsVisible(false)}
+              id="t-line-panel"
+              role="tabpanel"
+              aria-labelledby={`t-line-tab-${activeStation}`}
+              className="t-line-panel"
+              style={{ '--station-color': STATIONS.find((s) => s.id === activeStation)?.color }}
             >
-              <div className="benefit-icon">&#9719;</div>
-              <div className="benefit-title">Your Job Options</div>
-              <div className="benefit-desc">
-                Living near a T stop puts you within reach of the region&rsquo;s
-                biggest job centers, without needing a car to get there.
-              </div>
-              <div className="benefit-expand">
-                <div className="expand-saving">
-                  The Financial District, Kendall Square, Back Bay, Longwood:
-                  each is just <strong>minutes on foot</strong> from
-                  a T station. Move away from transit and those commutes get
-                  longer, costlier, or impossible.
-                </div>
-                <div className="expand-source">
-                  Data: MBTA station locations &amp; BLS employment estimates
-                </div>
-              </div>
-            </div>
-            <div
-              className="benefit-card benefit-card-expandable"
-              onMouseEnter={() => setNeedsVisible(true)}
-              onMouseLeave={() => setNeedsVisible(false)}
-            >
-              <div className="benefit-icon">&#9878;</div>
-              <div className="benefit-title">Your Daily Errands</div>
-              <div className="benefit-desc">
-                Groceries, a clinic, your kid&rsquo;s school: near a T
-                stop, these are a walk away. Further out, each errand becomes a
-                trip.
-              </div>
-              <div className="benefit-expand">
-                <div className="expand-saving">
-                  Near <strong>{needsStop?.name || 'Harvard Square'}</strong>, there are{' '}
-                  <strong>{needsStop?.total || '150+'} daily-need destinations</strong> within
-                  a 10-minute walk. That&rsquo;s the kind of access you lose
-                  when you&rsquo;re priced out of a transit neighborhood.
-                </div>
-                <div className="expand-source">
-                  Data: OpenStreetMap amenities, 800m radius
-                </div>
-              </div>
-            </div>
-            <div
-              className="benefit-card benefit-card-expandable"
-              onMouseEnter={() => setTreesVisible(true)}
-              onMouseLeave={() => setTreesVisible(false)}
-            >
-              <div className="benefit-icon">&#9729;</div>
-              <div className="benefit-title">The Planet, Too</div>
-              <div className="benefit-desc">
-                Taking the T instead of driving cuts your transportation
-                emissions by more than half.
-              </div>
-              <div className="benefit-expand">
-                <div className="expand-label">5-mile commute, round trip, 250 days/year</div>
-                <div className="expand-compare">
-                  <div className="expand-mode">
-                    <div className="expand-mode-name">Driving</div>
-                    <div className="expand-bar-track">
-                      <div className="expand-bar" style={{ width: '100%', background: '#8b4a4a' }} />
-                    </div>
-                    <div className="expand-value">533 kg CO&#8322;/yr</div>
+              {activeStation === 'savings' && (
+                <div className="t-line-content" key="savings">
+                  <div className="t-line-content-eyebrow">Orange Line &middot; Your Savings</div>
+                  <div className="t-line-stat">
+                    <span className="t-line-stat-num">$910</span>
+                    <span className="t-line-stat-unit">/month, or $10,920/year</span>
                   </div>
-                  <div className="expand-mode">
-                    <div className="expand-mode-name">MBTA</div>
-                    <div className="expand-bar-track">
-                      <div className="expand-bar" style={{ width: '47%', background: '#00843D' }} />
+                  <div className="t-line-stat-sub">
+                    A car costs ~<strong>$1,000/month</strong> in Greater Boston. An MBTA
+                    pass is <strong>$90</strong>. That gap is rent money.
+                  </div>
+                  <div className="t-line-compare">
+                    <div className="t-line-compare-row">
+                      <span className="t-line-compare-label">Owning a car</span>
+                      <span className="t-line-compare-bar">
+                        <span className="t-line-compare-fill t-line-compare-fill-car" style={{ width: '100%' }} />
+                      </span>
+                      <span className="t-line-compare-val">$1,000/mo</span>
                     </div>
-                    <div className="expand-value">250 kg CO&#8322;/yr</div>
+                    <div className="t-line-compare-row">
+                      <span className="t-line-compare-label">MBTA pass</span>
+                      <span className="t-line-compare-bar">
+                        <span className="t-line-compare-fill t-line-compare-fill-mbta" style={{ width: '9%' }} />
+                      </span>
+                      <span className="t-line-compare-val">$90/mo</span>
+                    </div>
+                  </div>
+                  <div className="t-line-source">
+                    Data: AAA 2024 driving costs (Northeast) &amp; MBTA fare schedule
                   </div>
                 </div>
-                <div className="expand-saving">
-                  Switching saves <strong>283 kg CO&#8322;</strong> per year, about
-                  the same climate benefit as planting 13 trees.
+              )}
+
+              {activeStation === 'jobs' && (
+                <div className="t-line-content" key="jobs">
+                  <div className="t-line-content-eyebrow">Blue Line &middot; Your Job Options</div>
+                  <div className="t-line-stat">
+                    <span className="t-line-stat-num">4</span>
+                    <span className="t-line-stat-unit">major job centers, all reachable on the T</span>
+                  </div>
+                  <div className="t-line-stat-sub">
+                    Each is just <strong>minutes on foot</strong> from a station. Move
+                    away from transit and these commutes get longer, costlier, or
+                    impossible.
+                  </div>
+                  <div className="t-line-chips">
+                    <span className="t-line-chip"><strong>Financial District</strong>State / Downtown Crossing</span>
+                    <span className="t-line-chip"><strong>Kendall Square</strong>Kendall/MIT</span>
+                    <span className="t-line-chip"><strong>Back Bay</strong>Back Bay</span>
+                    <span className="t-line-chip"><strong>Longwood</strong>Longwood Medical Area</span>
+                  </div>
+                  <div className="t-line-source">
+                    Data: MBTA station locations &amp; BLS employment estimates
+                  </div>
                 </div>
-                <div className="expand-source">
-                  Data: CBO &amp; Our World in Data, per-passenger-mile estimates
+              )}
+
+              {activeStation === 'errands' && (
+                <div className="t-line-content" key="errands">
+                  <div className="t-line-content-eyebrow">Red Line &middot; Your Daily Errands</div>
+                  <div className="t-line-stat">
+                    <span className="t-line-stat-num">{needsStop?.total || '150+'}</span>
+                    <span className="t-line-stat-unit">daily-need destinations within a 10-minute walk</span>
+                  </div>
+                  <div className="t-line-stat-sub">
+                    Near <strong>{needsStop?.name || 'Harvard Square'}</strong>, groceries,
+                    a clinic, your kid&rsquo;s school: each is a walk away. That&rsquo;s
+                    the kind of access you lose when you&rsquo;re priced out of a transit
+                    neighborhood.
+                  </div>
+                  <div className="t-line-icons">
+                    <span className="t-line-iconpill">Groceries</span>
+                    <span className="t-line-iconpill">Clinics</span>
+                    <span className="t-line-iconpill">Schools</span>
+                    <span className="t-line-iconpill">Pharmacies</span>
+                    <span className="t-line-iconpill">Cafes</span>
+                  </div>
+                  <div className="t-line-source">
+                    Data: OpenStreetMap amenities, 800m radius
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {activeStation === 'planet' && (
+                <div className="t-line-content" key="planet">
+                  <div className="t-line-content-eyebrow">Green Line &middot; The Planet, Too</div>
+                  <div className="t-line-stat">
+                    <span className="t-line-stat-num">&minus;53%</span>
+                    <span className="t-line-stat-unit">CO&#8322; vs driving</span>
+                  </div>
+                  <div className="t-line-stat-sub">
+                    Switching saves <strong>283 kg CO&#8322;</strong> per year &mdash;
+                    about the same climate benefit as planting <strong>13 trees</strong>.
+                  </div>
+                  <div className="t-line-source-context">5-mile commute, round trip, 250 days/year</div>
+                  <div className="t-line-compare">
+                    <div className="t-line-compare-row">
+                      <span className="t-line-compare-label">Driving</span>
+                      <span className="t-line-compare-bar">
+                        <span className="t-line-compare-fill t-line-compare-fill-car" style={{ width: '100%' }} />
+                      </span>
+                      <span className="t-line-compare-val">533 kg/yr</span>
+                    </div>
+                    <div className="t-line-compare-row">
+                      <span className="t-line-compare-label">MBTA</span>
+                      <span className="t-line-compare-bar">
+                        <span className="t-line-compare-fill t-line-compare-fill-mbta" style={{ width: '47%' }} />
+                      </span>
+                      <span className="t-line-compare-val">250 kg/yr</span>
+                    </div>
+                  </div>
+                  <div className="t-line-source">
+                    Data: CBO &amp; Our World in Data, per-passenger-mile estimates
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
