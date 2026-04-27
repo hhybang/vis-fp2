@@ -476,6 +476,52 @@
   margin-bottom: 0;
 }
 
+.scrolly-section .policy-section-bridge {
+  font-family: var(--font-serif);
+  font-size: clamp(18px, 2.1vw, 22px);
+  line-height: 1.55;
+  color: var(--ink);
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  max-width: 720px;
+  margin: 0 auto 36px;
+  padding: 0 12px;
+  text-align: left;
+}
+
+.scrolly-section .policy-section-bridge em {
+  font-style: italic;
+  color: #6b1a12;
+  font-weight: 600;
+}
+
+/* Modest header above the policy-laws Venn diagram. */
+.venn-section-header {
+  max-width: 760px;
+  margin: 0 auto 28px;
+  padding: 0 12px;
+  text-align: center;
+}
+
+.venn-section-title {
+  font-family: var(--font-display, var(--font-serif));
+  font-size: clamp(20px, 2.3vw, 26px);
+  line-height: 1.25;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0 0 10px;
+  letter-spacing: -0.005em;
+}
+
+.venn-section-dek {
+  font-family: var(--font-label, 'DM Sans', sans-serif);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-muted);
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+
 .hover-hint {
   font-family: var(--font-label);
   font-size: 11px;
@@ -2737,6 +2783,39 @@
 .motivation-takeaway strong {
   font-weight: 800;
   color: #DA291C;
+}
+
+/* Sub-section bridge inside a single combined motivation-card.
+   Used to separate "prescription" (levers) from "proof" (peer states)
+   while keeping them in one editorial unit. */
+.motivation-subsection-divider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 36px 0 18px;
+}
+
+.motivation-subsection-divider::before,
+.motivation-subsection-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--paper-rule);
+}
+
+.motivation-subsection-kicker {
+  font-family: var(--font-label, 'DM Sans', sans-serif);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+.motivation-dek--inline {
+  margin-top: 0;
+  margin-bottom: 18px;
 }
 
 .motivation-source {

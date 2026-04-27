@@ -257,18 +257,9 @@ const LEVERS = [
 const BOSTON_AMI_100_2P = 127200
 const WORKERS = [
   { name: 'Retail salesperson', wage: 36170, icon: '🛍️' },
-  { name: 'Home health aide', wage: 37440, icon: '🏥' },
-  { name: 'Childcare worker', wage: 39120, icon: '🧸' },
-  { name: 'Janitor', wage: 39940, icon: '🧹' },
-  { name: 'Line cook', wage: 44200, icon: '🍳' },
   { name: 'Preschool teacher', wage: 45300, icon: '✏️' },
-  { name: 'EMT', wage: 46090, icon: '🚑' },
-  { name: 'MBTA bus driver', wage: 62520, icon: '🚌' },
-  { name: 'Construction laborer', wage: 62920, icon: '🔨' },
   { name: 'Firefighter', wage: 75050, icon: '🚒' },
-  { name: 'Police officer', wage: 76560, icon: '🚓' },
-  { name: 'Elementary teacher', wage: 87660, icon: '🍎' },
-  { name: 'Registered nurse', wage: 100360, icon: '💉' },
+  { name: 'Software engineer', wage: 135300, icon: '💻' },
 ].map((w) => ({ ...w, ami: (w.wage / BOSTON_AMI_100_2P) * 100 }))
 
 function workerTier(ami) {
@@ -440,7 +431,7 @@ function LeverPanel({ basePct, totalUnits }) {
 
         <div className="lever-workers">
           <div className="lever-workers-eyebrow">
-            Workers who gain access {numLevers === 0 ? '(pull a lever to start)' : `(${workersLitUp.length}/13)`}
+            Workers who gain access {numLevers === 0 ? '(pull a lever to start)' : `(${workersLitUp.length}/${WORKERS.length})`}
           </div>
           <div className="lever-workers-grid">
             {WORKERS.map((w) => {
@@ -468,7 +459,7 @@ function LeverPanel({ basePct, totalUnits }) {
 /* =========================================================================
    Viz B · The Worker Picker
    --------------------------------------------------------------------------
-   Pick one of 13 Greater Boston occupations. A grid of 100 little "houses"
+   Pick one of a handful of representative Greater Boston occupations. A grid of 100 little "houses"
    recolors live to show: under today's law, how many of every 100 new MBTA-
    near homes are priced for her — and how that changes if MA adds a 20%
    inclusionary floor at 50% AMI. Designed for empathy: the abstract policy
@@ -520,30 +511,17 @@ function buildHouseLayout(pct) {
 }
 
 function WorkerPicker({ basePct, totalUnits }) {
-  const [selected, setSelected] = useState('Childcare worker')
-  const [showFloor, setShowFloor] = useState(false)
+  const [selected, setSelected] = useState('Preschool teacher')
 
-  const worker = WORKERS.find((w) => w.name === selected) || WORKERS[2]
+  const worker = WORKERS.find((w) => w.name === selected) || WORKERS[1]
   const tiers = tiersAccessibleTo(worker.ami)
   const accessibleTier = workerTier(worker.ami)
 
-  // Apply the proposed package: 20% floor + deep AMI cap.
-  const projected = useMemo(
-    () => applyLevers(basePct, { floor: true, deep: true }).pct,
-    [basePct]
-  )
+  const houses = useMemo(() => buildHouseLayout(basePct), [basePct])
 
-  const housesNow = useMemo(() => buildHouseLayout(basePct), [basePct])
-  const housesNew = useMemo(() => buildHouseLayout(projected), [projected])
-  const houses = showFloor ? housesNew : housesNow
-
-  // Per-100 counts she can compete for
-  const accessibleCount = (layout) => layout.filter((k) => tiers.has(k)).length
-  const nowCount = accessibleCount(housesNow)
-  const newCount = accessibleCount(housesNew)
+  // Per-100 count she can compete for under today's policy.
+  const nowCount = houses.filter((k) => tiers.has(k)).length
   const realNow = Math.round((nowCount / 100) * totalUnits)
-  const realNew = Math.round((newCount / 100) * totalUnits)
-  const delta = realNew - realNow
 
   return (
     <div className="worker-picker">
@@ -584,24 +562,6 @@ function WorkerPicker({ basePct, totalUnits }) {
             </div>
           </div>
 
-          <div className="worker-toggle" role="group" aria-label="Toggle policy state">
-            <button
-              type="button"
-              className={`worker-toggle-btn ${!showFloor ? 'on' : ''}`}
-              onClick={() => setShowFloor(false)}
-              aria-pressed={!showFloor}
-            >
-              Today
-            </button>
-            <button
-              type="button"
-              className={`worker-toggle-btn ${showFloor ? 'on' : ''}`}
-              onClick={() => setShowFloor(true)}
-              aria-pressed={showFloor}
-            >
-              With 20% floor at 50% AMI
-            </button>
-          </div>
         </div>
 
         <div className="worker-picker-layout">
@@ -635,9 +595,7 @@ function WorkerPicker({ basePct, totalUnits }) {
             <div className="worker-callout-row">
               <div className="worker-callout-eyebrow">Of every 100 new homes near MBTA</div>
               <div className="worker-callout-num">
-                <span className={`worker-callout-now ${!showFloor ? 'is-active' : ''}`}>{nowCount}</span>
-                <span className="worker-callout-arrow">→</span>
-                <span className={`worker-callout-new ${showFloor ? 'is-active' : ''}`}>{newCount}</span>
+                <span className="worker-callout-now is-active">{nowCount}</span>
               </div>
               <div className="worker-callout-sub">
                 priced for a {worker.name.toLowerCase()}
@@ -648,13 +606,9 @@ function WorkerPicker({ basePct, totalUnits }) {
               <div className="worker-callout-eyebrow">In real units already in the MBTA-near pipeline</div>
               <div className="worker-callout-real-row">
                 <span>{realNow.toLocaleString()}</span>
-                <span className="worker-callout-arrow">→</span>
-                <span className="worker-callout-real-new">{realNew.toLocaleString()}</span>
               </div>
               <div className="worker-callout-delta">
-                {delta > 0
-                  ? `+${delta.toLocaleString()} more homes a ${worker.name.toLowerCase()} could compete for`
-                  : 'No change'}
+                homes a {worker.name.toLowerCase()} can currently compete for
               </div>
             </div>
 
@@ -920,7 +874,12 @@ function PeerComparison({ funnel }) {
    Section wrapper
    ========================================================================= */
 
-export default function PolicyGapPanels() {
+export default function PolicyGapPanels({ view = 'all' }) {
+  // 'levers' renders the merged prescription + peer-evidence article
+  // (the standalone peers view has been folded into 'levers' for narrative flow).
+  const showLevers = view === 'all' || view === 'levers' || view === 'peers'
+  const showWorkers = view === 'all' || view === 'workers'
+
   const [builds, setBuilds] = useState(null)
   const [error, setError] = useState(false)
 
@@ -955,15 +914,18 @@ export default function PolicyGapPanels() {
 
   return (
     <div className="motivation-stack">
-      {/* Viz 1: The Lever Rack — interactive prescription */}
-      <article className="motivation-card">
+      {/* Viz 1+3 merged: Prescription (levers) + Proof (peer states) */}
+      {showLevers && (
+      <article className="motivation-card motivation-card--combined">
         <header className="motivation-card-header">
           <h3>How to actually build affordable homes near the MBTA: pull these three levers.</h3>
           <p className="motivation-dek">
-            The MBTA Communities Act zones for density. The Affordable Homes Act funds construction.
-            Neither requires that the homes be priced for the working renters who depend on transit.
-            Three policy levers — already in place in peer states — would turn that capacity into
-            homes for workers. Toggle them below to see how the unit mix shifts.
+            The MBTA Communities Act zones for density. The Affordable Homes Act funds
+            construction. Neither requires that the homes be priced for the working renters who
+            depend on transit. The fix is a third lever, an{' '}
+            <Jargon term="affordability floor">affordability floor</Jargon> near transit, and
+            it&rsquo;s already in place in peer states. Toggle the levers below to see how the
+            unit mix would shift.
           </p>
         </header>
 
@@ -971,65 +933,23 @@ export default function PolicyGapPanels() {
 
         <div className="motivation-takeaway">
           With all three levers pulled, MA would build roughly{' '}
-          <strong>1 in 5 new MBTA-near homes</strong> at deed-restricted prices — and{' '}
+          <strong>1 in 5 new MBTA-near homes</strong> at deed-restricted prices, and{' '}
           <strong>1 in 10</strong> at <Jargon term="deep affordability">deep affordability</Jargon>{' '}
-          (under 50% <Jargon term="AMI">AMI</Jargon>) — without changing a single line of zoning code.
-          The blueprint is already proven from California to Maryland to Washington.
+          (under 50% <Jargon term="AMI">AMI</Jargon>), without changing a single line of zoning code.
         </div>
 
-        <footer className="motivation-source">
-          Counterfactual model: 20% inclusionary floor with at least half of the affordable share
-          targeted at &le;50% AMI, applied to the {totalUnits.toLocaleString()} MBTA-near units in
-          the MassBuilds pipeline (Mar 2026). Sources:{' '}
-          <a href="https://www.mass.gov/info-details/multi-family-zoning-requirement-for-mbta-communities" target="_blank" rel="noopener noreferrer">MBTA Communities</a>{' '}·{' '}
-          <a href="https://www.mass.gov/info-details/the-affordable-homes-act-smart-housing-livable-communities" target="_blank" rel="noopener noreferrer">Affordable Homes Act</a>{' '}·{' '}
-          <a href="https://www.mapc.org/planning101/affordability-effectiveness-section-3a/" target="_blank" rel="noopener noreferrer">MAPC Section 3A analysis</a>.
-        </footer>
-      </article>
-
-      {/* Viz 2: Worker Picker — interactive empathy */}
-      <article className="motivation-card">
-        <header className="motivation-card-header">
-          <h3>Pick a worker. See the homes near her T stop.</h3>
-          <p className="motivation-dek">
-            A line cook makes $44k. A childcare worker, $39k. A registered nurse, $100k. Each
-            occupies a different rung of the income ladder — and the housing built next to their
-            bus stops treats them very differently. Tap a worker to see how many of every 100
-            new MBTA-near homes she can compete for, and how that changes with the proposed
-            floor.
-          </p>
-        </header>
-
-        <WorkerPicker basePct={breakdownPct} totalUnits={totalUnits} />
-
-        <div className="motivation-takeaway">
-          Today, a <strong>childcare worker</strong> can compete for fewer than 7 of every 100
-          new MBTA-near homes. With a 20% floor at 50% AMI, that more than triples — and the
-          same lever delivers homes for line cooks, EMTs, teachers, and nurses too. Affordability
-          isn&rsquo;t one bracket; it&rsquo;s a ladder, and the floor adds rungs near the bottom.
+        <div className="motivation-subsection-divider" role="presentation">
+          <span className="motivation-subsection-kicker">And the blueprint is already proven</span>
         </div>
 
-        <footer className="motivation-source">
-          Wages: U.S. Bureau of Labor Statistics, OEWS, May 2023, Boston-Cambridge-Nashua MA-NH
-          MSA, median annual wage by SOC code. AMI base: HUD FY2024 income limits, Boston HMFA,
-          2-person 100% AMI = $127,200. Unit mix: MassBuilds (Mar 2026), MBTA-served projects
-          completed and under construction.
-        </footer>
-      </article>
-
-      {/* Viz 3: Peer comparison */}
-      <article className="motivation-card">
-        <header className="motivation-card-header">
-          <h3>Peer states already paired their density laws with a floor.</h3>
-          <p className="motivation-dek">
-            Massachusetts isn&rsquo;t the first state to <Jargon term="upzone">upzone</Jargon>{' '}
-            near transit. Four peer jurisdictions paired density with a{' '}
-            <strong>statewide or county-wide <Jargon term="affordability floor">affordability
-            floor</Jargon></strong> — the exact lever MBTA Communities left out. The bar shows
-            each regime&rsquo;s required affordable share; the black diamond on the top row is
-            what MA actually built near the T, with no floor in place.
-          </p>
-        </header>
+        <p className="motivation-dek motivation-dek--inline">
+          Massachusetts isn&rsquo;t the first state to <Jargon term="upzone">upzone</Jargon>{' '}
+          near transit. Four peer jurisdictions paired density with a{' '}
+          <strong>statewide or county-wide <Jargon term="affordability floor">affordability
+          floor</Jargon></strong>, the exact lever MBTA Communities left out. The bar shows
+          each regime&rsquo;s required affordable share; the black diamond on the top row is
+          what MA actually built near the T, with no floor in place.
+        </p>
 
         <PeerComparison funnel={funnel} />
 
@@ -1053,13 +973,43 @@ export default function PolicyGapPanels() {
         </div>
 
         <footer className="motivation-source">
-          Sources:{' '}
+          Counterfactual model: 20% inclusionary floor with at least half of the affordable share
+          targeted at &le;50% AMI, applied to the {totalUnits.toLocaleString()} MBTA-near units in
+          the MassBuilds pipeline (Mar 2026). Peer policies:{' '}
           <a href="https://montgomerycountymd.gov/DHCA/housing/singlefamily/mpdu/produced.html" target="_blank" rel="noopener noreferrer">Montgomery County MPDU</a>{' '}·{' '}
           <a href="https://www.seattle.gov/housing/housing-developers/mandatory-housing-affordability" target="_blank" rel="noopener noreferrer">Seattle MHA</a>{' '}·{' '}
           <a href="https://ternercenter.berkeley.edu/research-and-policy/sb-35-evaluation/" target="_blank" rel="noopener noreferrer">Terner Center SB 35 evaluation</a>{' '}·{' '}
           <a href="https://app.leg.wa.gov/billsummary?BillNumber=1491&Year=2025" target="_blank" rel="noopener noreferrer">Washington HB 1491</a>.
+          {' '}MA context:{' '}
+          <a href="https://www.mass.gov/info-details/multi-family-zoning-requirement-for-mbta-communities" target="_blank" rel="noopener noreferrer">MBTA Communities</a>{' '}·{' '}
+          <a href="https://www.mass.gov/info-details/the-affordable-homes-act-smart-housing-livable-communities" target="_blank" rel="noopener noreferrer">Affordable Homes Act</a>{' '}·{' '}
+          <a href="https://www.mapc.org/planning101/affordability-effectiveness-section-3a/" target="_blank" rel="noopener noreferrer">MAPC Section 3A analysis</a>.
         </footer>
       </article>
+      )}
+
+      {/* Viz 2: Worker Picker — interactive empathy */}
+      {showWorkers && (
+      <article className="motivation-card">
+        <header className="motivation-card-header">
+          <h3>Pick a worker. See the homes near her T stop.</h3>
+          <p className="motivation-dek">
+            Tap a worker
+            to see how many of every 100 new MBTA-near homes she can compete for.
+          </p>
+        </header>
+
+        <WorkerPicker basePct={breakdownPct} totalUnits={totalUnits} />
+
+        <footer className="motivation-source">
+          Wages: U.S. Bureau of Labor Statistics, OEWS, May 2023, Boston-Cambridge-Nashua MA-NH
+          MSA, median annual wage by SOC code. AMI base: HUD FY2024 income limits, Boston HMFA,
+          2-person 100% AMI = $127,200. Unit mix: MassBuilds (Mar 2026), MBTA-served projects
+          completed and under construction.
+        </footer>
+      </article>
+      )}
+
     </div>
   )
 }

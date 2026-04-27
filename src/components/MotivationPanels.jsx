@@ -156,6 +156,7 @@ const OCCUPATIONS = [
   { name: 'Police officer', wage: 76560, soc: '33-3051' },
   { name: 'Elementary school teacher', wage: 87660, soc: '25-2021' },
   { name: 'Registered nurse', wage: 100360, soc: '29-1141' },
+  { name: 'Software engineer', wage: 135300, soc: '15-1252' },
 ]
 
 function allocateWaffle(breakdown) {
@@ -436,7 +437,9 @@ function OccupationStrip() {
 }
 
 
-export default function MotivationPanels() {
+export default function MotivationPanels({ view = 'all' }) {
+  const showWaffle = view === 'all' || view === 'waffle'
+  const showOccupations = view === 'all' || view === 'occupations'
   const [builds, setBuilds] = useState(null)
   const [error, setError] = useState(false)
   const [hoverKey, setHoverKey] = useState(null)
@@ -505,6 +508,7 @@ export default function MotivationPanels() {
   return (
     <div className="motivation-stack">
       {/* Visualization 1: Waffle chart */}
+      {showWaffle && (
       <article className="motivation-card">
         <header className="motivation-card-header">
           <h3>Of every 100 new homes built near MBTA transit…</h3>
@@ -564,16 +568,19 @@ export default function MotivationPanels() {
           under-construction projects tagged near MBTA Rapid Transit, Commuter Rail, Ferry, or Key Bus routes.
         </footer>
       </article>
+      )}
 
       {/* Visualization 2: Who is the new housing actually for? */}
+      {showOccupations && (
       <article className="motivation-card">
         <header className="motivation-card-header">
           <h3>The people who keep Boston running can&rsquo;t afford the housing built next to their bus stop.</h3>
           <p className="motivation-dek">
             Across <strong>{OCCUPATIONS.length}</strong> common Greater Boston occupations,
-            from childcare workers and line cooks to teachers and nurses, median wages
-            line up against the same <Jargon term="AMI">AMI</Jargon> tiers shown in the
-            unit-mix waffle above.
+            from childcare workers and line cooks at the bottom of the wage ladder to
+            teachers, nurses, and software engineers at the top, median wages line up
+            against the same <Jargon term="AMI">AMI</Jargon> tiers shown in the unit-mix
+            waffle above.
           </p>
         </header>
 
@@ -582,9 +589,10 @@ export default function MotivationPanels() {
         <div className="motivation-takeaway">
           Childcare workers, line cooks, and EMTs earn under 50% AMI: only{' '}
           <strong>{((supply.values.u30 + supply.values.a3050) / supply.total * 100).toFixed(0)}</strong>{' '}
-          of every 100 new MBTA-near units are priced for them. Even elementary
-          teachers and registered nurses (60&ndash;80% AMI) would need a
-          deed-restricted lottery to afford most of the rest.
+          of every 100 new MBTA-near units are priced for them. Even elementary teachers
+          and registered nurses (60&ndash;80% AMI) would need a deed-restricted lottery to
+          afford most of the rest. Only at the software-engineer tier (above 80% AMI) does
+          market-rate housing near transit start to feel within reach.
         </div>
 
         <footer className="motivation-source">
@@ -594,6 +602,7 @@ export default function MotivationPanels() {
           2-person 100% AMI = $127,200. Hover any dot for the underlying numbers.
         </footer>
       </article>
+      )}
     </div>
   )
 }

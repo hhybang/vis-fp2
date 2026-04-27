@@ -362,7 +362,7 @@ export default function ScrollyStory({ onComplete }) {
             <span className="scrolly-hero-title-accent">Transit</span>
           </h1>
           <p className="subtitle">
-            How Massachusetts&rsquo; two landmark housing laws can come together
+            How Massachusetts&rsquo; policies can come together
             to expand affordable homes near the MBTA.
           </p>
           <p className="scrolly-hero-authors">
@@ -631,33 +631,54 @@ export default function ScrollyStory({ onComplete }) {
             distance of an MBTA station.
             </p>
           </div>
-          <PolicyVenn />
         </div>
       </section>
 
-      {/* Section 4 · Motivation */}
+      {/* Section 3 · Of every 100 new homes (waffle) */}
       <div className="section-divider" />
       <section className="scrolly-section" ref={addRef(3)}>
-        <MotivationPanels />
+        <MotivationPanels view="waffle" />
       </section>
 
-      {/* Section 5 · Analysis: What's Missing */}
+      {/* Section 4 · The people who keep Boston running (occupations) */}
       <div className="section-divider" />
       <section className="scrolly-section" ref={addRef(4)}>
+        <MotivationPanels view="occupations" />
+      </section>
 
-        <PolicyGapPanels />
+      {/* Section 5 · Pick a worker */}
+      <div className="section-divider" />
+      <section className="scrolly-section" ref={addRef(5)}>
+        <PolicyGapPanels view="workers" />
+      </section>
 
-        <p>
-          The blueprint isn&rsquo;t hypothetical. Washington requires
-          affordable units in every development near a transit station;
-          California fast-tracks projects that include them; Montgomery
-          County has been doing it since 1974. Massachusetts already has
-          the zoning capacity from MBTA Communities and the $5.4 billion
-          from the Affordable Homes Act. Adding a statewide affordability
-          floor near transit would convert that capacity into homes a
-          line cook, a teacher, or a home health aide can actually afford
-          near the station they take to work.
+      {/* Section 6 · Two Landmark Laws · Venn Diagram */}
+      <div className="section-divider" />
+      <section className="scrolly-section" ref={addRef(6)}>
+        <header className="venn-section-header">
+          <h3 className="venn-section-title">
+            Two state housing laws shape what gets built near MBTA stations.
+          </h3>
+          <p className="venn-section-dek">
+            Hover each circle to see what each law does, and where they
+            don&rsquo;t quite meet.
+          </p>
+        </header>
+        <PolicyVenn />
+      </section>
+
+      {/* Section 7 · Bridge paragraph + The three levers */}
+      <div className="section-divider" />
+      <section className="scrolly-section" ref={addRef(7)}>
+        <p className="policy-section-bridge">
+          Both laws control <em>where</em> housing gets built and{' '}
+          <em>how much</em> money flows to it. Neither controls{' '}
+          <em>who gets to live there</em>. That&rsquo;s the gap above:
+          density without affordability, capacity without keys for working
+          renters. So what would actually build homes for them near the
+          MBTA, and whose lives would change?
         </p>
+        <PolicyGapPanels view="levers" />
       </section>
 
       {/* Transition · systemic gap → personal calculus */}
@@ -673,8 +694,8 @@ export default function ScrollyStory({ onComplete }) {
         </div>
       </section>
 
-      {/* Section 6 · Conclusion / transition (full viewport, centered) */}
-      <section className="scrolly-section scrolly-cta" ref={addRef(5)}>
+      {/* Section 9 · Conclusion / transition (full viewport, centered) */}
+      <section className="scrolly-section scrolly-cta" ref={addRef(9)}>
         <div className="scrolly-cta-inner">
           <h2>The Tradeoffs Are Personal</h2>
           <p className="scrolly-cta-lead">
