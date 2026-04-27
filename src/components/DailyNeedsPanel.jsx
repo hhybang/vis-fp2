@@ -204,9 +204,6 @@ export default function DailyNeedsPanel({ visible, onStopChange }) {
             })}
           </div>
         </div>
-        <div className="needs-panel-takeaway">
-          Near transit, many everyday errands are reachable without a car.
-        </div>
       </div>
     </div>
   )

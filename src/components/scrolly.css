@@ -262,6 +262,8 @@
   padding: clamp(56px, 10vh, 96px) clamp(24px, 5vw, 56px) clamp(24px, 4vh, 40px);
   display: flex;
   justify-content: center;
+  position: relative;
+  z-index: 4;
 }
 .scrolly-lede-text {
   max-width: 36ch;
@@ -775,6 +777,24 @@
   margin: 4px 0 8px;
 }
 
+/* Inline footnote-style definition that sits between the headline stat and
+   the body paragraph. Kept small and italic so it reads as an aside, not
+   as part of the main argument. */
+.t-line-stat-note {
+  font-family: var(--font-serif);
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--ink-muted);
+  margin: 4px 0 10px;
+  padding-left: 2px;
+}
+
+.t-line-stat-note sup {
+  font-weight: 700;
+  color: var(--ink-faint);
+  margin-right: 2px;
+}
+
 .t-line-source {
   font-family: var(--font-label);
   font-size: 10px;
@@ -1249,7 +1269,7 @@
 }
 
 .trees-show .tree-ground {
-  opacity: 1;
+  opacity: 0.3;
   transform: translateY(0);
 }
 
@@ -1411,6 +1431,55 @@
   max-width: 880px;
   margin: 0 auto;
   padding: 72px 40px 80px;
+  position: relative;
+  z-index: 2;
+}
+
+/* Single card holding the opener prose and its source citation. The card
+   chrome lives on the wrapper so both paragraphs sit inside one box. */
+.policy-section-opener-card {
+  margin: 0 0 56px;
+  padding: 22px 26px 16px;
+  background: var(--paper-card);
+  border-left: 3px solid var(--accent, #DA291C);
+  box-shadow: var(--ui-card-shadow);
+}
+
+.scrolly-section p.policy-section-opener {
+  font-family: var(--font-serif);
+  font-size: clamp(16px, 1.7vw, 19px);
+  line-height: 1.7;
+  color: var(--ink);
+  margin: 0;
+}
+
+.policy-section-opener strong {
+  font-weight: 900;
+  color: #DA291C;
+}
+
+.scrolly-section p.policy-section-opener-source {
+  font-family: var(--font-label);
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--ink-faint);
+  margin: 16px 0 0;
+  padding: 12px 0 0;
+  letter-spacing: 0.02em;
+  border-top: 1px solid var(--paper-rule);
+}
+
+.scrolly-section p.policy-section-opener-source a {
+  color: var(--ink-muted);
+  text-decoration: underline;
+  text-decoration-color: var(--paper-rule);
+  text-underline-offset: 2px;
+}
+
+.scrolly-section p.policy-section-opener-source a:hover,
+.scrolly-section p.policy-section-opener-source a:focus-visible {
+  color: var(--ink);
+  text-decoration-color: currentColor;
 }
 
 .policy-section-header {
@@ -1531,6 +1600,283 @@
   text-transform: uppercase;
   letter-spacing: 0.07em;
   margin-top: 10px;
+}
+
+.policy-stat-fn-mark {
+  font-weight: 700;
+  font-size: 0.7em;
+  color: var(--ink-muted);
+  margin-left: 2px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* Footnote definition for the stat-banner. Mirrors the t-line-stat-note
+   pattern: small serif type, muted color, no uppercase, sits just below
+   the banner before the body copy. */
+.policy-card-v2 .policy-stat-footnote {
+  font-family: var(--font-serif);
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--ink-muted);
+  margin: -10px 0 18px;
+  padding: 0 4px;
+}
+
+.policy-card-v2 .policy-stat-footnote sup {
+  font-weight: 700;
+  color: var(--ink-faint);
+  margin-right: 2px;
+}
+
+.policy-card-v2 .policy-stat-footnote a {
+  color: var(--ink-muted);
+  text-decoration: underline;
+  text-decoration-color: var(--paper-rule);
+  text-underline-offset: 2px;
+}
+
+.policy-card-v2 .policy-stat-footnote a:hover,
+.policy-card-v2 .policy-stat-footnote a:focus-visible {
+  color: var(--ink);
+  text-decoration-color: currentColor;
+}
+
+/* ===== Policy Venn diagram =====
+   Visual takeaway for the policy section. Two large color-coded circles
+   contain each law's year, name, what it does, and its keyword tag in
+   their non-overlap zones. The intersection is rendered as a paper-
+   colored "hole" with a dashed red border to mark the gap — affordable
+   housing near transit, encouraged by both laws but required by neither.
+   All three regions (left lobe, lens, right lobe) are clickable and
+   reveal a detail panel below. Font sizes are in SVG user units
+   (viewBox 800x540). */
+.policy-venn {
+  margin: 48px auto 32px;
+  padding: 0 8px;
+  max-width: 800px;
+  text-align: center;
+}
+
+.policy-venn-svg {
+  width: 100%;
+  max-width: 720px;
+  height: auto;
+  display: block;
+  margin: 0 auto 14px;
+}
+
+.policy-venn-eyebrow {
+  font-family: var(--font-label);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  fill: var(--ink-muted);
+}
+
+.policy-venn-title {
+  font-family: var(--font-display, var(--font-serif));
+  font-size: 24px;
+  font-weight: 800;
+  fill: var(--ink);
+  line-height: 1.1;
+}
+
+.policy-venn-tag {
+  font-family: var(--font-label);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  fill: var(--ink-muted);
+}
+
+/* Lens-text and lens path fade in once both laws have been hovered.
+   The .policy-venn--gap-revealed class is set on the figure when both
+   law circles have been entered/focused at least once. */
+.policy-venn-gap-text {
+  animation: policy-venn-fade-in 380ms ease-out both;
+}
+
+.policy-venn-region--mid {
+  animation: policy-venn-fade-in 380ms ease-out both;
+}
+
+@keyframes policy-venn-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.policy-venn-missing-eyebrow {
+  font-family: var(--font-label);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.24em;
+  fill: #DA291C;
+}
+
+.policy-venn-missing-text {
+  font-family: var(--font-display, var(--font-serif));
+  font-size: 26px;
+  font-weight: 800;
+  fill: #DA291C;
+}
+
+.policy-venn-caption {
+  font-family: var(--font-serif);
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--ink-muted);
+  max-width: 600px;
+  margin: 6px auto 0;
+  font-style: italic;
+}
+
+.policy-venn-caption-hint {
+  font-style: normal;
+  font-family: var(--font-label);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-left: 6px;
+  white-space: nowrap;
+}
+
+/* ----- Interactive regions (hover-driven) ----- */
+.policy-venn-region {
+  cursor: pointer;
+  transition: fill 180ms ease, stroke 180ms ease, opacity 180ms ease,
+    stroke-width 180ms ease;
+}
+
+.policy-venn-region:focus {
+  outline: none;
+}
+
+/* Active = currently hovered or keyboard-focused. Pulled from React
+   state so hovering one region also dims the others. */
+.policy-venn-region--left.is-active {
+  fill: rgba(0, 61, 165, 0.34);
+  stroke: rgba(0, 61, 165, 0.95);
+  stroke-width: 3;
+}
+.policy-venn-region--right.is-active {
+  fill: rgba(0, 132, 61, 0.34);
+  stroke: rgba(0, 132, 61, 0.95);
+  stroke-width: 3;
+}
+.policy-venn-region--mid.is-active {
+  stroke-width: 3.5;
+}
+
+.policy-venn-region.is-dimmed {
+  opacity: 0.45;
+}
+
+/* Labels never block hover on the regions beneath them. */
+.policy-venn-labels {
+  pointer-events: none;
+}
+
+/* ----- Detail panel ----- */
+.policy-venn-detail {
+  position: relative;
+  max-width: 620px;
+  margin: 6px auto 0;
+  padding: 18px 22px;
+  text-align: left;
+  background: var(--paper-card, #ffffff);
+  border: 1px solid var(--paper-rule);
+  border-left: 4px solid currentColor;
+  border-radius: 4px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.02);
+}
+
+.policy-venn-detail--left {
+  color: #003DA5;
+}
+.policy-venn-detail--right {
+  color: #00843D;
+}
+.policy-venn-detail--mid {
+  color: #DA291C;
+}
+
+.policy-venn-detail-eyebrow {
+  font-family: var(--font-label);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.policy-venn-detail-title {
+  font-family: var(--font-display, var(--font-serif));
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--ink);
+  line-height: 1.25;
+  margin-bottom: 10px;
+}
+
+.policy-venn-detail-body {
+  font-family: var(--font-serif);
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--ink);
+  margin: 0 0 10px;
+}
+
+.policy-venn-detail-source {
+  font-family: var(--font-label);
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--ink-muted);
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+.policy-venn-detail-source a {
+  color: var(--ink-muted);
+  text-decoration: underline;
+  text-decoration-color: var(--paper-rule);
+  text-underline-offset: 2px;
+}
+
+.policy-venn-detail-source a:hover,
+.policy-venn-detail-source a:focus-visible {
+  color: var(--ink);
+  text-decoration-color: currentColor;
+}
+
+@media (max-width: 720px) {
+  .policy-venn {
+    margin: 36px auto 24px;
+  }
+  .policy-venn-caption {
+    font-size: 13px;
+  }
+  .policy-venn-caption-hint {
+    display: block;
+    margin: 6px 0 0;
+  }
+  .policy-venn-detail {
+    padding: 16px 18px;
+  }
+  .policy-venn-detail-title {
+    font-size: 17px;
+  }
+  .policy-venn-detail-body {
+    font-size: 13.5px;
+  }
 }
 
 .policy-body {
@@ -2171,14 +2517,23 @@
 .motivation-waffle-cell {
   width: 100%;
   aspect-ratio: 1 / 1;
-  border-radius: 2px;
   transition: opacity 0.15s ease, transform 0.15s ease;
   cursor: default;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .motivation-waffle-cell:hover {
-  transform: scale(1.15);
+  transform: scale(1.18);
   z-index: 2;
+}
+
+.motivation-waffle-house {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
 }
 
 .motivation-waffle-legend {
@@ -2189,7 +2544,7 @@
 
 .motivation-legend-row {
   display: grid;
-  grid-template-columns: 14px 1fr;
+  grid-template-columns: 24px 1fr;
   gap: 12px;
   padding: 10px 12px;
   border: 1px solid transparent;
@@ -2209,11 +2564,19 @@
 }
 
 .motivation-legend-swatch {
-  width: 14px;
-  height: 14px;
-  margin-top: 3px;
-  border-radius: 2px;
-  border: 1px solid rgba(0,0,0,0.08);
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.motivation-legend-house {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
 }
 
 .motivation-legend-text {

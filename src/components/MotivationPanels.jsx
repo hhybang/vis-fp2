@@ -41,6 +41,10 @@ function Jargon({ term, children }) {
   )
 }
 
+// AMI tiers used in the waffle. Tooltip text is the inline explanation
+// shown under each legend row; phrased to lead with a concrete dollar
+// income (2-person household, Boston-area HUD limits) and add a short
+// plain-language framing rather than restating the AMI percentage.
 const AMI_CATS = [
   {
     key: 'u30',
@@ -48,7 +52,7 @@ const AMI_CATS = [
     sub: '<30% AMI',
     color: '#6b2b27',
     tooltip:
-      'Affordable to households earning less than 30% of Area Median Income (~under $38k for a 2-person household in Boston).',
+      'For households earning under ~$38k a year.',
   },
   {
     key: 'a3050',
@@ -56,7 +60,7 @@ const AMI_CATS = [
     sub: '30–50% AMI',
     color: '#a14a35',
     tooltip:
-      'Affordable to households earning 30–50% of Area Median Income (~$38k–$64k for a 2-person household).',
+      'For households earning ~$38k–$64k a year: full-time minimum-wage earners and fixed-income seniors.',
   },
   {
     key: 'a5080',
@@ -64,7 +68,7 @@ const AMI_CATS = [
     sub: '50–80% AMI',
     color: '#d38e42',
     tooltip:
-      'Affordable to households earning 50–80% of AMI (~$64k–$102k for a 2-person household).',
+      'For households earning ~$64k–$102k a year: most of the working middle class.',
   },
   {
     key: 'a80p',
@@ -72,22 +76,23 @@ const AMI_CATS = [
     sub: '80%+ AMI',
     color: '#e9c46a',
     tooltip:
-      'Affordable to households earning 80%+ of AMI (~$102k+ for a 2-person household).',
+      'For households earning $102k or more: above typical Boston-area renter income.',
   },
   {
     key: 'affOther',
-    label: 'Affordable, tier unspecified',
+    label: 'Affordable, income level unknown',
     sub: 'no AMI reported',
     color: '#b6c4a7',
     tooltip:
-      'MassBuilds records these units as deed-restricted affordable but does not specify which AMI band they serve.',
+      'These units have an income cap (they are deed-restricted affordable), but the source data does not record how strict the cap is, so we cannot place them in one of the bands above.',
   },
   {
     key: 'market',
     label: 'Market-rate',
     sub: 'no restriction',
     color: '#d4d0c4',
-    tooltip: 'Units rented or sold at market price, with no income-based restriction.',
+    tooltip:
+      'No income cap. Rented or sold at whatever price the market will pay.',
   },
 ]
 
@@ -204,22 +209,33 @@ function WaffleChart({ breakdown, hovered, onHover }) {
   // Reorder so market-rate (dominant) is at the back, affordable tiers stand out in front rows.
   // Simple approach: keep canonical order so "affordable" cluster is top-left, market fills bottom-right.
   return (
-    <div className="motivation-waffle" role="img" aria-label="Waffle chart of AMI breakdown of new MBTA-near housing">
+    <div className="motivation-waffle" role="img" aria-label="Waffle chart of AMI breakdown of new MBTA-near housing, rendered as colored house icons">
       {flat.map((key, i) => {
         const cat = AMI_CATS.find((c) => c.key === key)
         const isDim = hovered && hovered !== key
+        const fill = cat?.color || '#ccc'
         return (
           <div
             key={i}
             className="motivation-waffle-cell"
             data-key={key}
-            style={{
-              background: cat?.color || '#ccc',
-              opacity: isDim ? 0.22 : 1,
-            }}
+            style={{ opacity: isDim ? 0.22 : 1 }}
             onMouseEnter={() => onHover(key)}
             onMouseLeave={() => onHover(null)}
           >
+            <svg
+              viewBox="0 0 24 24"
+              className="motivation-waffle-house"
+              aria-hidden="true"
+            >
+              {/* House silhouette: pitched roof + body. Drawn as a single
+                  filled path so it scales cleanly and inherits the AMI tier
+                  color via the fill prop. */}
+              <path
+                d="M12 3 L2 13 L5 13 L5 22 L19 22 L19 13 L22 13 Z"
+                fill={fill}
+              />
+            </svg>
             <span className="sr-only">{cat?.label}</span>
           </div>
         )
@@ -513,7 +529,14 @@ export default function MotivationPanels() {
                 onMouseEnter={() => setHoverKey(l.key)}
                 onMouseLeave={() => setHoverKey(null)}
               >
-                <span className="motivation-legend-swatch" style={{ background: l.color }} />
+                <span className="motivation-legend-swatch" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" className="motivation-legend-house">
+                    <path
+                      d="M12 3 L2 13 L5 13 L5 22 L19 22 L19 13 L22 13 Z"
+                      fill={l.color}
+                    />
+                  </svg>
+                </span>
                 <div className="motivation-legend-text">
                   <div className="motivation-legend-label">
                     {l.label}

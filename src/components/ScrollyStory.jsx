@@ -4,6 +4,7 @@ import DailyNeedsPanel from './DailyNeedsPanel'
 import JobAccessPanel from './JobAccessPanel'
 import MotivationPanels from './MotivationPanels'
 import PolicyGapPanels from './PolicyGapPanels'
+import PolicyVenn from './PolicyVenn'
 import KeyTermsButton from './KeyTermsButton'
 import tree1 from '../imgs/trees/cartoon-tree-1.png'
 import tree2 from '../imgs/trees/cartoon-tree-2.png'
@@ -16,13 +17,6 @@ import './scrolly.css'
 const TREE_IMGS = [tree1, tree2, tree3, tree4, tree5, tree6]
 
 const TREES = [
-  { left: '-1%',  size: 300, bottom: 0 },
-  { left: '10%',  size: 180, bottom: 0 },
-  { left: '19%', size: 200, bottom: 0 },
-  { left: '16%', size: 120, bottom: 0 },
-  { left: '7%', size: 130, bottom: 0 },
-  { left: '19%', size: 90, bottom: 0 },
-  { left: '14%', size: 85, bottom: 0 },
   { left: '95%', size: 90, bottom: 0 },
   { left: '77%', size: 120, bottom: 0 },
   { left: '74%', size: 150, bottom: 0 },
@@ -105,10 +99,10 @@ const RIGHT_WAVERS = pickWaversNearEdge(RIGHT_DATA, 1, 'right')
 // Red (errands -- the data is keyed to Harvard Square, on the Red Line),
 // Green (planet). This is the Why-It-Matters interaction metaphor.
 const STATIONS = [
-  { id: 'savings', label: 'Your Savings',      line: 'Orange', color: '#ED8B00' },
-  { id: 'jobs',    label: 'Your Job Options',  line: 'Blue',   color: '#003DA5' },
-  { id: 'errands', label: 'Your Daily Errands', line: 'Red',    color: '#DA291C' },
-  { id: 'planet',  label: 'The Planet, Too',   line: 'Green',  color: '#00843D' },
+  { id: 'savings', label: 'Cost Savings',  line: 'Orange', color: '#ED8B00' },
+  { id: 'jobs',    label: 'Job Access',    line: 'Blue',   color: '#003DA5' },
+  { id: 'errands', label: 'Daily Needs',   line: 'Red',    color: '#DA291C' },
+  { id: 'planet',  label: 'Climate Impact', line: 'Green',  color: '#00843D' },
 ]
 
 export default function ScrollyStory({ onComplete }) {
@@ -156,15 +150,9 @@ export default function ScrollyStory({ onComplete }) {
 
     const mapObs = new IntersectionObserver(
       ([entry]) => {
-        const on = entry.intersectionRatio >= 0.15
-        if (on) {
-          mapEl.classList.add('map-visible')
-        } else {
-          mapEl.classList.remove('map-visible')
-        }
-        setMapOn(on)
+        setMapOn(entry.intersectionRatio >= 0.35)
       },
-      { threshold: [0, 0.15] }
+      { threshold: [0, 0.2, 0.35, 0.5], rootMargin: '-20% 0px -10% 0px' }
     )
     mapObs.observe(mapEl)
 
@@ -195,10 +183,22 @@ export default function ScrollyStory({ onComplete }) {
   }, [])
 
   const quoteTimer = useRef(null)
+  const quoteFadeTimer = useRef(null)
   const [quoteFading, setQuoteFading] = useState(false)
+
+  const dismissQuote = () => {
+    if (quoteTimer.current) clearTimeout(quoteTimer.current)
+    if (quoteFadeTimer.current) clearTimeout(quoteFadeTimer.current)
+    setQuoteFading(true)
+    quoteFadeTimer.current = setTimeout(() => {
+      setActiveQuote(null)
+      setQuoteFading(false)
+    }, 600)
+  }
 
   const handleWaverClick = (e, quoteIndex) => {
     if (quoteTimer.current) clearTimeout(quoteTimer.current)
+    if (quoteFadeTimer.current) clearTimeout(quoteFadeTimer.current)
     setQuoteFading(false)
     const rect = e.currentTarget.getBoundingClientRect()
     const isLeftHalf = rect.left < window.innerWidth / 2
@@ -213,11 +213,37 @@ export default function ScrollyStory({ onComplete }) {
     })
     quoteTimer.current = setTimeout(() => {
       setQuoteFading(true)
-      setTimeout(() => { setActiveQuote(null); setQuoteFading(false) }, 600)
+      quoteFadeTimer.current = setTimeout(() => {
+        setActiveQuote(null)
+        setQuoteFading(false)
+      }, 600)
     }, 4000)
   }
 
-  useEffect(() => () => { if (quoteTimer.current) clearTimeout(quoteTimer.current) }, [])
+  useEffect(() => () => {
+    if (quoteTimer.current) clearTimeout(quoteTimer.current)
+    if (quoteFadeTimer.current) clearTimeout(quoteFadeTimer.current)
+  }, [])
+
+  useEffect(() => {
+    if (!activeQuote) return
+    const handlePointerDown = (e) => {
+      if (e.target.closest('.speech-bubble')) return
+      if (e.target.closest('.person-waver')) return
+      dismissQuote()
+    }
+    const handleKey = (e) => {
+      if (e.key === 'Escape') dismissQuote()
+    }
+    document.addEventListener('mousedown', handlePointerDown)
+    document.addEventListener('touchstart', handlePointerDown)
+    document.addEventListener('keydown', handleKey)
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown)
+      document.removeEventListener('touchstart', handlePointerDown)
+      document.removeEventListener('keydown', handleKey)
+    }
+  }, [activeQuote])
 
   const renderSideGrid = (data, wavers, quoteOffset) => {
     const waverArr = [...wavers]
@@ -353,28 +379,9 @@ export default function ScrollyStory({ onComplete }) {
           closer you live to a T stop, the more you pay. Transit means jobs,
           groceries, healthcare: your whole daily life without a car.
           But the neighborhoods with the best access are increasingly out of
-          reach for the people who depend on it most. This is the story of
-          how that happened, what the state promised to do about it, and
-          what it means for you.
+          reach for the people who depend on it most. Here, we explore how
+          state policy could do more for working-class renters near transit.
         </p>
-      </section>
-
-      {/* Renter voices — surfaced early so the audience hears real people first */}
-      <section className="renter-voices" ref={addRef(0)}>
-        <div className="renter-voices-inner">
-          {QUOTES.map((q, i) => (
-            <blockquote key={i} className="renter-voice-card">
-              <p className="renter-voice-text">{q.text}</p>
-              <footer className="renter-voice-attr">
-                <span className="renter-voice-name">{q.name}</span>
-                <span className="renter-voice-area">{q.area}</span>
-                <cite className="renter-voice-source">
-                  {q.source}, <em>{q.sourceTitle}</em> ({q.date})
-                </cite>
-              </footer>
-            </blockquote>
-          ))}
-        </div>
       </section>
 
       {/* Section 1 · Why Transit Matters to You */}
@@ -385,13 +392,13 @@ export default function ScrollyStory({ onComplete }) {
         </div>
         <div className="section-map-tint" />
         <div className="section-content">
-          <h2>Your T Stop Is More Than a Commute</h2>
           <p>
-            If you don&rsquo;t own a car, or can&rsquo;t afford one,
-            your nearest transit stop shapes everything: which jobs you can get
-            to, where you buy groceries, how you reach a doctor. Living close
-            to a station isn&rsquo;t a luxury. For many renters in Greater
-            Boston, it&rsquo;s the infrastructure that makes daily life work.
+            For renters like you, the nearest MBTA station shapes
+            daily life: which jobs are reachable, which groceries and clinics
+            are within walking distance, where a child&rsquo;s school sits
+            relative to home. Station-adjacent housing is essential
+            infrastructure for these households, and one of the highest-leverage
+            places state policy can support working families.
           </p>
 
           <div className="t-line" role="tablist" aria-label="Why your T stop matters">
@@ -428,14 +435,17 @@ export default function ScrollyStory({ onComplete }) {
             >
               {activeStation === 'savings' && (
                 <div className="t-line-content" key="savings">
-                  <div className="t-line-content-eyebrow">Orange Line &middot; Your Savings</div>
+                  <div className="t-line-content-eyebrow">Orange Line &middot; Cost Savings</div>
                   <div className="t-line-stat">
                     <span className="t-line-stat-num">$910</span>
                     <span className="t-line-stat-unit">/month, or $10,920/year</span>
                   </div>
                   <div className="t-line-stat-sub">
-                    A car costs ~<strong>$1,000/month</strong> in Greater Boston. An MBTA
-                    pass is <strong>$90</strong>. That gap is rent money.
+                    A car costs ~<strong>$1,000/month</strong> in Greater Boston;
+                    an MBTA pass is <strong>$90</strong>. The roughly $900
+                    monthly difference can absorb the higher rents found in
+                    transit-adjacent neighborhoods, which is part of what makes
+                    station access so valuable for working renters.
                   </div>
                   <div className="t-line-compare">
                     <div className="t-line-compare-row">
@@ -461,15 +471,16 @@ export default function ScrollyStory({ onComplete }) {
 
               {activeStation === 'jobs' && (
                 <div className="t-line-content" key="jobs">
-                  <div className="t-line-content-eyebrow">Blue Line &middot; Your Job Options</div>
+                  <div className="t-line-content-eyebrow">Blue Line &middot; Job Access</div>
                   <div className="t-line-stat">
                     <span className="t-line-stat-num">4</span>
                     <span className="t-line-stat-unit">major job centers, all reachable on the T</span>
                   </div>
                   <div className="t-line-stat-sub">
-                    Each is just <strong>minutes on foot</strong> from a station. Move
-                    away from transit and these commutes get longer, costlier, or
-                    impossible.
+                    Each sits within <strong>minutes on foot</strong> of a
+                    station. Keeping station-adjacent housing reachable
+                    preserves access to the region&rsquo;s largest employers for
+                    working renters.
                   </div>
                   <div className="t-line-chips">
                     <span className="t-line-chip"><strong>Financial District</strong>State / Downtown Crossing</span>
@@ -485,23 +496,21 @@ export default function ScrollyStory({ onComplete }) {
 
               {activeStation === 'errands' && (
                 <div className="t-line-content" key="errands">
-                  <div className="t-line-content-eyebrow">Red Line &middot; Your Daily Errands</div>
+                  <div className="t-line-content-eyebrow">Red Line &middot; Daily Needs</div>
                   <div className="t-line-stat">
                     <span className="t-line-stat-num">{needsStop?.total || '150+'}</span>
                     <span className="t-line-stat-unit">daily-need destinations within a 10-minute walk</span>
                   </div>
-                  <div className="t-line-stat-sub">
-                    Near <strong>{needsStop?.name || 'Harvard Square'}</strong>, groceries,
-                    a clinic, your kid&rsquo;s school: each is a walk away. That&rsquo;s
-                    the kind of access you lose when you&rsquo;re priced out of a transit
-                    neighborhood.
+                  <div className="t-line-stat-note">
+                    * Daily-need destinations are the everyday services: <br />groceries, food and cafés, health clinics,
+                    pharmacies, schools, libraries, parks, fitness, and banks
+                    and post offices.
                   </div>
-                  <div className="t-line-icons">
-                    <span className="t-line-iconpill">Groceries</span>
-                    <span className="t-line-iconpill">Clinics</span>
-                    <span className="t-line-iconpill">Schools</span>
-                    <span className="t-line-iconpill">Pharmacies</span>
-                    <span className="t-line-iconpill">Cafes</span>
+                  <div className="t-line-stat-sub">
+                    Near <strong>{needsStop?.name || 'Harvard Square'}</strong>,
+                    each sits within a short walk. Maintaining station-adjacent
+                    housing keeps these services within reach for the renters
+                    who depend on them.
                   </div>
                   <div className="t-line-source">
                     Data: OpenStreetMap amenities, 800m radius
@@ -511,14 +520,15 @@ export default function ScrollyStory({ onComplete }) {
 
               {activeStation === 'planet' && (
                 <div className="t-line-content" key="planet">
-                  <div className="t-line-content-eyebrow">Green Line &middot; The Planet, Too</div>
+                  <div className="t-line-content-eyebrow">Green Line &middot; Climate Impact</div>
                   <div className="t-line-stat">
                     <span className="t-line-stat-num">&minus;53%</span>
                     <span className="t-line-stat-unit">CO&#8322; vs driving</span>
                   </div>
                   <div className="t-line-stat-sub">
-                    Switching saves <strong>283 kg CO&#8322;</strong> per year &mdash;
-                    about the same climate benefit as planting <strong>13 trees</strong>.
+                    Each transit commute saves about <strong>283 kg CO&#8322;</strong>
+                    per year, roughly the climate benefit of planting{' '}
+                    <strong>13 trees</strong>.
                   </div>
                   <div className="t-line-source-context">5-mile commute, round trip, 250 days/year</div>
                   <div className="t-line-compare">
@@ -548,9 +558,15 @@ export default function ScrollyStory({ onComplete }) {
         </div>
       </section>
 
-      {/* Section 2 · Background: Affordability Gap */}
+      {/* Section 2 · Policy Context (with affordability-gap people background) */}
       <div className="section-divider" />
-      <section className={`scrolly-section section-with-people ${!mapOn && peopleSectionOn ? 'people-visible' : ''}`} ref={peopleSectionRef}>
+      <section
+        className={`scrolly-section scrolly-section-wide policy-section-editorial section-with-people ${!mapOn && peopleSectionOn ? 'people-visible' : ''}`}
+        ref={(el) => {
+          sectionsRef.current[2] = el
+          peopleSectionRef.current = el
+        }}
+      >
         <div className="people-sides">
           <div className="people-side people-side-left">{renderSideGrid(LEFT_DATA, LEFT_WAVERS, 0)}</div>
           <div className="people-side people-side-right">{renderSideGrid(RIGHT_DATA, RIGHT_WAVERS, 2)}</div>
@@ -577,204 +593,57 @@ export default function ScrollyStory({ onComplete }) {
             </div>
           </div>
         )}
-        <div className="section-content revealed">
-          <h2>Rents Run Higher Near MBTA Stations</h2>
-          <p>
-            Proximity to MBTA service is consistently associated with higher
-            market rents. Rents in transit-adjacent neighborhoods have risen
-            faster than the regional average.
-          </p>
-
-          <div className="stat-row">
-            <div className="stat-block">
-              <div className="stat-number">$2,300</div>
-              <div className="stat-desc">
-                Average monthly rent near MBTA stations in Greater Boston
-              </div>
-            </div>
-            <div className="stat-block">
-              <div className="stat-number">30%</div>
-              <div className="stat-desc">
-                Share of income recommended for housing costs
-              </div>
-            </div>
-            <div className="stat-block">
-              <div className="stat-number">$92,000</div>
-              <div className="stat-desc">
-                Minimum annual income to afford that rent at 30%
-              </div>
-            </div>
-          </div>
-
-          <p className="section-note">
-            At the 30% rule, a household needs roughly $92,000 in annual
-            income to afford the average transit-adjacent apartment without
-            being cost-burdened. About <strong>4 in 10 households</strong> in
-            Greater Boston fall below that threshold.
-          </p>
-        </div>
-      </section>
-
-      {/* Section 3 · Policy Context */}
-      <div className="section-divider" />
-      <section className="scrolly-section scrolly-section-wide policy-section-editorial" ref={addRef(2)}>
         <div className="policy-section-inner">
-          <header className="policy-section-header">
-            <h2>Two Landmark Laws, One Missing Guarantee</h2>
-            <p className="policy-section-lead">
-              Massachusetts passed two landmark housing policies, the
-              most ambitious in state history. They sound like good news for
-              renters. Look closer.
+          <div className="policy-section-opener-card">
+            <p className="policy-section-opener">
+              Housing is considered affordable when rent takes up no more than
+              30% of household income. So, a household needs
+              roughly <strong>$92,000 a year</strong> to afford the average
+              apartment near an MBTA station. About{' '}
+              <strong>4 in 10 Greater Boston households</strong> earn less.
             </p>
-          </header>
-
-          <div className="policy-stack" role="list">
-            {/* Card 1: MBTA Communities Act */}
-            <article className="policy-card-v2" role="listitem">
-              <div className="policy-header">
-                <div className="policy-icon">
-                  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <rect x="6" y="14" width="36" height="28" rx="3" />
-                    <path d="M16 14V8a8 8 0 0 1 16 0v6" />
-                    <circle cx="24" cy="28" r="4" />
-                    <path d="M24 32v4" />
-                  </svg>
-                </div>
-                <div>
-                  <span className="policy-year">2021</span>
-                  <h3>MBTA Communities Act</h3>
-                  <p className="policy-card-dek">
-                    Zoning reform that opens station areas to denser housing.
-                  </p>
-                </div>
-              </div>
-
-              <div className="policy-stat-banner">
-                <div className="policy-stat">
-                  <span className="policy-stat-num">177</span>
-                  <span className="policy-stat-label">communities affected</span>
-                </div>
-              </div>
-
-              <div className="policy-body policy-body-split">
-                <div className="policy-does">
-                  <span className="policy-tag policy-tag-does">What it does</span>
-                  <p>
-                    Requires MBTA-served communities to zone for multi-family
-                    housing near transit stations, removing decades of exclusionary
-                    single-family-only zoning that restricted where people could live.
-                  </p>
-                </div>
-                <div className="policy-misses">
-                  <span className="policy-tag policy-tag-misses">What it means for you</span>
-                  <p>
-                    The law mandates <em>zoning</em>, not construction, and
-                    sets <strong>no income targets</strong>. Every new building
-                    near your station can be entirely market-rate. More
-                    apartments, same unaffordable rents.
-                  </p>
-                </div>
-              </div>
-
-              <a
-                className="policy-source-link"
-                href="https://www.mass.gov/info-details/multi-family-zoning-requirement-for-mbta-communities"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Mass.gov: Multi-Family Zoning Requirement &rarr;
-              </a>
-            </article>
-
-            {/* Card 2: Affordable Homes Act */}
-            <article className="policy-card-v2" role="listitem">
-              <div className="policy-header">
-                <div className="policy-icon">
-                  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <path d="M6 22L24 8l18 14" />
-                    <path d="M10 20v18h10V28h8v10h10V20" />
-                    <path d="M24 28v6" />
-                  </svg>
-                </div>
-                <div>
-                  <span className="policy-year">2024</span>
-                  <h3>Affordable Homes Act</h3>
-                  <p className="policy-card-dek">
-                    Historic public investment in housing production and preservation.
-                  </p>
-                </div>
-              </div>
-
-              <div className="policy-stat-banner">
-                <div className="policy-stat">
-                  <span className="policy-stat-num">$5.4B</span>
-                  <span className="policy-stat-label">housing investment</span>
-                </div>
-              </div>
-
-              <div className="policy-body policy-body-split">
-                <div className="policy-does">
-                  <span className="policy-tag policy-tag-does">What it does</span>
-                  <p>
-                    The largest housing bond in state history. Funds production,
-                    preservation, and stabilization across Massachusetts, with
-                    programs for smart growth and livable communities near transit.
-                  </p>
-                </div>
-                <div className="policy-misses">
-                  <span className="policy-tag policy-tag-misses">What it means for you</span>
-                  <p>
-                    $5.4 billion sounds like a lot. But nothing in the law says
-                    that money has to produce <strong>affordable units</strong>{' '}
-                    near your station. The funding goes statewide. Affordability
-                    near transit is encouraged, not required.
-                  </p>
-                </div>
-              </div>
-
-              <a
-                className="policy-source-link"
-                href="https://www.mass.gov/info-details/the-affordable-homes-act-smart-housing-livable-communities"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Mass.gov: Affordable Homes Act &rarr;
-              </a>
-            </article>
-          </div>
-
-          <div className="policy-takeaway">
-            <p className="policy-takeaway-intro">
-              Both laws move in the right direction. But if you&rsquo;re a renter
-              watching new buildings go up near your stop, the bottom line is:
-            </p>
-            <p className="policy-quote policy-quote--synthesis">
-              More housing near transit does not mean housing
-              <em> you</em> can afford near transit.
+            <p className="policy-section-opener-source">
+              Sources:{' '}
+            <a
+              href="https://www.hud.gov/program_offices/comm_planning/affordablehousing"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              HUD affordability standard (30% rent-to-income rule)
+            </a>
+            {' · '}
+            <a
+              href="https://data.census.gov/table/ACSDP5Y2023.DP04"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              median gross rent, ACS 2023 5-yr (DP04)
+            </a>
+            {' · '}
+            <a
+              href="https://data.census.gov/table/ACSDP5Y2023.DP03"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              household income distribution, ACS 2023 5-yr (DP03)
+            </a>
+            . Computed for Greater Boston census tracts within walking
+            distance of an MBTA station.
             </p>
           </div>
+          <PolicyVenn />
         </div>
       </section>
 
       {/* Section 4 · Motivation */}
       <div className="section-divider" />
       <section className="scrolly-section" ref={addRef(3)}>
-        <h2>Who the New Housing Is For</h2>
-
         <MotivationPanels />
-
-        <p>
-          The pattern is consistent: the stations with the strongest service
-          are surrounded by the most market-rate housing. New construction
-          near the Red and Orange Lines skews heavily toward higher-income
-          tenants relative to the median Greater Boston renter.
-        </p>
       </section>
 
       {/* Section 5 · Analysis: What's Missing */}
       <div className="section-divider" />
       <section className="scrolly-section" ref={addRef(4)}>
-        <h2>Where Affordability Is Left to Local Discretion</h2>
         <p>
           Both laws control <em>where</em> housing gets built and <em>how
           much</em> money flows to it. Neither controls{' '}
