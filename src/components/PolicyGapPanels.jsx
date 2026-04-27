@@ -1298,7 +1298,7 @@ function PolicyExplorer({ activeKey, onSelect, peers, funnel }) {
         <figcaption className="policy-explorer-compare-cap">
           Each <strong>bar</strong> is the affordable share that policy
           <em> requires</em> in new transit-area development. MA&rsquo;s bar is
-          empty because the law mandates none &mdash; so for MA we plot
+          empty because the law mandates none. For MA we plot
           <span className="policy-compare-legend">
             <span className="policy-compare-legend-swatch policy-compare-legend-swatch-today" aria-hidden="true" />
             the grey diamond
@@ -1465,14 +1465,10 @@ export default function PolicyGapPanels({ view = 'all' }) {
       {showLevers && (
       <article className="motivation-card motivation-card--combined">
         <header className="motivation-card-header">
-          <h3>How to actually build affordable homes near the MBTA</h3>
+          <h3>How MBTA-near housing policies can help build affordable homes</h3>
           <p className="motivation-dek">
-            Three other places already pair transit-area zoning with an{' '}
-            <Jargon term="affordability floor">affordability floor</Jargon>{' '}
-            and an in-lieu fund. Massachusetts has the zoning &mdash; the grey
-            diamond on the MA row shows the affordable share actually being
-            built today. Pull the levers below to see what a peer-style policy
-            would change.
+            Three other places already solved this problem by pairing transit-area zoning with an{' '}
+            affordability floor and an in-lieu fund. Hover any bar to read about that policy &darr;
           </p>
         </header>
 
@@ -1503,9 +1499,7 @@ export default function PolicyGapPanels({ view = 'all' }) {
           in-lieu fund, the bulk priced for households under 50%{' '}
           <Jargon term="AMI">AMI</Jargon>. That&rsquo;s the band where the{' '}
           <strong>4 in 10 Greater Boston households</strong> who can&rsquo;t
-          afford the average T-stop rent actually sit, including renters like
-          Jane Santos along the Green Line Extension and Betty Gordon on the
-          Fairmount Line.
+          afford the average T-stop rent actually sit.
         </div>
 
         <p className="policy-explorer-close">
