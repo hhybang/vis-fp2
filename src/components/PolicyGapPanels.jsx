@@ -1452,12 +1452,16 @@ export default function PolicyGapPanels({ view = 'all' }) {
     Math.round(((newDeepShare - baseDeepShare) / 100) * totalUnits)
   )
   // Total cumulative affordable units in the prescription's scoreboard
-  // (on-site + fund-funded), used in the closing kicker.
+  // (baseline on-site + floor lift + fund-funded), used in the closing
+  // kicker. Matches the headline on the ScoreboardChart, which sums the
+  // full on-site affordable count (newAffShare * totalUnits) and the
+  // fund-funded layer.
+  const baselineAffUnits = Math.round((baseAffShare / 100) * totalUnits)
   const fundedAffUnits = Math.round(
     (totalUnits * NONAFF_SHARE_AFTER_FLOOR * FEE_PER_NONAFF_UNIT) /
       FUND_COST_PER_AFF_UNIT
   )
-  const totalScoreboard = totalAdded + fundedAffUnits
+  const totalScoreboard = baselineAffUnits + totalAdded + fundedAffUnits
 
   return (
     <div className="motivation-stack">
@@ -1493,8 +1497,10 @@ export default function PolicyGapPanels({ view = 'all' }) {
             {totalScoreboard.toLocaleString()} affordable homes
           </strong>{' '}
           in the MBTA-near pipeline over a decade &mdash;{' '}
-          <strong>{totalAdded.toLocaleString()}</strong> built on-site by the
-          inclusionary floor and{' '}
+          <strong>{baselineAffUnits.toLocaleString()}</strong> already
+          deed-restricted in the existing mix,{' '}
+          <strong>{totalAdded.toLocaleString()}</strong> more built on-site as
+          the inclusionary floor lifts the affordable share to 20%, and{' '}
           <strong>{fundedAffUnits.toLocaleString()}</strong> funded by the
           in-lieu fund, the bulk priced for households under 50%{' '}
           <Jargon term="AMI">AMI</Jargon>. That&rsquo;s the band where the{' '}

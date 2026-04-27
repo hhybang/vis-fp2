@@ -641,8 +641,7 @@ export default function MotivationPanels({ view = 'all' }) {
             Across <strong>{OCCUPATIONS.length}</strong> common Greater Boston occupations,
             from childcare workers and line cooks at the bottom of the wage ladder to
             teachers, nurses, and software engineers at the top, median wages line up
-            against the same <Jargon term="AMI">AMI</Jargon> tiers shown in the unit-mix
-            waffle above.
+            against the same <Jargon term="AMI">AMI</Jargon> tiers shown in the visualization above.
           </p>
         </header>
 

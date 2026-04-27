@@ -12,6 +12,8 @@ export default function Toolbar({
   onClearExploration,
   selectedHousing,
   onClearHousingSelection,
+  policyPackage,
+  onPolicyPackageChange,
 }) {
   const busy = isLoading || routeLoading
   const showFooter =
@@ -19,6 +21,33 @@ export default function Toolbar({
 
   return (
     <div className="toolbar">
+      <div className="toolbar-row toolbar-row-package">
+        <div className="package-toggle" role="group" aria-label="Policy package view">
+          <span className="package-toggle-label">View:</span>
+          <button
+            type="button"
+            className={`package-toggle-btn${!policyPackage ? ' is-on' : ''}`}
+            aria-pressed={!policyPackage}
+            onClick={() => onPolicyPackageChange?.(false)}
+          >
+            Today
+          </button>
+          <button
+            type="button"
+            className={`package-toggle-btn package-toggle-btn-cf${policyPackage ? ' is-on' : ''}`}
+            aria-pressed={policyPackage}
+            onClick={() => onPolicyPackageChange?.(true)}
+          >
+            With both levers pulled
+          </button>
+        </div>
+        <p className="package-toggle-hint">
+          {policyPackage
+            ? 'Counterfactual: every TOD project reserves \u226520% deed-restricted, half at \u226450% AMI.'
+            : 'Today\u2019s MassBuilds pipeline. Toggle to see how the policy package would change the same projects.'}
+        </p>
+      </div>
+
       <div className="toolbar-row toolbar-row-controls">
         <div className="toolbar-group">
           <span className="toolbar-label">Map layer</span>

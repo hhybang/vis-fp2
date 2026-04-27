@@ -36,6 +36,7 @@ export default function MapPanel({
   selectedHousingId,
   mapBusy,
   mapLayer,
+  policyPackage,
 }) {
   const mapRef = useRef(null)
   const mapInstanceRef = useRef(null)
@@ -267,6 +268,12 @@ export default function MapPanel({
       )}
       {!clickedPoint && (
         <div className="map-instruction">Click anywhere on the map to explore commute times</div>
+      )}
+      {policyPackage && mapLayer === 'housing' && (
+        <div className="map-cf-banner" role="status" aria-live="polite">
+          <span className="map-cf-banner-dot" aria-hidden="true" />
+          Showing housing under <strong>both levers pulled</strong> &mdash; every project gets &ge;20% deed-restricted, half &le;50% AMI
+        </div>
       )}
       <div className="map-legend">
         {mapLayer === 'transit' && (

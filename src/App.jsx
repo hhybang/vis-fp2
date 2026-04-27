@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import ScrollyStory from './components/ScrollyStory'
 import OnboardingModal from './components/OnboardingModal'
 import MapPanel from './components/MapPanel'
@@ -8,6 +8,7 @@ import KeyTermsButton from './components/KeyTermsButton'
 import { loadMBTAStops, loadMassBuilds, loadACSIncomeData } from './utils/dataLoaders'
 import { fetchIsochrone, fetchDirections, fetchCensusRentData, fetchTractBoundaries } from './utils/api'
 import { getOuterIsochrone, pointInPolygon, tractIntersectsIsochrone } from './utils/geo'
+import { applyPolicyPackageToProject } from './utils/policyPackage'
 import './App.css'
 
 function App() {
@@ -38,6 +39,21 @@ function App() {
   const [filteredHousing, setFilteredHousing] = useState([])
   const [avgRent, setAvgRent] = useState(0)
   const [editProfileOpen, setEditProfileOpen] = useState(false)
+  // Counterfactual toggle: when true, the explorer recolors housing dots and
+  // recomputes "homes priced for you" using the same lever-rack policy
+  // package the story closes on (20% inclusionary floor + half deep).
+  const [policyPackage, setPolicyPackage] = useState(false)
+
+  // Pre-compute the counterfactual variant of every MassBuilds project once
+  // so map recoloring and banner counts share a single source of truth.
+  const cfMassBuilds = useMemo(
+    () => massBuilds.map(applyPolicyPackageToProject),
+    [massBuilds]
+  )
+  const cfFilteredHousing = useMemo(
+    () => filteredHousing.map(applyPolicyPackageToProject),
+    [filteredHousing]
+  )
 
   useEffect(() => {
     if (!onboarded) return
@@ -240,7 +256,13 @@ function App() {
             mbtaStops={mapLayer === 'transit' ? mbtaStops : []}
             isochroneData={isochroneData}
             routeData={routeData}
-            filteredHousing={mapLayer === 'housing' ? massBuilds : []}
+            filteredHousing={
+              mapLayer === 'housing'
+                ? policyPackage
+                  ? cfMassBuilds
+                  : massBuilds
+                : []
+            }
             clickedPoint={clickedPoint}
             workLocation={workLocation}
             monthlyIncome={monthlyIncome}
@@ -250,6 +272,7 @@ function App() {
             selectedHousingId={selectedHousing?.id ?? null}
             mapBusy={isLoading || routeLoading}
             mapLayer={mapLayer}
+            policyPackage={policyPackage}
           />
         </div>
         <div className="panel-right">
@@ -268,6 +291,8 @@ function App() {
               onClearExploration={handleClearExploration}
               selectedHousing={selectedHousing}
               onClearHousingSelection={handleClearHousingSelection}
+              policyPackage={policyPackage}
+              onPolicyPackageChange={setPolicyPackage}
             />
           </div>
           <div className="charts-panel-scroll">
@@ -279,6 +304,10 @@ function App() {
               monthlyIncome={monthlyIncome}
               affordabilityPct={affordabilityPct}
               avgRent={avgRent}
+              filteredHousing={filteredHousing}
+              cfFilteredHousing={cfFilteredHousing}
+              policyPackage={policyPackage}
+              onPolicyPackageChange={setPolicyPackage}
             />
           </div>
         </div>

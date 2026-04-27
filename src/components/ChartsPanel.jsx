@@ -11,12 +11,22 @@ export default function ChartsPanel({
   monthlyIncome,
   affordabilityPct,
   avgRent,
+  filteredHousing = [],
+  cfFilteredHousing = [],
+  policyPackage = false,
+  onPolicyPackageChange,
 }) {
   const hasIsochrone = isochroneData && isochroneData.features && isochroneData.features.length > 0
 
   return (
     <div className="charts-panel">
-      <ExplorerIntro />
+      <ExplorerIntro
+        filteredHousing={filteredHousing}
+        cfFilteredHousing={cfFilteredHousing}
+        monthlyIncome={monthlyIncome}
+        policyPackage={policyPackage}
+        onPolicyPackageChange={onPolicyPackageChange}
+      />
       <div className="chart-card chart-card-rent">
         <h3>Monthly Rent Distribution</h3>
         {hasIsochrone ? (

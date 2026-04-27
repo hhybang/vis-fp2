@@ -2641,6 +2641,157 @@
   border-bottom-color: var(--paper-rule-strong);
 }
 
+/* "Wage & Housing Ledger" spread — wraps the occupations panel
+   ("The people who keep Boston running…") and the worker picker
+   ("Pick a worker. See what the housing pipeline offers her."). The page
+   itself becomes a wage ledger: warmer cream paper than the surrounding
+   --paper-bg, hairline horizontal rules at a 28px rhythm, heavier rules
+   at AMI-tier breakpoints, a red steno-pad margin rule, and ghosted
+   dollar amounts down the left margin. The full-bleed paper is painted
+   by ::before via the same 100vw / left:50% / translateX(-50%) trick used
+   by .motivation-card--combined, so the texture spans the viewport. */
+.wage-ledger-spread {
+  position: relative;
+  isolation: isolate;
+  padding: 8px 0;
+}
+
+.wage-ledger-spread::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+  background:
+    /* heavier rules at AMI-tier rhythm (~every 6 hairlines) */
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 167px,
+      rgba(26, 26, 26, 0.10) 167px,
+      rgba(26, 26, 26, 0.10) 168px
+    ),
+    /* hairline ledger rules every 28px */
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 27px,
+      rgba(74, 98, 130, 0.10) 27px,
+      rgba(74, 98, 130, 0.10) 28px
+    ),
+    /* steno-pad red margin rule, sits ~64px from viewport left */
+    linear-gradient(
+      to right,
+      transparent 0,
+      transparent 64px,
+      rgba(218, 41, 28, 0.30) 64px,
+      rgba(218, 41, 28, 0.30) 65px,
+      transparent 65px
+    ),
+    /* warmer paper than --paper-bg */
+    #efe6cf;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Editorial strap at the very top of the spread. */
+.wage-ledger-spread::after {
+  content: 'Wage & Housing Ledger · Greater Boston';
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-label);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(26, 26, 26, 0.42);
+  z-index: 0;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* Ghost dollar amounts running down the steno-pad margin. The rail spans
+   the full viewport width via the same full-bleed trick, then the labels
+   are anchored to the viewport's left edge. We list the four AMI-tier
+   wages (30 / 50 / 80 / 100% AMI for a 2-person household) repeated three
+   times so they distribute musically along the spread regardless of
+   height. */
+.wage-ledger-rail {
+  position: absolute;
+  top: 48px;
+  bottom: 48px;
+  left: 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: flex-start;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.wage-ledger-rail span {
+  margin-left: 14px;
+  font-family: var(--font-label);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: rgba(26, 26, 26, 0.32);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Strip the inner card chrome — the page surface IS the ledger, so the
+   white card boxes that .motivation-card normally draws would fight the
+   paper. Keep the vertical padding rhythm but drop background, border,
+   and shadow. The header rule promotes to the strong paper-rule so it
+   reads against the warmer ledger paper. */
+.wage-ledger-spread .motivation-card {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 28px 0 22px;
+}
+
+.wage-ledger-spread .motivation-card-header {
+  border-bottom-color: var(--paper-rule-strong);
+}
+
+/* On narrow viewports the steno-pad margin and dollar rail would crowd
+   the content. Hide the rail and pull the red margin rule off-screen by
+   widening the transparent left band. */
+@media (max-width: 720px) {
+  .wage-ledger-rail {
+    display: none;
+  }
+  .wage-ledger-spread::before {
+    background:
+      repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent 167px,
+        rgba(26, 26, 26, 0.10) 167px,
+        rgba(26, 26, 26, 0.10) 168px
+      ),
+      repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent 27px,
+        rgba(74, 98, 130, 0.10) 27px,
+        rgba(74, 98, 130, 0.10) 28px
+      ),
+      #efe6cf;
+  }
+  .wage-ledger-spread::after {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+  }
+}
+
 .motivation-card-header {
   display: flex;
   flex-direction: column;
@@ -2817,9 +2968,16 @@
 }
 
 /* ----- Transit bars ----- */
+/* The occupations chart ("Worker income, as % of Boston Area Median Income…")
+   sits inside the wage-ledger-spread, where the page is painted with hairline
+   ledger rules. Those rules would cut visually through the chart's strip
+   legend and dot rows, so we lay a solid paper-bg fill behind the SVG so the
+   visualization reads as a clean analytical surface. */
 .motivation-bars-wrap {
   position: relative;
   width: 100%;
+  background: var(--paper-bg);
+  padding: 12px 8px;
 }
 
 .motivation-bars-svg {

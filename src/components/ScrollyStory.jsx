@@ -661,17 +661,31 @@ export default function ScrollyStory({ onComplete }) {
         <MotivationPanels view="waffle" />
       </section>
 
-      {/* Section 4 · The people who keep Boston running (occupations) */}
+      {/* Sections 4 + 5 · "Wage & Housing Ledger" spread.
+          Both panels share one full-bleed background — warm ledger paper
+          with hairline rules, a steno-pad red margin rule, and ghosted
+          AMI-tier dollar amounts running down the margin. The page itself
+          becomes the wage ledger, instead of two white cards. */}
       <div className="section-divider" />
-      <section className="scrolly-section" ref={addRef(4)}>
-        <MotivationPanels view="occupations" />
-      </section>
+      <div className="wage-ledger-spread">
+        <aside className="wage-ledger-rail" aria-hidden="true">
+          {Array.from({ length: 3 }).flatMap((_, rep) =>
+            ['$38K', '$64K', '$102K', '$127K'].map((d, i) => (
+              <span key={`${rep}-${i}`}>{d}</span>
+            ))
+          )}
+        </aside>
 
-      {/* Section 5 · Pick a worker */}
-      <div className="section-divider" />
-      <section className="scrolly-section" ref={addRef(5)}>
-        <PolicyGapPanels view="workers" />
-      </section>
+        {/* Section 4 · The people who keep Boston running (occupations) */}
+        <section className="scrolly-section" ref={addRef(4)}>
+          <MotivationPanels view="occupations" />
+        </section>
+
+        {/* Section 5 · Pick a worker */}
+        <section className="scrolly-section" ref={addRef(5)}>
+          <PolicyGapPanels view="workers" />
+        </section>
+      </div>
 
       {/* Section 6 · Two Landmark Laws · Venn Diagram */}
       <div className="section-divider" />
@@ -705,10 +719,13 @@ export default function ScrollyStory({ onComplete }) {
       <section className="scrolly-bridge" aria-hidden="false">
         <div className="scrolly-bridge-inner">
           <p className="scrolly-bridge-text">
-            Up to here, a shared view of law, supply, and a few example workers. 
-            What follows lets you sit with the choice that any one renter has to make: 
-            the rent they can carry, the commute they can absorb, the tradeoffs they end up living with. <br /> <br />
-            From the story to <em>one renter's</em> map.
+            Up to here, the argument has lived at the scale of a state: two
+            laws, a pipeline, and a policy package that would build thousands
+            of new affordable homes near the MBTA.<br /><br />
+            The next view drops you onto a map at the scale of a single
+            renter &mdash; <em>your</em> income, <em>your</em> workplace,{' '}
+            <em>your</em> reach area &mdash; and lets you compare today&rsquo;s
+            pipeline to the same pipeline under both levers.
           </p>
           <div className="scrolly-bridge-rule" />
         </div>
@@ -717,15 +734,23 @@ export default function ScrollyStory({ onComplete }) {
       {/* Section 9 · Conclusion / transition (full viewport, centered) */}
       <section className="scrolly-section scrolly-cta" ref={addRef(9)}>
         <div className="scrolly-cta-inner">
-          <h2>The Tradeoffs Are Personal</h2>
+          <h2>See it on your block.</h2>
           <p className="scrolly-cta-lead">
-          For any one renter, the right tradeoff depends on income, workplace, and priorities. How far is the commute they can absorb? What share of income can go to rent? Is a car worth the cost if it buys a cheaper apartment further out?
+            The choice set for any one renter today &mdash; rent share,
+            commute distance, whether to keep a car &mdash; is the choice set
+            <em> current law</em> produces. The explorer lets you place
+            yourself on the map and see two versions of the same neighborhood
+            side by side: the homes priced for you in today&rsquo;s pipeline,
+            and the homes that would be priced for you if Massachusetts
+            paired its TOD zoning with the affordability floor and the
+            in-lieu fund.
           </p>
           <p className="scrolly-cta-sub">
-          Use the explorer to step through the decision a Greater Boston renter is making right now.
+            Toggle <em>Today</em> vs <em>both levers pulled</em> and watch the
+            housing dots, and the count of homes priced for you, change.
           </p>
           <button type="button" onClick={onComplete}>
-            Start Exploring
+            Place yourself on the map
           </button>
         </div>
       </section>
