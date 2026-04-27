@@ -344,15 +344,6 @@ function LeverPanel({ basePct, totalUnits }) {
   const numLevers = Object.values(levers).filter(Boolean).length
   const mixLeverCount = (levers.floor ? 1 : 0) + (levers.deep ? 1 : 0)
 
-  const tierDeltas = TIERS.map((t) => ({
-    ...t,
-    d: result.pct[t.key] - basePct[t.key],
-  }))
-  const maxAbsDelta = Math.max(
-    0.25,
-    ...tierDeltas.map((x) => Math.abs(x.d))
-  )
-
   return (
     <div className="lever-panel">
       <div className="lever-rack" role="group" aria-label="Policy levers">
@@ -450,41 +441,6 @@ function LeverPanel({ basePct, totalUnits }) {
             </span>
           ))}
         </div>
-
-        {numLevers > 0 && (
-          <div
-            className="lever-delta-block"
-            aria-label="Change in the mix, percentage points vs. baseline. Each bar uses the same scale, normalized to the largest change."
-          >
-            {tierDeltas.map(({ key, label, d, color }) => {
-              const w = Math.min(100, (Math.abs(d) / maxAbsDelta) * 100)
-              const val =
-                d === 0 ? '0' : d > 0 ? `+${d.toFixed(1)}` : d.toFixed(1)
-              return (
-                <div key={key} className="lever-delta-line">
-                  <span className="lever-delta-line-label">{label}</span>
-                  <div className="lever-delta-line-track" aria-hidden="true">
-                    {d > 0 && (
-                      <div
-                        className="lever-delta-line-fill"
-                        style={{ width: `${w}%`, left: 0, background: color }}
-                      />
-                    )}
-                    {d < 0 && (
-                      <div
-                        className="lever-delta-line-fill"
-                        style={{ width: `${w}%`, right: 0, left: 'auto', background: 'rgba(90, 90, 90, 0.45)' }}
-                      />
-                    )}
-                  </div>
-                  <span className={`lever-delta-line-pp ${d < 0 ? 'lever-delta-line-pp-neg' : ''}`}>
-                    {val}
-                  </span>
-                </div>
-              )
-            })}
-          </div>
-        )}
 
         {numLevers > 0 && (
           <ul className="lever-sidenotes" aria-label="Model notes for your selection">
