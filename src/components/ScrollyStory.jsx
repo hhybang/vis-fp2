@@ -677,7 +677,7 @@ export default function ScrollyStory({ onComplete }) {
           <em>how much</em> money flows to it. Neither controls{' '}
           <em>who gets to live there</em>. That&rsquo;s the gap shown above:
           density without affordability, capacity without keys for working
-          renters. <br /> <br /> The same income bands appear here, now as two policy levers, alongside a chart of how other places set an affordable <em>share</em>.
+          renters.
         </p>
         <PolicyGapPanels view="levers" />
       </section>
