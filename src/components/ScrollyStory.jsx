@@ -233,7 +233,7 @@ export default function ScrollyStory({ onComplete }) {
 
   return (
     <div className="scrolly">
-      <div className={`trees-fixed ${treesVisible ? 'trees-show' : ''}`} aria-hidden="true">
+      <div className={`trees-fixed ${treesVisible && mapOn ? 'trees-show' : ''}`} aria-hidden="true">
         {TREES.map((t, i) => (
           <img
             key={i}
@@ -334,7 +334,7 @@ export default function ScrollyStory({ onComplete }) {
         <p className="scrolly-lede-text">
           If you rent in Greater Boston, you already know the tradeoff: the
           closer you live to a T stop, the more you pay. Transit means jobs,
-          groceries, healthcare &mdash; your whole daily life without a car.
+          groceries, healthcare: your whole daily life without a car.
           But the neighborhoods with the best access are increasingly out of
           reach for the people who depend on it most. This is the story of
           how that happened, what the state promised to do about it, and
@@ -368,7 +368,6 @@ export default function ScrollyStory({ onComplete }) {
         </div>
         <div className="section-map-tint" />
         <div className="section-content">
-          <span className="section-eyebrow">Why It Matters</span>
           <h2>Your T Stop Is More Than a Commute</h2>
           <p>
             If you don&rsquo;t own a car, or can&rsquo;t afford one,
@@ -522,14 +521,11 @@ export default function ScrollyStory({ onComplete }) {
           </div>
         )}
         <div className="section-content revealed">
-          <span className="section-eyebrow">The Squeeze</span>
-          <h2>The Closer to Transit, the Higher Your Rent</h2>
+          <h2>Rents Run Higher Near MBTA Stations</h2>
           <p>
-            Every time a new station opens or a line improves, the apartments
-            nearby get more expensive. It&rsquo;s not a mystery: better
-            transit makes a neighborhood more desirable, and landlords price
-            accordingly. Rents near MBTA stations have been climbing faster
-            than rents everywhere else.
+            Proximity to MBTA service is consistently associated with higher
+            market rents. Rents in transit-adjacent neighborhoods have risen
+            faster than the regional average.
           </p>
 
           <div className="stat-row">
@@ -554,16 +550,10 @@ export default function ScrollyStory({ onComplete }) {
           </div>
 
           <p className="section-note">
-            If you earn less than $92,000 a year, a typical apartment near an
-            MBTA station would eat more than 30% of your income. That&rsquo;s
-            the textbook definition of being &ldquo;cost-burdened.&rdquo;
-            Roughly <strong>4 in 10 households</strong> in Greater Boston fall
-            below that line.
-          </p>
-          <p>
-            You&rsquo;re not imagining the squeeze. The gap between where you
-            can afford to live and where the T can take you is real, and
-            it&rsquo;s growing.
+            At the 30% rule, a household needs roughly $92,000 in annual
+            income to afford the average transit-adjacent apartment without
+            being cost-burdened. About <strong>4 in 10 households</strong> in
+            Greater Boston fall below that threshold.
           </p>
         </div>
       </section>
@@ -573,8 +563,7 @@ export default function ScrollyStory({ onComplete }) {
       <section className="scrolly-section scrolly-section-wide policy-section-editorial" ref={addRef(2)}>
         <div className="policy-section-inner">
           <header className="policy-section-header">
-            <span className="section-eyebrow">What the State Promised</span>
-            <h2>Two Big Laws. Neither Guarantees You a Home.</h2>
+            <h2>Two Landmark Laws, One Missing Guarantee</h2>
             <p className="policy-section-lead">
               Massachusetts passed two landmark housing policies, the
               most ambitious in state history. They sound like good news for
@@ -713,25 +702,22 @@ export default function ScrollyStory({ onComplete }) {
       {/* Section 4 · Motivation */}
       <div className="section-divider" />
       <section className="scrolly-section" ref={addRef(3)}>
-        <span className="section-eyebrow">Who Actually Gets In</span>
-        <h2>So Who Is the New Housing For?</h2>
+        <h2>Who the New Housing Is For</h2>
 
         <MotivationPanels />
 
         <p>
-          The pattern is clear: the stations with the best service, the
-          ones you depend on most, are surrounded by the most
-          market-rate housing. The new buildings going up near your Red Line
-          or Orange Line stop are overwhelmingly not priced for you. They&rsquo;re
-          priced for someone earning twice what you do.
+          The pattern is consistent: the stations with the strongest service
+          are surrounded by the most market-rate housing. New construction
+          near the Red and Orange Lines skews heavily toward higher-income
+          tenants relative to the median Greater Boston renter.
         </p>
       </section>
 
       {/* Section 5 · Analysis: What's Missing */}
       <div className="section-divider" />
       <section className="scrolly-section" ref={addRef(4)}>
-        <span className="section-eyebrow">The Missing Piece</span>
-        <h2>Why Nobody Required Affordable Units</h2>
+        <h2>Where Affordability Is Left to Local Discretion</h2>
         <p>
           Both laws control <em>where</em> housing gets built and <em>how
           much</em> money flows to it. Neither controls{' '}
@@ -741,33 +727,31 @@ export default function ScrollyStory({ onComplete }) {
         <PolicyGapPanels />
 
         <p>
-          Other states have figured this out. Washington now requires affordable
-          units in every development near a transit station. California
-          fast-tracks projects that include them. Massachusetts has the zoning
-          and the money. What it&rsquo;s still missing is the rule that
-          says some of those new apartments near your stop have to be ones you
-          can actually sign a lease on.
+          Other states pair density with required affordability near transit.
+          Washington requires affordable units in every development near a
+          transit station; California fast-tracks projects that include them.
+          Massachusetts has the zoning capacity and the funding in place. An
+          affordability requirement tied to transit proximity would close the
+          remaining gap.
         </p>
       </section>
 
       {/* Transition · systemic gap → personal calculus */}
       <section className="scrolly-bridge" aria-hidden="false">
         <div className="scrolly-bridge-inner">
-          <span className="scrolly-bridge-eyebrow">In the Meantime</span>
           <p className="scrolly-bridge-text">
-            Policy change is slow. And while legislators debate, you&rsquo;re
-            the one making the tradeoffs:{' '}
+            Policy change takes time. In the meantime, renters navigate these
+            tradeoffs{' '}
             <em>one budget, one commute, one lease at a time</em>.
           </p>
           <div className="scrolly-bridge-rule" />
-          <p className="scrolly-bridge-cue">So what does the map look like for you?</p>
+          <p className="scrolly-bridge-cue">What does the map look like for you?</p>
         </div>
       </section>
 
       {/* Section 6 · Conclusion / transition (full viewport, centered) */}
       <section className="scrolly-section scrolly-cta" ref={addRef(5)}>
         <div className="scrolly-cta-inner">
-          <span className="section-eyebrow">Explore</span>
           <h2>The Tradeoffs Are Personal</h2>
           <p className="scrolly-cta-lead">
             The right tradeoff depends on your situation: your income, your

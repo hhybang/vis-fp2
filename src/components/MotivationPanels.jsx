@@ -491,7 +491,6 @@ export default function MotivationPanels() {
       {/* Visualization 1: Waffle chart */}
       <article className="motivation-card">
         <header className="motivation-card-header">
-          <span className="motivation-eyebrow">Evidence · 01</span>
           <h3>Of every 100 new homes built near MBTA transit…</h3>
           <p className="motivation-dek">
             Across <strong>{devs.toLocaleString()}</strong> completed and in-progress developments
@@ -546,7 +545,6 @@ export default function MotivationPanels() {
       {/* Visualization 2: Who is the new housing actually for? */}
       <article className="motivation-card">
         <header className="motivation-card-header">
-          <span className="motivation-eyebrow">Evidence · 02</span>
           <h3>The people who keep Boston running can&rsquo;t afford the housing built next to their bus stop.</h3>
           <p className="motivation-dek">
             Across <strong>{OCCUPATIONS.length}</strong> common Greater Boston occupations,

@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import * as d3 from 'd3'
 import { loadMassBuilds } from '../utils/dataLoaders'
-import { GLOSSARY, KEY_GLOSSARY_TERMS } from '../utils/glossary'
+import { GLOSSARY } from '../utils/glossary'
 
 /* =========================================================================
-   Inline jargon tooltips + glossary strip
+   Inline jargon tooltips
    Housing-policy copy is full of domain terms. Readers get a dotted underline
-   on each jargon word, a hover/focus definition popup, and a persistent key-
-   terms strip at the top of the section for baseline context.
+   on each jargon word with a hover/focus definition popup.
    ========================================================================= */
 
 function Jargon({ term, children }) {
@@ -21,41 +20,6 @@ function Jargon({ term, children }) {
         <span className="jargon-tooltip-def">{entry.def}</span>
       </span>
     </span>
-  )
-}
-
-function GlossaryStrip() {
-  const [open, setOpen] = useState(false)
-  return (
-    <section className={`policy-glossary ${open ? 'is-open' : ''}`} aria-label="Key terms">
-      <button
-        type="button"
-        className="policy-glossary-toggle"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-      >
-        <span className="policy-glossary-eyebrow">Key terms</span>
-        <span className="policy-glossary-hint">
-          {open ? 'Hide definitions' : 'Show definitions for housing-policy jargon'}
-        </span>
-        <span className="policy-glossary-chev" aria-hidden="true">
-          {open ? '▴' : '▾'}
-        </span>
-      </button>
-      {open && (
-        <dl className="policy-glossary-list">
-          {KEY_GLOSSARY_TERMS.map((key) => {
-            const entry = GLOSSARY[key]
-            return (
-              <div key={key} className="policy-glossary-item">
-                <dt>{entry.short}</dt>
-                <dd>{entry.def}</dd>
-              </div>
-            )
-          })}
-        </dl>
-      )}
-    </section>
   )
 }
 
@@ -796,13 +760,10 @@ export default function PolicyGapPanels() {
 
   return (
     <div className="motivation-stack">
-      <GlossaryStrip />
-
       {/* Viz 1: Collapse bars */}
       <article className="motivation-card">
         <header className="motivation-card-header">
-          <span className="motivation-eyebrow">Gap · 01</span>
-          <h3>Capacity without affordability is a policy gap, not a policy result.</h3>
+          <h3>Capacity without affordability: units built near transit are less affordable than units built away from it.</h3>
           <p className="motivation-dek">
             The MBTA Communities Act requires <Jargon term="as-of-right">as-of-right</Jargon> zoning
             for multi-family housing, not construction, and <strong>sets no income targets</strong>.
@@ -831,8 +792,7 @@ export default function PolicyGapPanels() {
       {/* Viz 2: Municipality scatter */}
       <article className="motivation-card">
         <header className="motivation-card-header">
-          <span className="motivation-eyebrow">Gap · 02</span>
-          <h3>With no <Jargon term="affordability floor">affordability floor</Jargon>, outcomes swing from 2% to 28% across the same law.</h3>
+          <h3>Without a statewide <Jargon term="affordability floor">affordability floor</Jargon>, outcomes range from 2% to 28% under the same law.</h3>
           <p className="motivation-dek">
             Every municipality below is subject to the MBTA Communities Act. Each dot is one
             community, sized by units built. With no statewide affordability mandate, some
@@ -881,7 +841,6 @@ export default function PolicyGapPanels() {
       {/* Viz 3: Peer comparison */}
       <article className="motivation-card">
         <header className="motivation-card-header">
-          <span className="motivation-eyebrow">Gap · 03</span>
           <h3>Other states solved the same problem by requiring a floor.</h3>
           <p className="motivation-dek">
             Massachusetts isn&rsquo;t the first state to <Jargon term="upzone">upzone</Jargon>{' '}
