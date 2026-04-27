@@ -727,7 +727,7 @@ const PEER_POLICIES = [
   {
     key: 'mont',
     place: 'Montgomery County, MD',
-    policy: 'Moderately-Priced Dwelling Unit (MPDU)',
+    policy: 'Moderately-Priced Dwelling Unit',
     policyShort: 'MPDU',
     policyUrl: 'https://montgomerycountymd.gov/DHCA/housing/singlefamily/mpdu/produced.html',
     year: 1974,
