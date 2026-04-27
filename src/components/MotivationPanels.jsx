@@ -14,8 +14,8 @@ const MBTA_MODES = [
 // pattern used in PolicyGapPanels (same CSS classes in scrolly.css).
 const MOTIVATION_GLOSSARY = {
   'AMI': {
-    short: 'AMI · Area Median Income',
-    def: 'The middle household income for a metro area, used by HUD and the state to define who qualifies for income-restricted housing. In Greater Boston, 50% AMI is roughly $64k for a 2-person household; 80% AMI is roughly $102k. Lower percentages mean deeper affordability.',
+    short: 'Area Median Income (AMI)',
+    def: 'HUD-published benchmark used to set income eligibility for affordable housing. 100% AMI for a 2-person Boston household = $127,200 in 2024.',
   },
   'any affordable': {
     short: '"Any affordable"',
@@ -558,9 +558,8 @@ export default function MotivationPanels({ view = 'all' }) {
         </div>
 
         <div className="motivation-takeaway">
-          Only <strong>{pctDeep.toFixed(1)}%</strong> of new units near MBTA transit are targeted at households earning below 50% <Jargon term="AMI">AMI</Jargon>.
-          Those are the renters with the least ability to afford a car, and the most to gain from living near transit.
-          The other <strong>{((breakdown.market / hu) * 100).toFixed(0)}%</strong> of units are market-rate.
+          Only <strong>{pctDeep.toFixed(1)}%</strong> of new units near MBTA transit are designated for households earning below 50% AMI. Those are the renters with the least ability to afford a car, and the most to gain from living near transit. 
+          The remaining <strong>{((breakdown.market / hu) * 100).toFixed(0)}%</strong> are market-rate, with no income restriction.
         </div>
 
         <footer className="motivation-source">

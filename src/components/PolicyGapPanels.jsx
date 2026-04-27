@@ -247,7 +247,11 @@ const TIERS = [
 const LEVERS = [
   {
     id: 'floor',
-    title: '20% inclusionary floor',
+    title: (
+      <>
+        20% <Jargon term="inclusionary floor">inclusionary floor</Jargon>
+      </>
+    ),
     short: 'Affordability floor',
     desc:
       'Require every TOD project near MBTA to set aside at least 20% of units as deed-restricted affordable.',
@@ -994,24 +998,20 @@ export default function PolicyGapPanels({ view = 'all' }) {
         <header className="motivation-card-header">
           <h3>How to actually build affordable homes near the MBTA: pull these two levers.</h3>
           <p className="motivation-dek">
-            <strong>Floor</strong> = a minimum{' '}
-            <Jargon term="affordability floor">deed-restricted</Jargon> share. <strong>Deep-AMI</strong> = more
-            of that for under-50% incomes&mdash;like the worker cards, for the
-            full pipeline. Notes if the data already sit at the floor. The
-            chart below the takeaway is the <em>first</em> of those, not
-            the deep split.
+            <strong>Floor</strong> sets a minimum <Jargon term="deed-restricted">deed-restricted</Jargon> share for every TOD project. {' '}
+            <strong>Deep-AMI</strong> requires that a portion of those affordable units serve households under 50% <Jargon term="AMI">AMI</Jargon>, the same renters who appear in the worker cards above. 
+            <br /> <br />
+            Toggles below show what the full MBTA pipeline would look like under each lever. The chart further down shows the floor only, not the deep-AMI split.
           </p>
         </header>
 
         <LeverPanel basePct={breakdownPct} totalUnits={totalUnits} />
 
         <div className="motivation-takeaway">
-          In this model, with both levers on, about{' '}
-          <strong>1 in {oneInDeed} pipeline homes near the MBTA</strong> are priced in the
-          deed-restricted stack, and about <strong>1 in {oneInDeep}</strong> in the
-          <Jargon term="deep affordability">deep</Jargon> (under-50%{' '}
-          <Jargon term="AMI">AMI</Jargon>) part of that stack. Your toggles may read
-          differently if the real pipeline is already at the floor and deep share.
+          With both levers on, this model projects that about <strong>1 in {oneInDeed} pipeline homes near the MBTA</strong>{' '}
+          would be <Jargon term="deed-restricted">deed-restricted</Jargon>, and about <strong>1 in {oneInDeep}</strong>  
+          would be priced for households under 50% AMI. <br /> <br /> Today, only <strong>16.1%</strong> of the pipeline is affordable at any level, and <strong>3.4%</strong> reaches the under-50% AMI band. 
+          The gap between the model and the baseline is what a statewide floor and deep-AMI rule would close.
         </div>
 
         <div className="motivation-subsection-divider" role="presentation">
@@ -1019,11 +1019,10 @@ export default function PolicyGapPanels({ view = 'all' }) {
         </div>
 
         <p className="motivation-dek motivation-dek--inline">
-          Each bar: a required <strong>affordable share</strong> (in-lieu where
-          applicable)&mdash;first toggle territory, not the second. The diamond is
-          what Massachusetts <em>built</em> in this view, with no similar statewide
-          floor. Rounded peer rules, for contrast&mdash;not a one-to-one with
-          the pipeline.
+          Each bar shows a required <strong>affordable share</strong>, with in-lieu fees where applicable. 
+          This is what the first lever (the floor) does. The second lever, deep-AMI targeting, is set separately. 
+          The diamond marks what Massachusetts has built under current law, with no statewide affordable share required. 
+          Peer rules are rounded for comparison and are not a one-to-one match with the MBTA pipeline.
         </p>
 
         <PeerComparison funnel={funnel} />
@@ -1042,10 +1041,9 @@ export default function PolicyGapPanels({ view = 'all' }) {
         </div>
 
         <div className="motivation-takeaway">
-          The peers add density to a <strong>minimum</strong> affordable
-          share&mdash;that is the bar.{' '}
-          Who gets the deeper set-asides is the second lever (and the workers
-          before). MA has the rezoning. <strong>Still open: a share floor.</strong>
+          Peer states pair density near transit with a <strong>minimum</strong> affordable share. 
+          That floor is the first lever. Targeting deeper set-asides to lower-income households is the second, and it is the lever that determines whether housing reaches workers like the ones shown above. 
+          <br /> <br /> Massachusetts has done the rezoning. A statewide affordable-share floor is still open.
         </div>
 
         <footer className="motivation-source">
@@ -1068,10 +1066,9 @@ export default function PolicyGapPanels({ view = 'all' }) {
       {showWorkers && (
       <article className="motivation-card">
         <header className="motivation-card-header">
-          <h3>Pick a worker. See the homes near her T stop.</h3>
+          <h3>Pick a worker. See what the housing pipeline offers her.</h3>
           <p className="motivation-dek">
-            Tap a worker
-            to see how many of every 100 new MBTA-near homes she can compete for.
+          Each worker represents a real Greater Boston wage. The colored homes show how many of every 100 new MBTA-near units are priced within her income tier.
           </p>
         </header>
 

@@ -375,12 +375,7 @@ export default function ScrollyStory({ onComplete }) {
       {/* Lede — first paragraph, paper background, sets up the rest */}
       <section className="scrolly-lede">
         <p className="scrolly-lede-text">
-          If you rent in Greater Boston, you already know the tradeoff: the
-          closer you live to a T stop, the more you pay. Transit means jobs,
-          groceries, healthcare: your whole daily life without a car.
-          But the neighborhoods with the best access are increasingly out of
-          reach for the people who depend on it most. Here, we explore how
-          state policy could do more for working-class renters near transit.
+        For a renter in Greater Boston, the tradeoff is well known: the closer you live to a T stop, the more you pay. Transit means jobs, groceries, healthcare. A whole daily life without a car. But the neighborhoods with the best access are increasingly out of reach for the people who depend on transit most. This piece walks through what working-class renters near the MBTA face today, and where state policy has room to do more.
         </p>
       </section>
 
@@ -393,12 +388,7 @@ export default function ScrollyStory({ onComplete }) {
         <div className="section-map-tint" />
         <div className="section-content">
           <p>
-            For renters like you, the nearest MBTA station shapes
-            daily life: which jobs are reachable, which groceries and clinics
-            are within walking distance, where a child&rsquo;s school sits
-            relative to home. Station-adjacent housing is essential
-            infrastructure for these households, and one of the highest-leverage
-            places state policy can support working families.
+          For a working-class renter, the nearest MBTA station shapes daily life: which jobs are reachable, which groceries and clinics are within walking distance, where a child's school sits relative to home. Station-adjacent housing is essential infrastructure for these households, and one of the highest-leverage places where state policy can support working families.
           </p>
 
           <div className="t-line" role="tablist" aria-label="Why your T stop matters">
@@ -437,8 +427,7 @@ export default function ScrollyStory({ onComplete }) {
               {!activeStation && (
                 <div className="t-line-prompt" role="status" aria-live="polite">
                   <p>
-                    Select a stop above to explore: cost savings, job access,
-                    daily needs, or climate impact.
+                  Select a stop to see what's at stake along each dimension: the costs avoided, the jobs reached, the daily errands made walkable, the climate impact reduced.
                   </p>
                 </div>
               )}
@@ -605,7 +594,7 @@ export default function ScrollyStory({ onComplete }) {
         <div className="policy-section-inner">
           <p className="policy-people-hint" role="note">
             Click a waving figure at the left or right to read what Boston-area
-            residents have said in local news.
+            residents have said in local news about housing and transit.
           </p>
           <div className="policy-section-opener-card">
             <p className="policy-section-opener">
@@ -686,10 +675,9 @@ export default function ScrollyStory({ onComplete }) {
         <p className="policy-section-bridge">
           Both laws control <em>where</em> housing gets built and{' '}
           <em>how much</em> money flows to it. Neither controls{' '}
-          <em>who gets to live there</em>. That&rsquo;s the gap above:
+          <em>who gets to live there</em>. That&rsquo;s the gap shown above:
           density without affordability, capacity without keys for working
-          renters. Same price bands as earlier, now as two levers, then
-          a chart of how other places set an affordable <em>share</em>.
+          renters. <br /> <br /> The same income bands appear here, now as two policy levers, alongside a chart of how other places set an affordable <em>share</em>.
         </p>
         <PolicyGapPanels view="levers" />
       </section>
@@ -698,11 +686,10 @@ export default function ScrollyStory({ onComplete }) {
       <section className="scrolly-bridge" aria-hidden="false">
         <div className="scrolly-bridge-inner">
           <p className="scrolly-bridge-text">
-            Up to here, a shared view of law, supply, and a few example workers.
-            What is left is yours:
-            the rent you can carry, the trip you will make, and the tradeoffs
-            you are willing to live with.<br /> <br />
-            From the story to <em>your</em> map.
+            Up to here, a shared view of law, supply, and a few example workers. 
+            What follows lets you sit with the choice that any one renter has to make: 
+            the rent they can carry, the commute they can absorb, the tradeoffs they end up living with. <br /> <br />
+            From the story to <em>one renter's</em> map.
           </p>
           <div className="scrolly-bridge-rule" />
         </div>
@@ -713,14 +700,10 @@ export default function ScrollyStory({ onComplete }) {
         <div className="scrolly-cta-inner">
           <h2>The Tradeoffs Are Personal</h2>
           <p className="scrolly-cta-lead">
-            The right tradeoff depends on your situation: your income, your
-            workplace, your priorities. How far are you willing to commute?
-            What can you afford to spend on housing? Is a car worth the cost
-            if it means a cheaper apartment further out?
+          For any one renter, the right tradeoff depends on income, workplace, and priorities. How far is the commute they can absorb? What share of income can go to rent? Is a car worth the cost if it buys a cheaper apartment further out?
           </p>
           <p className="scrolly-cta-sub">
-            Use the interactive explorer to test what transit-oriented housing
-            looks like for you.
+          Use the explorer to step through the decision a Greater Boston renter is making right now.
           </p>
           <button type="button" onClick={onComplete}>
             Start Exploring
