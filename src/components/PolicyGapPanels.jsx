@@ -648,13 +648,11 @@ function LeverPanel({ basePct, totalUnits }) {
               aria-label={`${lv.peer} lever: ${on ? 'pulled' : 'up'} — click to ${on ? 'release' : 'pull'}`}
               onClick={() => toggle(lv.id)}
             >
-              {/* "pull me" hint on the first lever — CSS hides it the
+              {/* "pull me" hint on each lever — CSS hides them the
                   moment any lever in the rack flips on. */}
-              {i === 0 && (
-                <span className="lever-pullme" aria-hidden="true">
-                  pull me <span className="lever-pullme-arrow">&darr;</span>
-                </span>
-              )}
+              <span className="lever-pullme" aria-hidden="true">
+                pull me <span className="lever-pullme-arrow">&darr;</span>
+              </span>
               <svg
                 viewBox="0 0 80 80"
                 className="lever-svg"

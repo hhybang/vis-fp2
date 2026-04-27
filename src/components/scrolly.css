@@ -2533,17 +2533,36 @@
 }
 
 /* "How to actually build affordable homes near the MBTA" — the prescription
-   card gets an architect's-blueprint grid: 8px minor + 40px major rules in a
-   desaturated chart-blue, sitting on a slightly warmer paper than the default
-   card so the grid reads. Reinforces the "drafting plans" metaphor without
-   competing with the viz inside. */
+   card. Frameless: the page itself becomes the drafting board. An architect's
+   grid (8px minor + 40px major rules in a desaturated chart-blue) is painted
+   by a pseudo-element that breaks out of the 880px section column to span
+   the full viewport width — making it feel like the entire page surface is
+   the drafting board, not a contained card. Content keeps its normal column
+   alignment with the rest of the section. */
 .motivation-card--combined {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  position: relative;
+  isolation: isolate;
+}
+
+.motivation-card--combined::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100vw;
+  transform: translateX(-50%);
   background:
     linear-gradient(to right, rgba(74, 98, 130, 0.10) 1px, transparent 1px) 0 0 / 40px 40px,
     linear-gradient(to bottom, rgba(74, 98, 130, 0.10) 1px, transparent 1px) 0 0 / 40px 40px,
     linear-gradient(to right, rgba(74, 98, 130, 0.05) 1px, transparent 1px) 0 0 / 8px 8px,
     linear-gradient(to bottom, rgba(74, 98, 130, 0.05) 1px, transparent 1px) 0 0 / 8px 8px,
-    #fbf7ea;
+    var(--paper-bg);
+  z-index: -1;
+  pointer-events: none;
 }
 
 .motivation-card--combined .motivation-card-header {
@@ -3189,10 +3208,14 @@
 }
 
 /* The bar chart now drives the explorer. It sits directly above the detail
-   panel; hovering or clicking any row updates the panel below in real time. */
+   panel; hovering or clicking any row updates the panel below in real time.
+   Solid card background so the bars read cleanly against the blueprint-grid
+   surface of the surrounding prescription card. */
 .policy-explorer-compare {
   margin: 0 0 0;
-  padding: 8px 0 4px;
+  padding: 18px 22px 14px;
+  background: var(--paper-card);
+  border: 1px solid var(--paper-rule);
 }
 
 .policy-explorer-compare-cap {
@@ -4007,8 +4030,8 @@
   color: #1a1a1a;
 }
 
-/* Hide once the reader has pulled any lever — at that point they get it. */
-.lever-rack:has(.lever-on) .lever-pullme,
+/* Hide each sticker only once its own lever has been pulled — the other
+   lever keeps inviting interaction until the reader engages with it too. */
 .lever-on .lever-pullme {
   opacity: 0;
   transform: scale(0.85) translateY(6px);
