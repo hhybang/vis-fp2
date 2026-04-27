@@ -330,8 +330,8 @@ export default function ScrollyStory({ onComplete }) {
           preload="auto"
           aria-hidden="true"
         >
-          <source src="/hero-bg-480.webm" type="video/webm" media="(max-width: 768px)" />
-          <source src="/hero-bg.webm" type="video/webm" />
+          <source src={`${import.meta.env.BASE_URL}hero-bg-480.webm`} type="video/webm" media="(max-width: 768px)" />
+          <source src={`${import.meta.env.BASE_URL}hero-bg.webm`} type="video/webm" />
         </video>
         <div className="scrolly-hero-overlay" aria-hidden="true" />
         <p className="scrolly-hero-credit">
