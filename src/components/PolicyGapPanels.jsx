@@ -697,73 +697,142 @@ function WorkerPicker({ basePct, totalUnits }) {
 
 const PEER_POLICIES = [
   {
-    key: 'ma',
-    place: 'Massachusetts',
-    policy: 'MBTA Communities Act',
-    year: 2021,
-    floor: 0,
-    floorLabel: 'No floor',
-    usesRealized: true,
+    key: 'ca',
+    place: 'California',
+    policy: 'SB 35 Streamlining',
+    policyShort: 'SB 35',
+    policyUrl:
+      'https://leginfo.legislature.ca.gov/faces/billNavClient.xhtml?bill_id=201720180SB35',
+    year: 2017,
+    floor: 20,
+    floorLabel: '20% required (Bay Area)',
+    accent: '#4d5a3f',
+    isFocus: false,
+    pieces: {
+      zoning: { has: true, label: 'By-right TOD zoning', detail: '≤90-day ministerial approval' },
+      floor: { has: true, label: 'Affordability floor', detail: '20% deed-restricted, half ≤50% AMI' },
+    },
+    stats: [
+      { num: '20%', unit: '', label: 'Bay Area required share' },
+      { num: '≤90', unit: 'days', label: 'approval timeline' },
+      { num: '18,000', unit: '+', label: 'homes streamlined (mostly 100% aff.)' },
+    ],
     description:
-      'Zones for density near transit but sets no affordability requirement. Local inclusionary ordinances are capped at 10% at 80% AMI to remain as-of-right.',
-    accent: '#DA291C',
-    isFocus: true,
+      'Joins by-right approval near transit with a statewide affordability requirement. Qualifying projects in jurisdictions behind on their housing targets skip discretionary review and CEQA — but only if they hit the law\u2019s required deed-restricted share.',
+    sources: [
+      { label: 'Cal. Gov. Code §65913.4', url: 'https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=GOV&sectionNum=65913.4' },
+      { label: 'Terner Center evaluation', url: 'https://ternercenter.berkeley.edu/research-and-policy/sb-35-evaluation/' },
+    ],
   },
   {
     key: 'mont',
     place: 'Montgomery County, MD',
     policy: 'Moderately-Priced Dwelling Unit (MPDU)',
+    policyShort: 'MPDU',
+    policyUrl: 'https://montgomerycountymd.gov/DHCA/housing/singlefamily/mpdu/produced.html',
     year: 1974,
     floor: 13.5,
     floorLabel: '12.5–15% required',
-    realized: null,
-    description:
-      'One of the oldest inclusionary-zoning laws in the US. Every development of 20+ units must include 12.5–15% affordable. 17,300+ affordable units produced.',
     accent: '#4d5a3f',
     isFocus: false,
+    pieces: {
+      zoning: { has: false, label: 'No TOD-specific upzoning', detail: 'Countywide, not transit-targeted' },
+      floor: { has: true, label: 'Affordability floor', detail: '12.5–15% on every 20+ unit project' },
+    },
+    stats: [
+      { num: '12.5–15%', unit: '', label: 'required affordable share' },
+      { num: '50', unit: 'yrs', label: 'in operation since 1974' },
+      { num: '17,300', unit: '+', label: 'deed-restricted homes produced' },
+    ],
+    description:
+      'One of the oldest inclusionary-zoning laws in the US. Every development of 20+ units must include 12.5–15% deed-restricted affordable. Proves a share floor can run for half a century without choking off supply.',
+    sources: [
+      { label: 'Montgomery County DHCA', url: 'https://montgomerycountymd.gov/DHCA/housing/singlefamily/mpdu/produced.html' },
+    ],
   },
   {
     key: 'sea',
     place: 'Seattle, WA',
     policy: 'Mandatory Housing Affordability',
+    policyShort: 'MHA',
+    policyUrl: 'https://www.seattle.gov/housing/housing-developers/mandatory-housing-affordability',
     year: 2019,
     floor: 9,
     floorLabel: '5–11% required',
-    realized: null,
-    description:
-      'In exchange for upzoning, every new multifamily project in urban centers and transit areas must either build affordable units or pay into an affordable-housing fund.',
     accent: '#4d5a3f',
     isFocus: false,
-  },
-  {
-    key: 'ca',
-    place: 'California',
-    policy: 'SB 35 Streamlining',
-    year: 2017,
-    floor: 20,
-    floorLabel: '20% required (Bay Area)',
-    realized: null,
+    pieces: {
+      zoning: { has: true, label: 'By-right upzoning', detail: 'Urban centers and station areas' },
+      floor: { has: true, label: 'Affordability floor', detail: '5–11% on every multifamily project' },
+    },
+    stats: [
+      { num: '5–11%', unit: '', label: 'required share (or in-lieu fee)' },
+      { num: '$280M', unit: '+', label: 'fees collected through 2023' },
+      { num: '~3,800', unit: '', label: 'affordable units built or funded' },
+    ],
     description:
-      'By-right, 6-month approval for housing projects that meet local affordability minimums (20% in the Bay Area). 18,000+ units approved in the first five years, most 100% affordable.',
-    accent: '#4d5a3f',
-    isFocus: false,
+      'Pairs upzoning with a mandatory share rule: every new multifamily project must build affordable units or pay into a city affordable-housing fund. Closest peer in design to what an MBTA-Communities-plus-floor would look like.',
+    sources: [
+      { label: 'Seattle Office of Housing', url: 'https://www.seattle.gov/housing/housing-developers/mandatory-housing-affordability' },
+    ],
   },
   {
     key: 'wa',
     place: 'Washington State',
     policy: 'HB 1491 TOD Law',
+    policyShort: 'HB 1491',
+    policyUrl: 'https://app.leg.wa.gov/billsummary?BillNumber=1491&Year=2025',
     year: 2025,
     floor: 10,
     floorLabel: 'Every TOD must include affordable',
-    realized: null,
-    description:
-      'Requires affordable units in every residential development inside transit station areas, with property-tax exemptions and fee reductions as incentives.',
     accent: '#4d5a3f',
     isFocus: false,
+    pieces: {
+      zoning: { has: true, label: 'By-right TOD zoning', detail: '½-mile radius around major stops' },
+      floor: { has: true, label: 'Affordability floor', detail: 'Required share + tax exemptions' },
+    },
+    stats: [
+      { num: '½', unit: 'mile', label: 'radius around transit stops' },
+      { num: '20', unit: 'yr', label: 'property-tax exemption' },
+      { num: 'New', unit: '', label: 'just passed in 2025' },
+    ],
+    description:
+      'Requires affordable units in every residential development inside transit station areas, paired with property-tax exemptions and fee reductions as incentives. The newest model — and the closest in scope to MBTA Communities.',
+    sources: [
+      { label: 'Washington HB 1491', url: 'https://app.leg.wa.gov/billsummary?BillNumber=1491&Year=2025' },
+    ],
+  },
+  {
+    key: 'ma',
+    place: 'Massachusetts',
+    policy: 'MBTA Communities Act',
+    policyShort: 'MA today',
+    policyUrl: 'https://www.mass.gov/info-details/multi-family-zoning-requirement-for-mbta-communities',
+    year: 2021,
+    floor: 0,
+    floorLabel: 'No floor',
+    accent: '#DA291C',
+    isFocus: true,
+    usesRealized: true,
+    pieces: {
+      zoning: { has: true, label: 'By-right TOD zoning', detail: 'MBTA Communities Act' },
+      floor: { has: false, label: 'No statewide floor', detail: 'Local IZ effectively capped at 10% at 80% AMI' },
+    },
+    stats: [
+      { num: '0%', unit: '', label: 'required affordable share' },
+      { num: '177', unit: '', label: 'communities subject to the law' },
+      { num: 'TBD', unit: '%', label: 'pipeline share realized', dynamic: 'affPctRealized' },
+    ],
+    description:
+      'Zones for density near transit but sets no statewide affordability requirement. Local inclusionary ordinances above 10% at 80% AMI risk losing their as-of-right status, so a community can comply by zoning a district of entirely market-rate towers.',
+    sources: [
+      { label: 'Mass.gov MBTA Communities', url: 'https://www.mass.gov/info-details/multi-family-zoning-requirement-for-mbta-communities' },
+      { label: 'MAPC Section 3A analysis', url: 'https://www.mapc.org/planning101/affordability-effectiveness-section-3a/' },
+    ],
   },
 ]
 
-function PeerComparison({ funnel }) {
+function PeerComparison({ funnel, activeKey, onSelect }) {
   const svgRef = useRef(null)
 
   useEffect(() => {
@@ -825,8 +894,30 @@ function PeerComparison({ funnel }) {
       .data(data)
       .enter()
       .append('g')
-      .attr('class', 'policy-peer-row')
+      .attr('class', (d) => `policy-peer-row${d.key === activeKey ? ' policy-peer-row-active' : ''}`)
       .attr('transform', (d) => `translate(0, ${y(d.key)})`)
+      .attr('tabindex', onSelect ? 0 : null)
+      .attr('role', onSelect ? 'button' : null)
+      .attr('aria-label', (d) => (onSelect ? `Show details for ${d.place} ${d.policy}` : null))
+      .style('cursor', onSelect ? 'pointer' : null)
+      .on('click', onSelect ? (_, d) => onSelect(d.key) : null)
+      .on('keydown', onSelect
+        ? (event, d) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault()
+              onSelect(d.key)
+            }
+          }
+        : null)
+
+    rows
+      .append('rect')
+      .attr('x', -margin.left + 4)
+      .attr('y', -2)
+      .attr('width', chartW + margin.left + margin.right - 8)
+      .attr('height', y.bandwidth() + 4)
+      .attr('fill', (d) => (d.key === activeKey ? '#fff5d6' : 'transparent'))
+      .attr('rx', 3)
 
     rows
       .append('rect')
@@ -933,9 +1024,129 @@ function PeerComparison({ funnel }) {
       .attr('fill', '#DA291C')
       .attr('font-family', 'Inter, sans-serif')
       .text('No statewide floor')
-  }, [funnel])
+  }, [funnel, activeKey, onSelect])
 
   return <svg ref={svgRef} className="policy-gap-svg" />
+}
+
+/* =========================================================================
+   Viz D · Policy Explorer
+   --------------------------------------------------------------------------
+   Tabs across all five jurisdictions. Each tab opens a detail panel showing
+   what that jurisdiction has (the two-piece stack: by-right zoning + share
+   floor), what the law produced (a 3-stat outcomes strip), and a one-line
+   description with citation links. Designed to mirror the T-line tabs in
+   ScrollyStory so the visual language of "interactive comparison" stays
+   consistent across the piece.
+   ========================================================================= */
+
+function PolicyExplorer({ activeKey, onSelect, peers, funnel }) {
+  const active = peers.find((p) => p.key === activeKey) || peers[0]
+  const dynamicValue = (stat) => {
+    if (!stat.dynamic) return null
+    if (stat.dynamic === 'affPctRealized') return `${funnel.affPct.toFixed(1)}%`
+    return null
+  }
+
+  return (
+    <div className="policy-explorer">
+      <div className="policy-explorer-tabs" role="tablist" aria-label="Policy comparison">
+        {peers.map((p) => {
+          const isActive = p.key === activeKey
+          return (
+            <button
+              key={p.key}
+              type="button"
+              role="tab"
+              aria-selected={isActive}
+              aria-controls="policy-explorer-panel"
+              id={`policy-explorer-tab-${p.key}`}
+              className={`policy-explorer-tab${isActive ? ' policy-explorer-tab-active' : ''}${p.isFocus ? ' policy-explorer-tab-focus' : ''}`}
+              style={{ '--peer-accent': p.accent }}
+              onClick={() => onSelect(p.key)}
+            >
+              <span className="policy-explorer-tab-place">{p.place}</span>
+              <span className="policy-explorer-tab-policy">{p.policyShort}</span>
+              <span className="policy-explorer-tab-year">{p.year}</span>
+            </button>
+          )
+        })}
+      </div>
+
+      <div
+        id="policy-explorer-panel"
+        role="tabpanel"
+        aria-labelledby={`policy-explorer-tab-${active.key}`}
+        className="policy-explorer-panel"
+        style={{ '--peer-accent': active.accent }}
+        key={active.key}
+      >
+        <div className="policy-explorer-header">
+          <div className="policy-explorer-header-line">
+            <span className="policy-explorer-header-place">{active.place}</span>
+            <span className="policy-explorer-header-dot" aria-hidden="true">&middot;</span>
+            <span className="policy-explorer-header-year">{active.year}</span>
+          </div>
+          <h4 className="policy-explorer-header-policy">
+            <a href={active.policyUrl} target="_blank" rel="noopener noreferrer">
+              {active.policy}
+            </a>
+          </h4>
+        </div>
+
+        <div className="policy-explorer-pieces" aria-label="What this jurisdiction has">
+          {[active.pieces.zoning, active.pieces.floor].map((piece, i) => (
+            <div
+              key={i}
+              className={`policy-explorer-piece${piece.has ? ' policy-explorer-piece-on' : ' policy-explorer-piece-off'}`}
+            >
+              <span className="policy-explorer-piece-mark" aria-hidden="true">
+                {piece.has ? '\u2713' : '\u2014'}
+              </span>
+              <div className="policy-explorer-piece-label">{piece.label}</div>
+              <div className="policy-explorer-piece-detail">{piece.detail}</div>
+            </div>
+          ))}
+        </div>
+
+        <div
+          className="policy-explorer-stats"
+          role="group"
+          aria-label={`${active.place} ${active.policy} outcomes`}
+        >
+          {active.stats.map((stat, i) => (
+            <div key={i} className="policy-explorer-stat">
+              <div className="policy-explorer-stat-num">
+                {dynamicValue(stat) ?? stat.num}
+                {stat.unit && !stat.dynamic && (
+                  <span className="policy-explorer-stat-unit">{stat.unit}</span>
+                )}
+              </div>
+              <div className="policy-explorer-stat-label">{stat.label}</div>
+            </div>
+          ))}
+        </div>
+
+        <p className="policy-explorer-desc">{active.description}</p>
+
+        <div className="policy-explorer-sources">
+          {active.sources.length > 0 && (
+            <>
+              <span className="policy-explorer-sources-label">Sources:</span>{' '}
+              {active.sources.map((s, i) => (
+                <span key={s.url}>
+                  <a href={s.url} target="_blank" rel="noopener noreferrer">
+                    {s.label}
+                  </a>
+                  {i < active.sources.length - 1 ? ' \u00b7 ' : ''}
+                </span>
+              ))}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  )
 }
 
 /* =========================================================================
@@ -950,6 +1161,7 @@ export default function PolicyGapPanels({ view = 'all' }) {
 
   const [builds, setBuilds] = useState(null)
   const [error, setError] = useState(false)
+  const [activePeer, setActivePeer] = useState('ca')
 
   useEffect(() => {
     let alive = true
@@ -1004,193 +1216,34 @@ export default function PolicyGapPanels({ view = 'all' }) {
       {showLevers && (
       <article className="motivation-card motivation-card--combined">
         <header className="motivation-card-header">
-          <h3>How to actually build affordable homes near the MBTA: pull these two levers.</h3>
+          <h3>How to actually build affordable homes near the MBTA</h3>
+          <p className="motivation-dek">
+            Four other places already pair transit-area zoning with an{' '}
+            <Jargon term="affordability floor">affordability floor</Jargon>.
+            Massachusetts has the zoning. Click through each to see what the
+            missing piece looks like &mdash; then test the same idea on the
+            MBTA-near pipeline below.
+          </p>
         </header>
 
-        <div className="policy-explainer">
-          <div className="policy-explainer-block">
-            <div className="policy-explainer-eyebrow">
-              The California precedent &middot; SB 35 (2017)
-            </div>
-            <h4 className="policy-explainer-title">
-              California already paired transit-area zoning with an
-              affordability requirement. Massachusetts hasn&rsquo;t.
-            </h4>
-            <p className="policy-explainer-body">
-              California&rsquo;s{' '}
-              <a
-                href="https://leginfo.legislature.ca.gov/faces/billNavClient.xhtml?bill_id=201720180SB35"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <strong>Senate Bill 35</strong>
-              </a>
-              , authored by State Senator Scott Wiener, joined two ideas
-              Massachusetts has kept separate: <em>by-right approval</em> for
-              housing near transit and a <em>statewide affordability floor</em>{' '}
-              on what gets approved. Qualifying multifamily projects in
-              jurisdictions behind on their state housing targets skip
-              discretionary review and{' '}
-              <a
-                href="https://opr.ca.gov/ceqa/"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                CEQA
-              </a>
-              {' '}&mdash; but only if they hit the law&rsquo;s required share
-              of deed-restricted units.
-            </p>
+        <PolicyExplorer
+          peers={PEER_POLICIES}
+          activeKey={activePeer}
+          onSelect={setActivePeer}
+          funnel={funnel}
+        />
 
-            <div className="policy-receipts" role="group" aria-label="California SB 35 results in numbers">
-              <div className="policy-receipts-stat">
-                <div className="policy-receipts-num">20%</div>
-                <div className="policy-receipts-label">
-                  required deed-restricted share<br />(Bay Area floor)
-                </div>
-              </div>
-              <div className="policy-receipts-stat">
-                <div className="policy-receipts-num">&le;90 <span className="policy-receipts-unit">days</span></div>
-                <div className="policy-receipts-label">
-                  ministerial approval<br />(vs. years under prior law)
-                </div>
-              </div>
-              <div className="policy-receipts-stat">
-                <div className="policy-receipts-num">18,000<span className="policy-receipts-plus">+</span></div>
-                <div className="policy-receipts-label">
-                  homes streamlined<br />(majority 100% affordable)
-                </div>
-              </div>
-            </div>
-            <p className="policy-receipts-source">
-              Sources: 20% floor and approval timeline,{' '}
-              <a
-                href="https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=GOV&sectionNum=65913.4"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Cal. Gov. Code &sect; 65913.4
-              </a>
-              {' '}and{' '}
-              <a
-                href="https://www.hcd.ca.gov/planning-and-community-development/streamlined-ministerial-approval-process"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                California HCD
-              </a>
-              ; approval counts and 100%-affordable share, UC Berkeley{' '}
-              <a
-                href="https://ternercenter.berkeley.edu/research-and-policy/sb-35-evaluation/"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Terner Center SB 35 evaluation
-              </a>
-              {' '}(2022).
-            </p>
+        <figure className="policy-explorer-compare" aria-label="Required affordable share, all five jurisdictions compared">
+          <figcaption className="policy-explorer-compare-cap">
+            Compare required shares &mdash; click any row to switch the panel above.
+          </figcaption>
+          <PeerComparison funnel={funnel} activeKey={activePeer} onSelect={setActivePeer} />
+        </figure>
 
-            <p className="policy-explainer-body">
-              <strong>Translating SB 35 to Massachusetts.</strong>{' '}
-              The{' '}
-              <a
-                href="https://www.mass.gov/info-details/multi-family-zoning-requirement-for-mbta-communities"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <strong>MBTA Communities Act</strong>
-              </a>
-              {' '}already supplies the California-style by-right zoning near
-              transit. The piece still missing is the affordability rule
-              attached to it &mdash; today, a community can comply by zoning for
-              a multifamily district of entirely market-rate towers (
-              <a
-                href="https://www.mapc.org/planning101/affordability-effectiveness-section-3a/"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                MAPC Section 3A analysis
-              </a>
-              ). A state-level rule modeled on SB 35 would graft a 20%
-              deed-restricted floor (with half at{' '}
-              &le;50% <Jargon term="AMI">AMI</Jargon>) onto the upzoning that
-              already exists.
-            </p>
-
-            <figure
-              className="policy-stack"
-              aria-label="The two-piece policy stack: California has both pieces; Massachusetts has only the zoning."
-            >
-              <div className="policy-stack-grid">
-                <div className="policy-stack-col">
-                  <div className="policy-stack-col-head policy-stack-col-head-have">
-                    California
-                  </div>
-                  <div className="policy-stack-tile policy-stack-tile-on">
-                    <span className="policy-stack-mark" aria-hidden="true">✓</span>
-                    <div className="policy-stack-tile-eyebrow">Affordability floor</div>
-                    <div className="policy-stack-tile-title">
-                      20% deed-restricted, half at &le;50% AMI
-                    </div>
-                  </div>
-                  <div className="policy-stack-tile policy-stack-tile-on">
-                    <span className="policy-stack-mark" aria-hidden="true">✓</span>
-                    <div className="policy-stack-tile-eyebrow">By-right TOD zoning</div>
-                    <div className="policy-stack-tile-title">
-                      Ministerial approval near transit
-                    </div>
-                  </div>
-                  <figcaption className="policy-stack-foot">
-                    <a
-                      href="https://leginfo.legislature.ca.gov/faces/billNavClient.xhtml?bill_id=201720180SB35"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      SB 35
-                    </a>{' '}
-                    &middot; 2017
-                  </figcaption>
-                </div>
-
-                <div className="policy-stack-col">
-                  <div className="policy-stack-col-head policy-stack-col-head-gap">
-                    Massachusetts
-                  </div>
-                  <div
-                    className="policy-stack-tile policy-stack-tile-missing"
-                    aria-label="Missing: no statewide affordability floor"
-                  >
-                    <span className="policy-stack-mark" aria-hidden="true">&mdash;</span>
-                    <div className="policy-stack-tile-eyebrow">No statewide floor</div>
-                    <div className="policy-stack-tile-title">The piece still missing</div>
-                  </div>
-                  <div className="policy-stack-tile policy-stack-tile-on">
-                    <span className="policy-stack-mark" aria-hidden="true">✓</span>
-                    <div className="policy-stack-tile-eyebrow">By-right TOD zoning</div>
-                    <div className="policy-stack-tile-title">MBTA Communities Act</div>
-                  </div>
-                  <figcaption className="policy-stack-foot">
-                    <a
-                      href="https://www.mass.gov/info-details/multi-family-zoning-requirement-for-mbta-communities"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      MBTA Communities
-                    </a>
-                    {' '}&middot; 2021&ensp;&middot;&ensp;
-                    <a
-                      href="https://www.mass.gov/info-details/the-affordable-homes-act-smart-housing-livable-communities"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Affordable Homes Act
-                    </a>
-                    {' '}&middot; 2024
-                  </figcaption>
-                </div>
-              </div>
-            </figure>
-          </div>
+        <div className="motivation-subsection-divider" role="presentation">
+          <span className="motivation-subsection-kicker">
+            Now apply this idea to the MBTA-near pipeline &darr;
+          </span>
         </div>
 
         <LeverPanel basePct={breakdownPct} totalUnits={totalUnits} />
@@ -1209,30 +1262,12 @@ export default function PolicyGapPanels({ view = 'all' }) {
           Fairmount Line.
         </div>
 
-        <div className="motivation-subsection-divider" role="presentation">
-          <span className="motivation-subsection-kicker">Four places already do this</span>
-        </div>
-
-        <PeerComparison funnel={funnel} />
-
-        <div className="policy-peer-grid">
-          {PEER_POLICIES.filter((p) => !p.isFocus).map((p) => (
-            <div key={p.key} className="policy-peer-card">
-              <div className="policy-peer-card-header">
-                <span className="policy-peer-card-place">{p.place}</span>
-                <span className="policy-peer-card-year">{p.year}</span>
-              </div>
-              <div className="policy-peer-card-policy">{p.policy}</div>
-              <p className="policy-peer-card-desc">{p.description}</p>
-            </div>
-          ))}
-        </div>
-
-        <div className="motivation-takeaway">
-          Every peer in the chart pairs density with a required share for
-          working renters. Massachusetts has the density.{' '}
-          <strong>Adding the share is the next move.</strong>
-        </div>
+        <p className="policy-explorer-close">
+          Each jurisdiction above built a variation on the same idea: density
+          paired with a required share for working renters. Massachusetts
+          already passed the density.{' '}
+          <strong>The affordable-share floor is the piece left to add.</strong>
+        </p>
 
         <footer className="motivation-source">
           Counterfactual model: 20% inclusionary floor with at least half of the affordable share
