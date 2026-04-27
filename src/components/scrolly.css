@@ -2300,6 +2300,78 @@
   z-index: 1;
 }
 
+/* Wrapper around each waving figure so a "click me" pill can sit above it
+   without disturbing the surrounding people-grid layout. The wrapper keeps
+   the same footprint as a regular .person-tiny SVG. */
+.person-waver-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 8px;
+  height: 13px;
+  cursor: pointer;
+  pointer-events: auto;
+  z-index: 2;
+}
+
+.person-waver-wrap .person-tiny {
+  width: 8px;
+  height: 13px;
+}
+
+.person-waver-hint {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  background: #1a1a1a;
+  color: #fff;
+  font-family: var(--font-label, system-ui, sans-serif);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 4px 7px;
+  border-radius: 3px;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+  animation: waver-hint-bob 1.6s ease-in-out infinite;
+  z-index: 3;
+}
+
+.person-waver-hint::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid #1a1a1a;
+}
+
+/* On the left people-side the wavers sit near the inner (right) edge of
+   their column, so anchor the pill toward the outer (left) edge to keep
+   it inside the overflow:hidden container. Mirror for the right side. */
+.people-side-left .person-waver-hint {
+  right: -2px;
+}
+.people-side-left .person-waver-hint::after {
+  right: 6px;
+}
+
+.people-side-right .person-waver-hint {
+  left: -2px;
+}
+.people-side-right .person-waver-hint::after {
+  left: 6px;
+}
+
+@keyframes waver-hint-bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+
 @keyframes person-wave {
   0%, 100% { transform: rotate(0deg) scale(1); }
   12%      { transform: rotate(-18deg) scale(2.2); }

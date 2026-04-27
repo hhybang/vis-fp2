@@ -229,7 +229,7 @@ export default function ScrollyStory({ onComplete }) {
     if (!activeQuote) return
     const handlePointerDown = (e) => {
       if (e.target.closest('.speech-bubble')) return
-      if (e.target.closest('.person-waver')) return
+      if (e.target.closest('.person-waver, .person-waver-wrap')) return
       dismissQuote()
     }
     const handleKey = (e) => {
@@ -252,14 +252,33 @@ export default function ScrollyStory({ onComplete }) {
         {data.map((isRed, i) => {
           const waverLocalIdx = waverArr.indexOf(i)
           const isWaver = waverLocalIdx !== -1
+          if (isWaver) {
+            return (
+              <span
+                key={i}
+                className="person-waver-wrap"
+                onClick={(e) => handleWaverClick(e, quoteOffset + waverLocalIdx)}
+              >
+                <span className="person-waver-hint" aria-hidden="true">
+                  click me
+                </span>
+                <svg
+                  viewBox="0 0 24 40"
+                  className="person-tiny person-waver"
+                  fill="#DA291C"
+                >
+                  <circle cx="12" cy="6" r="5" />
+                  <path d="M12 14c-5 0-9 3-9 7v4h4v15h10V25h4v-4c0-4-4-7-9-7z" />
+                </svg>
+              </span>
+            )
+          }
           return (
             <svg
               key={i}
               viewBox="0 0 24 40"
-              className={`person-tiny ${isWaver ? 'person-waver' : ''}`}
+              className="person-tiny"
               fill={isRed ? '#DA291C' : '#c0bdb8'}
-              onClick={isWaver ? (e) => handleWaverClick(e, quoteOffset + waverLocalIdx) : undefined}
-              style={isWaver ? { cursor: 'pointer', pointerEvents: 'auto' } : undefined}
             >
               <circle cx="12" cy="6" r="5" />
               <path d="M12 14c-5 0-9 3-9 7v4h4v15h10V25h4v-4c0-4-4-7-9-7z" />
