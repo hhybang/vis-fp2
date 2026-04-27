@@ -278,6 +278,41 @@ export default function ScrollyStory({ onComplete }) {
 
       {/* Hero */}
       <div className="scrolly-hero">
+        <video
+          className="scrolly-hero-video"
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+          aria-hidden="true"
+        >
+          <source src="/hero-bg-480.webm" type="video/webm" media="(max-width: 768px)" />
+          <source src="/hero-bg.webm" type="video/webm" />
+        </video>
+        <div className="scrolly-hero-overlay" aria-hidden="true" />
+        <p className="scrolly-hero-credit">
+          Footage: Green Line train leaving Union Square Station, Somerville, by{' '}
+          <a
+            href="https://commons.wikimedia.org/wiki/File:Inbound_test_train_leaving_Union_Square_station,_January_2022.webm"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Byron A. Nash
+          </a>{' '}
+          /{' '}
+          <a
+            href="https://creativecommons.org/licenses/by/2.0/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            CC BY 2.0
+          </a>
+        </p>
+        <div className="scrolly-hero-kicker">
+          <span className="scrolly-hero-kicker-dot" aria-hidden="true" />
+          Greater Boston, 2026
+        </div>
         <div className="scrolly-hero-content">
           <h1 className="scrolly-hero-title">
             <span className="scrolly-hero-title-line">Housing Near</span>
@@ -288,22 +323,26 @@ export default function ScrollyStory({ onComplete }) {
             and what&rsquo;s not being done about it
           </p>
           <p className="scrolly-hero-authors">
-            Gabriela Miranda, Arnav Verma, Helen Bang
-          </p>
-          <p className="intro">
-            If you rent in Greater Boston, you already know the tradeoff: the
-            closer you live to a T stop, the more you pay. Transit means
-            jobs, groceries, healthcare, your whole daily life without
-            a car. But the neighborhoods with the best access are
-            increasingly out of reach for the people who depend on it most.
-            This is the story of how that happened, what the state promised
-            to do about it, and what it means for you.
+            By Gabriela Miranda, Arnav Verma &amp; Helen Bang
           </p>
         </div>
         <div className="scroll-hint">Scroll to explore ↓</div>
       </div>
 
-      {/* Renter voices, surfaced early so the audience hears real people first */}
+      {/* Lede — first paragraph, paper background, sets up the rest */}
+      <section className="scrolly-lede">
+        <p className="scrolly-lede-text">
+          If you rent in Greater Boston, you already know the tradeoff: the
+          closer you live to a T stop, the more you pay. Transit means jobs,
+          groceries, healthcare &mdash; your whole daily life without a car.
+          But the neighborhoods with the best access are increasingly out of
+          reach for the people who depend on it most. This is the story of
+          how that happened, what the state promised to do about it, and
+          what it means for you.
+        </p>
+      </section>
+
+      {/* Renter voices — surfaced early so the audience hears real people first */}
       <section className="renter-voices" ref={addRef(0)}>
         <div className="renter-voices-inner">
           {QUOTES.map((q, i) => (

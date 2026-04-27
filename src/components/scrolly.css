@@ -14,106 +14,273 @@
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  padding: clamp(48px, 10vh, 100px) clamp(24px, 5vw, 56px) 88px;
+  justify-content: space-between;
+  align-items: stretch;
+  text-align: left;
+  padding:
+    clamp(28px, 4vh, 44px)
+    clamp(28px, 6vw, 88px)
+    clamp(64px, 9vh, 96px);
   position: relative;
   box-sizing: border-box;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.scrolly-hero-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -2;
+  pointer-events: none;
+  /* Subtle desaturation so the video reads as a backdrop, not a distraction */
+  filter: grayscale(0.25) contrast(1.05) brightness(0.85);
+}
+
+.scrolly-hero-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  /* Heavier wash at the bottom (where the text lives), light at the top (let
+     the train station show through). A soft vignette from the bottom-left
+     anchor point pulls focus toward the title block. */
+  background:
+    radial-gradient(
+      ellipse 90% 70% at 25% 95%,
+      rgba(0, 0, 0, 0.7) 0%,
+      rgba(0, 0, 0, 0.35) 45%,
+      rgba(0, 0, 0, 0.15) 80%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.45) 0%,
+      rgba(0, 0, 0, 0.2) 25%,
+      rgba(0, 0, 0, 0.25) 55%,
+      rgba(0, 0, 0, 0.7) 100%
+    );
+}
+
+/* Top-left kicker: small-caps eyebrow that gives an editorial dateline feel */
+.scrolly-hero-kicker {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  align-self: flex-start;
+  font-family: var(--font-label);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(246, 241, 232, 0.92);
+  padding: 8px 14px;
+  border: 1px solid rgba(246, 241, 232, 0.35);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
+}
+.scrolly-hero-kicker-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff4536;
+  box-shadow: 0 0 0 3px rgba(255, 69, 54, 0.25);
+}
+.scrolly-hero-kicker-sep {
+  opacity: 0.5;
 }
 
 .scrolly-hero-content {
   width: 100%;
-  max-width: 980px;
+  max-width: 920px;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
+  position: relative;
+  z-index: 1;
 }
 
-/* Display lines: same family + tracking as .chart-card h3 (App.css) */
+.scrolly-hero-credit {
+  position: absolute;
+  right: clamp(28px, 6vw, 88px);
+  top: clamp(28px, 4vh, 44px);
+  margin: 0;
+  z-index: 1;
+  font-family: var(--font-label);
+  font-size: 9.5px;
+  letter-spacing: 0.05em;
+  color: rgba(246, 241, 232, 0.55);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.85);
+  max-width: 38ch;
+  text-align: right;
+  line-height: 1.5;
+}
+.scrolly-hero-credit a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: rgba(246, 241, 232, 0.4);
+  text-underline-offset: 2px;
+}
+.scrolly-hero-credit a:hover {
+  color: #fff;
+  text-decoration-color: rgba(255, 255, 255, 0.8);
+}
+
+/* Title block: bottom-left anchored, two-line stacked treatment.
+   "Housing Near" sits as a smaller line, "Transit" is the big crimson hit. */
 .scrolly-hero-title {
   font-family: var(--font-serif);
-  margin: 0 0 clamp(20px, 3vh, 36px);
+  margin: 0 0 clamp(14px, 2vh, 22px);
   padding: 0;
   border: none;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: clamp(2px, 0.5vh, 8px);
+  align-items: flex-start;
+  gap: clamp(2px, 0.4vh, 6px);
   width: 100%;
+  max-width: 14ch;
   text-wrap: balance;
 }
 
 .scrolly-hero-title-line {
   display: block;
   font-family: var(--font-serif);
-  font-size: clamp(2.25rem, 7vw, 5rem);
+  font-size: clamp(1.85rem, 5.5vw, 4.25rem);
   font-weight: 900;
-  color: var(--ink);
+  color: #f6f1e8;
   letter-spacing: -0.02em;
   line-height: 0.95;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.55);
 }
 
 .scrolly-hero-title-accent {
   display: block;
   font-family: var(--font-serif);
-  font-size: clamp(3.75rem, 18vw, 11rem);
+  font-size: clamp(3.5rem, 13vw, 9rem);
   font-weight: 900;
-  color: #DA291C;
-  letter-spacing: -0.02em;
+  color: #ff4536;
+  letter-spacing: -0.025em;
   line-height: 0.88;
-  text-shadow: 0 2px 0 color-mix(in srgb, var(--paper-bg) 40%, transparent);
+  text-shadow:
+    0 2px 0 rgba(0, 0, 0, 0.35),
+    0 6px 32px rgba(0, 0, 0, 0.55);
 }
 
 .scrolly-hero .subtitle {
   font-family: var(--font-serif);
-  font-size: clamp(1.15rem, 2.8vw, 1.85rem);
-  font-weight: 600;
-  color: var(--ink-muted);
-  margin: 0 0 clamp(20px, 2.5vh, 28px);
+  font-size: clamp(1.05rem, 2.2vw, 1.55rem);
+  font-weight: 500;
+  color: #ece4d4;
+  margin: clamp(10px, 1.5vh, 18px) 0 clamp(18px, 2.5vh, 26px);
   font-style: italic;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.015em;
   line-height: 1.35;
-  max-width: 36ch;
+  max-width: 42ch;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.65);
 }
 
 .scrolly-hero-authors {
   font-family: var(--font-label);
-  font-size: clamp(12px, 1.35vw, 14px);
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: var(--ink);
-  margin: 0 0 clamp(28px, 4vh, 44px);
-  padding-bottom: clamp(20px, 3vh, 32px);
-  border-bottom: 1px solid var(--paper-rule);
+  font-size: clamp(11px, 1.1vw, 13px);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(246, 241, 232, 0.85);
+  margin: 0;
+  padding: clamp(12px, 1.6vh, 18px) 0 0;
+  border-top: 1px solid rgba(246, 241, 232, 0.3);
   width: 100%;
   max-width: 520px;
-}
-
-.scrolly-hero .intro {
-  max-width: 560px;
-  font-size: clamp(15px, 1.65vw, 18px);
-  line-height: 1.78;
-  color: var(--ink);
-  margin: 0;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
 }
 
 .scrolly-hero .scroll-hint {
   position: absolute;
-  bottom: clamp(24px, 5vh, 40px);
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: clamp(20px, 3.5vh, 32px);
+  right: clamp(28px, 6vw, 88px);
+  left: auto;
+  transform: none;
   font-family: var(--font-label);
-  font-size: 11px;
-  color: var(--ink-muted);
+  font-size: 10px;
+  color: rgba(246, 241, 232, 0.85);
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.18em;
   animation: bob 2s ease-in-out infinite;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scrolly-hero-video { display: none; }
+  .scrolly-hero-overlay { background: var(--paper-bg); }
+  .scrolly-hero-title-line,
+  .scrolly-hero-authors {
+    color: var(--ink);
+    text-shadow: none;
+  }
+  .scrolly-hero-authors {
+    border-top-color: var(--paper-rule);
+  }
+  .scrolly-hero .subtitle {
+    color: var(--ink-muted);
+    text-shadow: none;
+  }
+  .scrolly-hero-title-accent {
+    color: #DA291C;
+    text-shadow: 0 2px 0 color-mix(in srgb, var(--paper-bg) 40%, transparent);
+  }
+  .scrolly-hero-kicker {
+    color: var(--ink-muted);
+    border-color: var(--paper-rule);
+    background: transparent;
+    text-shadow: none;
+  }
+  .scrolly-hero-credit {
+    color: var(--ink-muted);
+    text-shadow: none;
+  }
+  .scrolly-hero .scroll-hint {
+    color: var(--ink-muted);
+    text-shadow: none;
+  }
 }
 
 @keyframes bob {
-  0%, 100% { transform: translateX(-50%) translateY(0); }
-  50%      { transform: translateX(-50%) translateY(8px); }
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(6px); }
+}
+
+/* ----- Lede paragraph (between video hero and renter quotes) ----- */
+.scrolly-lede {
+  background: var(--paper-bg);
+  padding: clamp(56px, 10vh, 96px) clamp(24px, 5vw, 56px) clamp(24px, 4vh, 40px);
+  display: flex;
+  justify-content: center;
+}
+.scrolly-lede-text {
+  max-width: 36ch;
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: clamp(18px, 1.9vw, 22px);
+  line-height: 1.6;
+  color: var(--ink);
+  letter-spacing: -0.005em;
+  text-wrap: pretty;
+}
+.scrolly-lede-text::first-letter {
+  font-family: var(--font-serif);
+  font-weight: 900;
+  font-size: 3.6em;
+  line-height: 0.85;
+  float: left;
+  padding: 6px 12px 0 0;
+  color: #DA291C;
 }
 
 /* ----- Renter voices strip (early quote callouts) ----- */
@@ -1665,7 +1832,22 @@
 /* ----- Responsive ----- */
 @media (max-width: 768px) {
   .scrolly-hero {
-    padding: 0 24px;
+    padding: 24px 24px 56px;
+  }
+  .scrolly-hero-credit {
+    position: static;
+    margin: 12px 0 0;
+    text-align: left;
+    max-width: none;
+    align-self: flex-start;
+  }
+  .scrolly-hero .scroll-hint {
+    right: 24px;
+  }
+  .scrolly-hero-title { max-width: 100%; }
+  .scrolly-lede-text::first-letter {
+    font-size: 3em;
+    padding: 4px 8px 0 0;
   }
 
   .scrolly-section {
