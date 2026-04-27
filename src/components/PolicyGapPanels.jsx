@@ -259,11 +259,11 @@ const LEVERS = [
   },
   {
     id: 'deep',
-    title: 'Cap at 50% AMI',
-    short: 'Deep AMI targeting',
+    title: 'Mandatory share + affordable-housing fund',
+    short: 'Mandatory share + fund',
     desc:
-      'Half of those affordable units must serve households under 50% AMI — the renters with the least access to a car.',
-    peer: 'Montgomery County MPDU',
+      'Pairs upzoning with a mandatory share rule: every new multifamily project must build affordable units or pay into a city affordable-housing fund — and those fund dollars stack with LIHTC to produce deeply-affordable units.',
+    peer: 'Seattle MHA',
   },
 ]
 
@@ -301,8 +301,316 @@ function tiersNarrativeAccess(ami) {
   return new Set(['a80p'])
 }
 
+/* --------------------------------------------------------------------------
+   ScoreboardChart — single merged stacked-area chart that replaces the old
+   PipelineAreaChart + FundProjectionChart pair. Bottom four bands are the
+   on-site affordable mix produced by the inclusionary floor (CA-style),
+   broken out by AMI tier. The top band is the additional affordable
+   production funded by the in-lieu fund (Seattle-style). One Y-axis,
+   cumulative affordable homes; the dollar total appears as an inline
+   annotation. The whole chart is the prescription's scoreboard — pull the
+   levers and the bands grow off the bottom.
+   -------------------------------------------------------------------------- */
+
+const HORIZON_YEARS = 10
+const AFFORDABLE_KEYS = ['u30', 'a3050', 'a5080', 'a80p']
+const FUND_KEY = 'fund'
+const FUND_COLOR = '#4d5a3f' // deep green — echoes the peer chart's "what other places do" accent
+
+// Calibration constants for the in-lieu-fund layer. All three are
+// public-record-anchored figures; full citations are in the chart footnote.
+const FEE_PER_NONAFF_UNIT = 20000        // $ collected per market-rate unit (Seattle MHA empirical avg, area-weighted)
+const FUND_COST_PER_AFF_UNIT = 200000    // local fund $ per affordable unit produced (Boston construction basis, LIHTC-stacked)
+const NONAFF_SHARE_AFTER_FLOOR = 0.80    // share of pipeline still market-rate after the 20% inclusionary floor
+
+function fundProjectionNumbers(totalUnits, fundActive) {
+  const nonAffUnitsTotal = fundActive ? totalUnits * NONAFF_SHARE_AFTER_FLOOR : 0
+  const fundTotal = nonAffUnitsTotal * FEE_PER_NONAFF_UNIT
+  const fundedAffUnitsTotal = fundTotal / FUND_COST_PER_AFF_UNIT
+  return {
+    nonAffUnitsTotal,
+    fundTotal,
+    fundedAffUnitsTotal,
+  }
+}
+
+// The prescription's projected total affordable share (in pp of pipeline)
+// when both levers are pulled. Used by the peer chart's MA row to draw the
+// "where MA would land" diamond.
+function prescriptionAffShare(prescriptionPct) {
+  const onSite = prescriptionPct.u30 + prescriptionPct.a3050 + prescriptionPct.a5080 + prescriptionPct.a80p
+  const fundPp = NONAFF_SHARE_AFTER_FLOOR * (FEE_PER_NONAFF_UNIT / FUND_COST_PER_AFF_UNIT) * 100
+  return onSite + fundPp
+}
+
+function ScoreboardChart({ pct, totalUnits, levers }) {
+  const ref = useRef(null)
+  const numLevers = (levers.floor ? 1 : 0) + (levers.deep ? 1 : 0)
+  const fundActive = levers.deep
+
+  const numbers = useMemo(() => {
+    const onSiteAffPct = pct.u30 + pct.a3050 + pct.a5080 + pct.a80p
+    const onSiteDeepPct = pct.u30 + pct.a3050
+    const onSiteAff = (onSiteAffPct / 100) * totalUnits
+    const onSiteDeep = (onSiteDeepPct / 100) * totalUnits
+    const fund = fundProjectionNumbers(totalUnits, fundActive)
+    return {
+      onSiteAff,
+      onSiteDeep,
+      fundTotal: fund.fundTotal,
+      fundedAff: fund.fundedAffUnitsTotal,
+      nonAffUnitsTotal: fund.nonAffUnitsTotal,
+      totalAff: onSiteAff + fund.fundedAffUnitsTotal,
+      // Fund-funded units stack the LIHTC at <=50% AMI, so they count as
+      // deeply affordable in the headline.
+      totalDeep: onSiteDeep + fund.fundedAffUnitsTotal,
+    }
+  }, [pct, totalUnits, fundActive])
+
+  useEffect(() => {
+    const draw = (svgEl) => {
+      if (!svgEl) return
+      const svg = d3.select(svgEl)
+      svg.selectAll('*').remove()
+
+      const bbox = svgEl.getBoundingClientRect()
+      const W = Math.max(280, bbox.width || 480)
+      const H = 260
+      const margin = { top: 14, right: 18, bottom: 32, left: 50 }
+      const innerW = W - margin.left - margin.right
+      const innerH = H - margin.top - margin.bottom
+
+      svg.attr('viewBox', `0 0 ${W} ${H}`).attr('preserveAspectRatio', 'none')
+
+      const g = svg
+        .append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`)
+
+      // Build per-year stacked rows: 4 AMI bands on the bottom, the fund
+      // layer on top. With both levers off, every band is 0 and the chart
+      // is empty — the prescription literally builds nothing without the
+      // levers pulled.
+      const annualUnits = totalUnits / HORIZON_YEARS
+      const data = Array.from({ length: HORIZON_YEARS + 1 }, (_, year) => {
+        const cumulative = annualUnits * year
+        const row = { year }
+        AFFORDABLE_KEYS.forEach((k) => {
+          row[k] = (cumulative * (pct[k] || 0)) / 100
+        })
+        row[FUND_KEY] = fundActive
+          ? (cumulative * NONAFF_SHARE_AFTER_FLOOR * FEE_PER_NONAFF_UNIT) /
+            FUND_COST_PER_AFF_UNIT
+          : 0
+        return row
+      })
+
+      // Fix the Y ceiling to ~40% of pipeline so toggling levers grows the
+      // bands within a stable frame instead of rescaling the chart.
+      const yMax = Math.max(totalUnits * 0.4, 1)
+
+      const x = d3.scaleLinear().domain([0, HORIZON_YEARS]).range([0, innerW])
+      const y = d3.scaleLinear().domain([0, yMax]).range([innerH, 0])
+
+      const stackKeys = [...AFFORDABLE_KEYS, FUND_KEY]
+      const stack = d3.stack().keys(stackKeys)
+      const series = stack(data)
+
+      const tierColor = Object.fromEntries(TIERS.map((t) => [t.key, t.color]))
+      const colorFor = (k) => (k === FUND_KEY ? FUND_COLOR : tierColor[k])
+
+      const area = d3
+        .area()
+        .x((d) => x(d.data.year))
+        .y0((d) => y(d[0]))
+        .y1((d) => y(d[1]))
+        .curve(d3.curveMonotoneX)
+
+      g.append('g')
+        .selectAll('path')
+        .data(series)
+        .enter()
+        .append('path')
+        .attr('fill', (d) => colorFor(d.key))
+        .attr('opacity', (d) => (d.key === FUND_KEY ? 0.78 : 0.92))
+        .attr('d', area)
+
+      // Subtle horizontal grid
+      g.append('g')
+        .selectAll('line')
+        .data(y.ticks(4))
+        .enter()
+        .append('line')
+        .attr('x1', 0)
+        .attr('x2', innerW)
+        .attr('y1', (d) => y(d))
+        .attr('y2', (d) => y(d))
+        .attr('stroke', '#e8e3d2')
+        .attr('stroke-width', 1)
+
+      // Endpoint label: total cumulative at year 10
+      const lastTop = series[series.length - 1][HORIZON_YEARS][1]
+      if (lastTop > 0) {
+        g.append('line')
+          .attr('x1', x(HORIZON_YEARS))
+          .attr('x2', x(HORIZON_YEARS))
+          .attr('y1', y(lastTop))
+          .attr('y2', y(lastTop) - 8)
+          .attr('stroke', '#1a1a1a')
+          .attr('stroke-width', 1)
+        g.append('text')
+          .attr('x', x(HORIZON_YEARS))
+          .attr('y', y(lastTop) - 12)
+          .attr('text-anchor', 'end')
+          .attr('font-family', 'DM Sans, Inter, sans-serif')
+          .attr('font-size', 10.5)
+          .attr('font-weight', 600)
+          .attr('fill', '#1a1a1a')
+          .text(`${Math.round(lastTop).toLocaleString()} homes`)
+      }
+
+      g.append('g')
+        .attr('transform', `translate(0, ${innerH})`)
+        .call(
+          d3
+            .axisBottom(x)
+            .ticks(5)
+            .tickFormat((d) => (d === 0 ? 'now' : `+${d}y`))
+        )
+        .call((sel) => {
+          sel.selectAll('text')
+            .attr('font-family', 'DM Sans, Inter, sans-serif')
+            .attr('font-size', 10)
+            .attr('fill', '#6e6e6e')
+          sel.selectAll('line').attr('stroke', '#cdc7b4')
+          sel.select('.domain').attr('stroke', '#cdc7b4')
+        })
+
+      g.append('g')
+        .call(
+          d3
+            .axisLeft(y)
+            .ticks(4)
+            .tickFormat((d) => (d >= 1000 ? `${(d / 1000).toFixed(1)}k` : d))
+        )
+        .call((sel) => {
+          sel.selectAll('text')
+            .attr('font-family', 'DM Sans, Inter, sans-serif')
+            .attr('font-size', 10)
+            .attr('fill', '#6e6e6e')
+          sel.selectAll('line').attr('stroke', '#cdc7b4')
+          sel.select('.domain').attr('stroke', '#cdc7b4')
+        })
+
+      svg
+        .append('text')
+        .attr('x', 6)
+        .attr('y', 12)
+        .attr('font-family', 'DM Sans, Inter, sans-serif')
+        .attr('font-size', 9.5)
+        .attr('font-weight', 700)
+        .attr('letter-spacing', '0.06em')
+        .attr('text-transform', 'uppercase')
+        .attr('fill', '#6e6e6e')
+        .text('Cumulative affordable homes near the MBTA')
+    }
+
+    draw(ref.current)
+    const onResize = () => draw(ref.current)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [pct, totalUnits, fundActive])
+
+  const totalAff = Math.round(numbers.totalAff)
+  const totalDeep = Math.round(numbers.totalDeep)
+  const fundedAff = Math.round(numbers.fundedAff)
+
+  const eyebrow = (() => {
+    if (numLevers === 0) return 'No levers pulled · the prescription does nothing'
+    if (numLevers === 1 && levers.floor) return 'Inclusionary floor only · 1 lever pulled'
+    if (numLevers === 1 && levers.deep) return 'Mandatory share + fund only · 1 lever pulled'
+    return 'Both levers pulled · CA floor + Seattle fund'
+  })()
+
+  return (
+    <figure className="scoreboard-chart">
+      <figcaption className="scoreboard-cap">
+        <span className="scoreboard-eyebrow">{eyebrow}</span>
+        <span className="scoreboard-headline">
+          {totalAff.toLocaleString()} affordable homes
+          <span className="scoreboard-headline-tail">
+            &nbsp;in 10 years
+          </span>
+        </span>
+        <span className="scoreboard-subline">
+          {totalDeep.toLocaleString()} deeply affordable (&le;50% AMI)
+          {fundActive && fundedAff > 0 ? (
+            <>
+              {' '}&middot; of which <strong>{fundedAff.toLocaleString()}</strong> funded by{' '}
+              <strong>${(numbers.fundTotal / 1e6).toFixed(0)}M</strong> in in-lieu fees
+            </>
+          ) : null}
+        </span>
+      </figcaption>
+      <svg ref={ref} className="scoreboard-svg" />
+      <details className="scoreboard-foot">
+        <summary>How this is calculated</summary>
+        <p>
+          The MBTA-near pipeline contains{' '}
+          <strong>{totalUnits.toLocaleString()}</strong> units over a ten-year
+          linear-absorption horizon. The bottom four bands are the on-site
+          affordable mix produced by a CA SB&nbsp;35-style 20% inclusionary
+          floor, broken out by AMI tier. The top green band is what the
+          remaining{' '}
+          <strong>{Math.round(numbers.nonAffUnitsTotal).toLocaleString()}</strong>{' '}
+          market-rate units would produce under Seattle&rsquo;s MHA in-lieu
+          mechanic at{' '}
+          <strong>${(FEE_PER_NONAFF_UNIT / 1000).toFixed(0)}k</strong> per
+          market-rate unit, with{' '}
+          <strong>${(FUND_COST_PER_AFF_UNIT / 1000).toFixed(0)}k</strong> of
+          local fund money buying each affordable unit (the rest filled by
+          LIHTC + state credits, which is why these units count as deeply
+          affordable).{' '}
+          <strong>Sources:</strong>{' '}
+          <a
+            href="https://www.seattle.gov/housing/housing-developers/mandatory-housing-affordability/mha-annual-reports"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Seattle Office of Housing &mdash; MHA Annual Reports (2019&ndash;2023)
+          </a>
+          ;{' '}
+          <a
+            href="https://ternercenter.berkeley.edu/research-and-policy/inclusionary-zoning-2023/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Terner Center &mdash; Inclusionary Zoning fee studies
+          </a>
+          ;{' '}
+          <a
+            href="https://www.huduser.gov/portal/datasets/lihtc.html"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            HUD LIHTC database
+          </a>
+          ;{' '}
+          <a
+            href="https://www.mhp.net/news/2023/the-cost-of-building-in-massachusetts"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            MHP &mdash; Cost of Building in Massachusetts
+          </a>
+          .
+        </p>
+      </details>
+    </figure>
+  )
+}
+
 function LeverPanel({ basePct, totalUnits }) {
-  const [levers, setLevers] = useState({ floor: false, deep: false })
+  const [levers, setLevers] = useState({ floor: true, deep: true })
   const result = useMemo(() => applyLevers(basePct, levers), [basePct, levers])
   const baseNorm = useMemo(
     () => applyLevers(basePct, { floor: false, deep: false }),
@@ -337,16 +645,7 @@ function LeverPanel({ basePct, totalUnits }) {
     return s
   }
   const workersLitUp = WORKERS.filter((w) => newAccess(w) - baseAccess(w) >= 1)
-
-  // Counts for the headline
-  const baseAff = basePct.u30 + basePct.a3050 + basePct.a5080 + basePct.a80p
-  const newAff = result.pct.u30 + result.pct.a3050 + result.pct.a5080 + result.pct.a80p
-  const baseDeep = basePct.u30 + basePct.a3050
-  const newDeep = result.pct.u30 + result.pct.a3050
-  const totalAdded = Math.round(((newAff - baseAff) / 100) * totalUnits)
-  const totalDeepAdded = Math.round(((newDeep - baseDeep) / 100) * totalUnits)
   const numLevers = Object.values(levers).filter(Boolean).length
-  const mixLeverCount = (levers.floor ? 1 : 0) + (levers.deep ? 1 : 0)
 
   return (
     <div className="lever-panel">
@@ -387,111 +686,61 @@ function LeverPanel({ basePct, totalUnits }) {
       </div>
 
       <p className="lever-legend-captions" id="lever-legend-captions">
-        Bars = <strong>pipeline</strong> units by band. <strong>Floor</strong> +{' '}
-        <strong>deep-AMI</strong> reweight the stack. The peer rows
-        only show the share floor&mdash;not the band split, which is only
-        in these bars.
+        One scoreboard. The bottom four bands are the on-site affordable mix
+        from the inclusionary floor, broken out by AMI band; the top green
+        band is what the in-lieu fund buys on the remaining market-rate
+        units. Pull the levers and the bands grow off the bottom.
       </p>
 
       <div className="lever-output" aria-describedby="lever-legend-captions">
-        <div className="lever-output-bars">
-          <div className="lever-bar-row">
-            <div className="lever-bar-label">
-              <span className="lever-bar-eyebrow">Current pipeline (MassBuilds) — baseline</span>
-              <span className="lever-bar-stat">
-                {baseAff.toFixed(0)}% affordable · {baseDeep.toFixed(1)}% deep
-              </span>
-            </div>
-            <div className="lever-bar lever-bar-base">
-              {TIERS.map((t) => (
-                <div
-                  key={t.key}
-                  className="lever-bar-seg"
-                  style={{ width: `${basePct[t.key]}%`, background: t.color }}
-                  title={`${t.label} · ${basePct[t.key].toFixed(1)}%`}
-                />
-              ))}
-            </div>
-          </div>
-          <div className="lever-bar-row">
-            <div className="lever-bar-label">
-              <span className="lever-bar-eyebrow">
-                {numLevers === 0
-                  ? 'Levers off: same mix as above (toggle to reweight)'
-                  : `After: ${mixLeverCount} lever${mixLeverCount > 1 ? 's' : ''} in the model`}
-              </span>
-              <span className="lever-bar-stat">
-                {newAff.toFixed(0)}% affordable · {newDeep.toFixed(1)}% deep
-              </span>
-            </div>
-            <div className="lever-bar lever-bar-new">
-              {TIERS.map((t) => (
-                <div
-                  key={t.key}
-                  className="lever-bar-seg"
-                  style={{ width: `${result.pct[t.key]}%`, background: t.color }}
-                  title={`${t.label} · ${result.pct[t.key].toFixed(1)}%`}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
+        <ScoreboardChart
+          pct={result.pct}
+          totalUnits={totalUnits}
+          levers={levers}
+        />
+
         <div className="lever-bar-legend">
-          {TIERS.map((t) => (
+          {TIERS.filter((t) => t.key !== 'market').map((t) => (
             <span key={t.key} className="lever-legend-item">
               <span className="lever-legend-swatch" style={{ background: t.color }} />
               {t.label}
               <span className="lever-legend-sub"> · {t.sub}</span>
             </span>
           ))}
+          <span className="lever-legend-item">
+            <span className="lever-legend-swatch" style={{ background: FUND_COLOR }} />
+            Fund-funded
+            <span className="lever-legend-sub"> · Seattle in-lieu, LIHTC-stacked</span>
+          </span>
         </div>
 
         {numLevers > 0 && (
-          <ul className="lever-sidenotes" aria-label="Model notes for your selection">
-            {levers.floor && (
-              <li>
-                {Math.abs(dAffFromFloor) < 0.1
-                  ? 'Affordability floor: the modeled pipeline is already at or above a 20% deed-restricted share, so this bar may barely move. Where the share is under 20%, the floor pulls the difference out of the market segment.'
-                  : `Affordability floor: +${dAffFromFloor.toFixed(1)} pp toward deed-restricted, from market, split across the four affordable bands in proportion to the current mix.`}
-              </li>
-            )}
-            {levers.deep && (
-              <li>
-                {Math.abs(dDeepFromDeep) < 0.1
-                  ? 'Deep-AMI: the affordable stack in the model is already at least half at or below 50% AMI, so the bar can stay flat. Otherwise this lever deepens the left side of the stack from higher AMI bands and market, in that order.'
-                  : `Deep-AMI: +${dDeepFromDeep.toFixed(1)} percentage points toward &lt;50% AMI in the model.`}
-              </li>
-            )}
-          </ul>
+          <details className="lever-sidenotes-details">
+            <summary>What each lever is doing in the model</summary>
+            <ul className="lever-sidenotes" aria-label="Model notes for your selection">
+              {levers.floor && (
+                <li>
+                  {Math.abs(dAffFromFloor) < 0.1
+                    ? 'Affordability floor: the modeled pipeline is already at or above a 20% deed-restricted share, so the bottom four bands may barely move. Where the share is under 20%, the floor pulls the difference out of the market segment.'
+                    : `Affordability floor: +${dAffFromFloor.toFixed(1)} pp toward deed-restricted, from market, split across the four affordable bands in proportion to the current mix.`}
+                </li>
+              )}
+              {levers.deep && (
+                <li>
+                  Mandatory share + fund: every market-rate unit pays{' '}
+                  ~${(FEE_PER_NONAFF_UNIT / 1000).toFixed(0)}k into the local
+                  housing fund, which stacks with LIHTC + state credits at{' '}
+                  ~${(FUND_COST_PER_AFF_UNIT / 1000).toFixed(0)}k per
+                  affordable unit. That funded production lands at &le;50% AMI
+                  &mdash; the green band on top.
+                  {Math.abs(dDeepFromDeep) >= 0.1
+                    ? ` On-site, the deep bands also move +${dDeepFromDeep.toFixed(1)} pp toward <50% AMI as the floor's mix re-balances.`
+                    : ''}
+                </li>
+              )}
+            </ul>
+          </details>
         )}
-
-        <div className="lever-impact">
-          <div className="lever-impact-stat">
-            <div className="lever-impact-num">
-              {totalAdded > 0 ? `+${totalAdded.toLocaleString()}` : '0'}
-            </div>
-            <div className="lever-impact-label">
-              additional deed-restricted homes near MBTA
-              <br />
-              <span className="lever-impact-sub">
-                projected on {totalUnits.toLocaleString()} pipeline units, vs. the
-                mix above
-              </span>
-            </div>
-          </div>
-          <div className="lever-impact-stat lever-impact-stat-alt">
-            <div className="lever-impact-num">
-              {totalDeepAdded > 0 ? `+${totalDeepAdded.toLocaleString()}` : '0'}
-            </div>
-            <div className="lever-impact-label">
-              more toward deep affordability
-              <br />
-              <span className="lever-impact-sub">
-                under 50% AMI in the model, vs. current pipeline
-              </span>
-            </div>
-          </div>
-        </div>
 
         <div className="lever-workers">
           <div className="lever-workers-eyebrow">
@@ -807,7 +1056,7 @@ const PEER_POLICIES = [
   },
 ]
 
-function PeerComparison({ funnel, activeKey, onSelect }) {
+function PeerComparison({ funnel, prescriptionShare = 0, activeKey, onSelect }) {
   const svgRef = useRef(null)
 
   useEffect(() => {
@@ -816,7 +1065,13 @@ function PeerComparison({ funnel, activeKey, onSelect }) {
     svg.selectAll('*').remove()
 
     const data = PEER_POLICIES.map((p) =>
-      p.usesRealized ? { ...p, realized: funnel.affPct } : p
+      p.usesRealized
+        ? {
+            ...p,
+            realized: funnel.affPct,
+            prescription: prescriptionShare > 0 ? prescriptionShare : null,
+          }
+        : p
     )
 
     const width = 740
@@ -828,7 +1083,13 @@ function PeerComparison({ funnel, activeKey, onSelect }) {
     const chartW = width - margin.left - margin.right
     const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`)
 
-    const xMax = 25
+    // Stretch the x-domain so the prescription diamond (which can sit
+    // higher than every peer's required floor) has room to land with its
+    // label, but never compress the everyday peer comparison below 25%.
+    const maxFloor = d3.max(data, (d) => d.floor) || 0
+    const maxRealized = d3.max(data, (d) => d.realized || 0) || 0
+    const maxPrescription = d3.max(data, (d) => d.prescription || 0) || 0
+    const xMax = Math.max(25, Math.ceil(Math.max(maxFloor, maxRealized, maxPrescription) * 1.1))
     const x = d3.scaleLinear().domain([0, xMax]).range([0, chartW])
     const y = d3
       .scaleBand()
@@ -934,28 +1195,82 @@ function PeerComparison({ funnel, activeKey, onSelect }) {
           .attr('stroke-width', 1.75)
       })
 
+    // Arrow marker for the today→prescription connector
+    const defs = svg.append('defs')
+    defs
+      .append('marker')
+      .attr('id', 'peer-prescription-arrow')
+      .attr('viewBox', '0 -5 10 10')
+      .attr('refX', 9)
+      .attr('refY', 0)
+      .attr('markerWidth', 6)
+      .attr('markerHeight', 6)
+      .attr('orient', 'auto')
+      .append('path')
+      .attr('d', 'M0,-4 L8,0 L0,4 L2,0 Z')
+      .attr('fill', FUND_COLOR)
+
+    // Faded "today" diamond — what MA's realized share is right now.
     rows
       .filter((d) => d.realized != null)
       .append('path')
-      .attr('d', d3.symbol().type(d3.symbolDiamond).size(110))
+      .attr('d', d3.symbol().type(d3.symbolDiamond).size(80))
       .attr(
         'transform',
         (d) => `translate(${x(Math.min(d.realized, xMax))}, ${y.bandwidth() / 2})`
       )
-      .attr('fill', '#1a1a1a')
+      .attr('fill', '#9a948a')
       .attr('stroke', '#fff')
       .attr('stroke-width', 1.25)
 
     rows
       .filter((d) => d.realized != null)
       .append('text')
-      .attr('x', (d) => x(Math.min(d.realized, xMax)) + 12)
-      .attr('y', y.bandwidth() / 2 + 4)
+      .attr('x', (d) => x(Math.min(d.realized, xMax)))
+      .attr('y', y.bandwidth() / 2 + 22)
+      .attr('text-anchor', 'middle')
+      .attr('font-size', 10)
+      .attr('font-weight', 600)
+      .attr('font-family', 'DM Sans, Inter, sans-serif')
+      .attr('fill', '#6e6e6e')
+      .text((d) => `today · ${d.realized.toFixed(1)}%`)
+
+    // Connector arrow + prescription diamond — where MA would land with
+    // both levers + the in-lieu fund.
+    rows
+      .filter((d) => d.prescription != null && d.prescription > (d.realized || 0))
+      .append('line')
+      .attr('x1', (d) => x(Math.min(d.realized || 0, xMax)) + 8)
+      .attr('x2', (d) => x(Math.min(d.prescription, xMax)) - 9)
+      .attr('y1', y.bandwidth() / 2)
+      .attr('y2', y.bandwidth() / 2)
+      .attr('stroke', FUND_COLOR)
+      .attr('stroke-width', 1.25)
+      .attr('stroke-dasharray', '3 3')
+      .attr('marker-end', 'url(#peer-prescription-arrow)')
+
+    rows
+      .filter((d) => d.prescription != null)
+      .append('path')
+      .attr('d', d3.symbol().type(d3.symbolDiamond).size(150))
+      .attr(
+        'transform',
+        (d) => `translate(${x(Math.min(d.prescription, xMax))}, ${y.bandwidth() / 2})`
+      )
+      .attr('fill', FUND_COLOR)
+      .attr('stroke', '#fff')
+      .attr('stroke-width', 1.5)
+
+    rows
+      .filter((d) => d.prescription != null)
+      .append('text')
+      .attr('x', (d) => x(Math.min(d.prescription, xMax)) + 14)
+      .attr('y', y.bandwidth() / 2 - 4)
       .attr('font-size', 11)
       .attr('font-weight', 700)
       .attr('font-family', 'Inter, sans-serif')
-      .attr('fill', '#1a1a1a')
-      .text((d) => `${d.realized.toFixed(1)}% realized`)
+      .attr('fill', FUND_COLOR)
+      .text((d) => `with the prescription · ${d.prescription.toFixed(0)}%`)
 
     rows
       .append('text')
@@ -995,13 +1310,13 @@ function PeerComparison({ funnel, activeKey, onSelect }) {
       .filter((d) => d.floor === 0)
       .append('text')
       .attr('x', 18)
-      .attr('y', y.bandwidth() / 2 + 4)
+      .attr('y', y.bandwidth() / 2 - 6)
       .attr('font-size', 11)
       .attr('font-weight', 700)
       .attr('fill', '#DA291C')
       .attr('font-family', 'Inter, sans-serif')
       .text('No statewide floor')
-  }, [funnel, activeKey, onSelect])
+  }, [funnel, prescriptionShare, activeKey, onSelect])
 
   return <svg ref={svgRef} className="policy-gap-svg" />
 }
@@ -1017,7 +1332,7 @@ function PeerComparison({ funnel, activeKey, onSelect }) {
    consistent across the piece.
    ========================================================================= */
 
-function PolicyExplorer({ activeKey, onSelect, peers, funnel }) {
+function PolicyExplorer({ activeKey, onSelect, peers, funnel, prescriptionShare }) {
   const active = peers.find((p) => p.key === activeKey) || peers[0]
   const dynamicValue = (stat) => {
     if (!stat.dynamic) return null
@@ -1032,9 +1347,16 @@ function PolicyExplorer({ activeKey, onSelect, peers, funnel }) {
         aria-label="Required affordable share, all five jurisdictions"
       >
         <figcaption className="policy-explorer-compare-cap">
-          Hover or click any row to read about that bill &darr;
+          Hover any row to read about that bill. The grey diamond is where
+          MA&rsquo;s realized share sits today; the green diamond is where
+          the prescription below would land it &darr;
         </figcaption>
-        <PeerComparison funnel={funnel} activeKey={activeKey} onSelect={onSelect} />
+        <PeerComparison
+          funnel={funnel}
+          prescriptionShare={prescriptionShare}
+          activeKey={activeKey}
+          onSelect={onSelect}
+        />
       </figure>
 
       <div
@@ -1166,6 +1488,9 @@ export default function PolicyGapPanels({ view = 'all' }) {
   const newAffShare = sumAff(mixWithBoth.pct)
   const baseDeepShare = sumDeep(breakdownPct)
   const newDeepShare = sumDeep(mixWithBoth.pct)
+  // Total projected affordable share with both levers + the in-lieu fund —
+  // drives the green "prescription" diamond on the MA row of the peer chart.
+  const prescriptionShare = prescriptionAffShare(mixWithBoth.pct)
   const totalAdded = Math.max(
     0,
     Math.round(((newAffShare - baseAffShare) / 100) * totalUnits)
@@ -1174,6 +1499,13 @@ export default function PolicyGapPanels({ view = 'all' }) {
     0,
     Math.round(((newDeepShare - baseDeepShare) / 100) * totalUnits)
   )
+  // Total cumulative affordable units in the prescription's scoreboard
+  // (on-site + fund-funded), used in the closing kicker.
+  const fundedAffUnits = Math.round(
+    (totalUnits * NONAFF_SHARE_AFTER_FLOOR * FEE_PER_NONAFF_UNIT) /
+      FUND_COST_PER_AFF_UNIT
+  )
+  const totalScoreboard = totalAdded + fundedAffUnits
 
   return (
     <div className="motivation-stack">
@@ -1184,10 +1516,11 @@ export default function PolicyGapPanels({ view = 'all' }) {
           <h3>How to actually build affordable homes near the MBTA</h3>
           <p className="motivation-dek">
             Three other places already pair transit-area zoning with an{' '}
-            <Jargon term="affordability floor">affordability floor</Jargon>.
-            Massachusetts has the zoning. Hover any row in the chart below to
-            see how that bill works &mdash; then test the same idea on the
-            MBTA-near pipeline.
+            <Jargon term="affordability floor">affordability floor</Jargon>{' '}
+            and an in-lieu fund. Massachusetts has the zoning &mdash; the grey
+            diamond on the MA row is where the realized share actually lands
+            today. Pull both levers below and the green diamond shows where
+            it would land instead.
           </p>
         </header>
 
@@ -1196,6 +1529,7 @@ export default function PolicyGapPanels({ view = 'all' }) {
           activeKey={activePeer}
           onSelect={setActivePeer}
           funnel={funnel}
+          prescriptionShare={prescriptionShare}
         />
 
         <div className="motivation-subsection-divider" role="presentation">
@@ -1209,22 +1543,26 @@ export default function PolicyGapPanels({ view = 'all' }) {
         <div className="motivation-takeaway">
           Both levers on: roughly{' '}
           <strong>
-            {totalAdded.toLocaleString()} additional deed-restricted homes
+            {totalScoreboard.toLocaleString()} affordable homes
           </strong>{' '}
-          in the MBTA-near pipeline, with{' '}
-          <strong>{totalDeepAdded.toLocaleString()}</strong> of those priced for
-          households under 50% <Jargon term="AMI">AMI</Jargon> &mdash; the band
-          where the <strong>4 in 10 Greater Boston households</strong> who can&rsquo;t
+          in the MBTA-near pipeline over a decade &mdash;{' '}
+          <strong>{totalAdded.toLocaleString()}</strong> built on-site by the
+          inclusionary floor and{' '}
+          <strong>{fundedAffUnits.toLocaleString()}</strong> funded by the
+          in-lieu fund, the bulk priced for households under 50%{' '}
+          <Jargon term="AMI">AMI</Jargon>. That&rsquo;s the band where the{' '}
+          <strong>4 in 10 Greater Boston households</strong> who can&rsquo;t
           afford the average T-stop rent actually sit, including renters like
           Jane Santos along the Green Line Extension and Betty Gordon on the
           Fairmount Line.
         </div>
 
         <p className="policy-explorer-close">
-          Each jurisdiction above built a variation on the same idea: density
-          paired with a required share for working renters. Massachusetts
-          already passed the density.{' '}
-          <strong>The affordable-share floor is the piece left to add.</strong>
+          Pull both levers and the diamond on the MA row above doesn&rsquo;t
+          just catch up to California &mdash; it sits above every peer in the
+          chart. Massachusetts already passed the density.{' '}
+          <strong>The affordable-share floor and the in-lieu fund are the
+          two pieces left to add.</strong>
         </p>
 
         <footer className="motivation-source">

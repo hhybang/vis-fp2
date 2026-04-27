@@ -4115,6 +4115,174 @@
   transition: width 0.55s cubic-bezier(0.55, 0.1, 0.25, 1);
 }
 
+/* Scoreboard chart — single merged panel that replaces the prior pair of
+   PipelineArea + FundProjection charts. Bottom four bands are the on-site
+   affordable mix from the inclusionary floor; top green band is what the
+   in-lieu fund underwrites on the remaining market-rate units. One Y-axis,
+   one headline, one footnote. */
+.scoreboard-chart {
+  margin: 0;
+  padding: 14px 16px 10px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, #4d5a3f 6%, transparent) 0%, transparent 55%),
+    var(--paper-card, #fffaee);
+  border: 1px solid var(--paper-rule-strong);
+  box-shadow: 0 0 0 2px rgba(26, 26, 26, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.scoreboard-cap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.scoreboard-eyebrow {
+  font-family: var(--font-label, 'DM Sans', sans-serif);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #4d5a3f;
+}
+
+.scoreboard-headline {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1.15;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.scoreboard-headline-tail {
+  font-family: var(--font-serif);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  letter-spacing: 0;
+}
+
+.scoreboard-subline {
+  font-family: var(--font-label, 'DM Sans', sans-serif);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--ink-muted);
+}
+
+.scoreboard-subline strong {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.scoreboard-svg {
+  width: 100%;
+  height: 260px;
+  display: block;
+  margin-top: 2px;
+}
+
+.scoreboard-foot {
+  margin: 4px 0 0;
+  padding: 0;
+  font-family: var(--font-label, 'DM Sans', sans-serif);
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--ink-muted);
+}
+
+.scoreboard-foot summary {
+  cursor: pointer;
+  padding: 6px 10px;
+  background: var(--paper-bg);
+  border-left: 3px solid #4d5a3f;
+  font-weight: 700;
+  color: var(--ink);
+  list-style: none;
+  user-select: none;
+}
+
+.scoreboard-foot summary::-webkit-details-marker {
+  display: none;
+}
+
+.scoreboard-foot summary::after {
+  content: ' \25be';
+  color: var(--ink-faint);
+  font-weight: 400;
+}
+
+.scoreboard-foot[open] summary::after {
+  content: ' \25b4';
+}
+
+.scoreboard-foot p {
+  margin: 6px 0 0;
+  padding: 10px 12px;
+  background: var(--paper-bg);
+  border-left: 3px solid #4d5a3f;
+}
+
+.scoreboard-foot strong {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.scoreboard-foot a,
+.scoreboard-foot a:visited {
+  color: var(--ink-muted);
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--ink-muted) 50%, transparent);
+  transition: color 120ms ease, border-color 120ms ease;
+}
+
+.scoreboard-foot a:hover,
+.scoreboard-foot a:focus-visible {
+  color: #4d5a3f;
+  border-bottom-color: #4d5a3f;
+}
+
+/* Sidenotes — demoted to a collapsible details, since the merged chart
+   makes the model behavior already legible at a glance. */
+.lever-sidenotes-details {
+  margin: 0;
+  font-family: var(--font-label, 'DM Sans', sans-serif);
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.lever-sidenotes-details summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--ink-muted);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 0;
+  list-style: none;
+  user-select: none;
+}
+
+.lever-sidenotes-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.lever-sidenotes-details summary::after {
+  content: ' \25be';
+}
+
+.lever-sidenotes-details[open] summary::after {
+  content: ' \25b4';
+}
+
+.lever-sidenotes-details .lever-sidenotes {
+  margin: 6px 0 0;
+}
+
 .lever-bar-legend {
   display: flex;
   flex-wrap: wrap;
@@ -4141,50 +4309,6 @@
 .lever-legend-sub {
   color: var(--ink-faint);
   font-size: 10.5px;
-}
-
-.lever-impact {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  padding: 14px 16px;
-  background: var(--paper-card);
-  border: 1px solid var(--paper-rule);
-  position: relative;
-}
-
-.lever-impact-stat {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.lever-impact-num {
-  font-family: var(--font-serif);
-  font-size: 32px;
-  font-weight: 900;
-  color: #4d5a3f;
-  letter-spacing: -0.02em;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-}
-
-.lever-impact-stat-alt .lever-impact-num {
-  color: #6b1a12;
-}
-
-.lever-impact-label {
-  font-family: var(--font-label);
-  font-size: 12px;
-  color: var(--ink);
-  font-weight: 600;
-  line-height: 1.4;
-}
-
-.lever-impact-sub {
-  font-weight: 400;
-  color: var(--ink-faint);
-  font-size: 11px;
 }
 
 .lever-workers {
@@ -4261,8 +4385,11 @@
   .lever-rack {
     grid-template-columns: 1fr;
   }
-  .lever-impact {
-    grid-template-columns: 1fr;
+  .scoreboard-headline {
+    font-size: 19px;
+  }
+  .scoreboard-svg {
+    height: 220px;
   }
 }
 
