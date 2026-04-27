@@ -259,7 +259,9 @@
 /* ----- Lede paragraph (between video hero and renter quotes) ----- */
 .scrolly-lede {
   background: var(--paper-bg);
-  padding: clamp(56px, 10vh, 96px) clamp(24px, 5vw, 56px) clamp(24px, 4vh, 40px);
+  /* Extra bottom space so the opening reads as a full beat before the T-line section */
+  padding: clamp(56px, 10vh, 96px) clamp(24px, 5vw, 56px) clamp(72px, 14vh, 140px);
+  margin-bottom: clamp(32px, 6vh, 72px);
   display: flex;
   justify-content: center;
   position: relative;
@@ -539,11 +541,11 @@
 }
 
 /* ----- T-Line · "Why It Matters" interactive subway diagram ----- */
-/* Four "stations" sit on a stylized T line. Clicking a stop selects it,
-   the dot fills with that line's official MBTA color, the panel below
-   crossfades to the matching content, and the corresponding companion
-   visualization (cost panels, jobs panel, daily-needs panel, trees) is
-   driven by the same activeStation state in the component. */
+/* Four "stations" sit on a stylized T line. None is selected on first view;
+   clicking a stop selects it, the dot fills with that line's official MBTA
+   color, the panel below crossfades to the matching content, and the
+   corresponding companion visualization (cost panels, jobs panel, daily-needs
+   panel, trees) is driven by the same activeStation state in the component. */
 .t-line {
   margin: 32px 0 8px;
 }
@@ -656,6 +658,24 @@
   min-height: 240px;
   box-shadow: var(--ui-card-shadow);
   transition: border-top-color 0.35s ease;
+}
+
+.t-line-prompt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 188px;
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: clamp(15px, 1.45vw, 17px);
+  line-height: 1.6;
+  color: var(--ink-muted);
+  max-width: 38ch;
+  margin: 0 auto;
+}
+
+.t-line-prompt p {
+  margin: 0;
 }
 
 .t-line-content {
@@ -1466,6 +1486,8 @@
   padding-right: 0;
   padding-top: 0;
   padding-bottom: 0;
+  margin-top: clamp(40px, 7vh, 88px);
+  margin-bottom: clamp(40px, 7vh, 88px);
 }
 
 .policy-section-editorial.revealed {
@@ -1479,6 +1501,17 @@
   padding: 72px 40px 80px;
   position: relative;
   z-index: 2;
+}
+
+.policy-people-hint {
+  font-family: var(--font-label);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--ink-muted);
+  text-align: center;
+  margin: 0 auto 20px;
+  max-width: 40ch;
+  letter-spacing: 0.01em;
 }
 
 /* Single card holding the opener prose and its source citation. The card
@@ -2102,8 +2135,8 @@
 
 /* ----- CTA (conclusion): full-screen beat before the explorer ----- */
 /* =========================================================================
-   Bridge · transition from systemic analysis → personal calculus
-   Sits between "What's Missing?" and "The Tradeoffs Are Personal"
+   Bridge · scroll narrative (data + stand-ins) → personal interactive map
+   Sits after levers; leads into the full-viewport CTA and explorer
    ========================================================================= */
 
 .scrolly-bridge {
@@ -3108,9 +3141,36 @@
   gap: 22px;
 }
 
+.lever-legend-captions {
+  font-family: var(--font-label);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--ink-muted);
+  margin: 0;
+  max-width: 64ch;
+}
+
+.lever-sidenotes {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 18px;
+  border-left: 2px solid #d4d0c4;
+  font-family: var(--font-label);
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--ink-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lever-sidenotes li {
+  margin: 0;
+}
+
 .lever-rack {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -3392,6 +3452,60 @@
   font-size: 10.5px;
 }
 
+.lever-delta-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 0 2px;
+  border-top: 1px dashed var(--paper-rule);
+  border-bottom: 1px dashed var(--paper-rule);
+  font-family: var(--font-label);
+}
+
+.lever-delta-line {
+  display: grid;
+  grid-template-columns: minmax(0, 120px) 1fr 40px;
+  align-items: center;
+  gap: 8px 10px;
+  font-size: 11px;
+  min-height: 18px;
+}
+
+.lever-delta-line-label {
+  color: var(--ink-muted);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.lever-delta-line-track {
+  position: relative;
+  height: 9px;
+  background: #e8e6e0;
+  border-radius: 1px;
+  min-width: 0;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.lever-delta-line-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 1px;
+  min-width: 1px;
+}
+
+.lever-delta-line-pp {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  font-size: 11.5px;
+  color: var(--ink);
+}
+
+.lever-delta-line-pp-neg {
+  color: var(--ink-muted);
+}
+
 .lever-impact {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -3434,17 +3548,6 @@
   font-weight: 400;
   color: var(--ink-faint);
   font-size: 11px;
-}
-
-.lever-impact-badge {
-  grid-column: 1 / -1;
-  font-family: var(--font-label);
-  font-size: 11.5px;
-  font-weight: 700;
-  color: #fffaee;
-  background: #1a1a1a;
-  padding: 7px 12px;
-  letter-spacing: 0.02em;
 }
 
 .lever-workers {

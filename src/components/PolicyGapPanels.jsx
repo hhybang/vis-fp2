@@ -134,20 +134,16 @@ function computePolicyGapStats(builds) {
    Counterfactual model used by the Lever Panel and Worker Picker.
 
    We model a stylized policy package — the same one MA peer states already
-   use — as three independently toggleable levers. Each lever applies a
-   simple, conservative rule on top of the breakdown.
+   use — as two independently toggleable levers. Each applies a simple rule
+   on top of the MassBuilds pipeline breakdown.
 
      1. FLOOR        — at least 20% of new units must be deed-restricted.
                        Top up `affordable` by pulling from `market`.
      2. DEEP_TARGET  — half of the required affordable share must be at
                        <=50% AMI. Reallocate within the affordable pool.
-     3. ANTI_DISPL   — local resident preference + tenant protections.
-                       Doesn't change unit count, but it does change WHO
-                       gets the keys: the same units now go to current
-                       transit-dependent renters instead of new arrivals.
 
    Output: a {u30, a3050, a5080, a80p, market} pct breakdown that always
-   sums to ~100, plus a `localPref` flag that the UI uses to annotate.
+   sums to ~100.
    ========================================================================= */
 
 function applyLevers(basePct, levers) {
@@ -155,16 +151,33 @@ function applyLevers(basePct, levers) {
   const total = 100
 
   if (levers.floor) {
-    // Bring total affordable share up to 20%
+    // Bring total affordable share up to 20%. New deed-restricted share is
+    // taken from market and distributed across the four affordable bands
+    // in proportion to the *existing* affordable mix so low bands move too
+    // (the old 60/40 50-80% vs 80%+ only split made the worker row imply
+    // that higher earners "gained access" and lower earners did not).
     const floor = 20
     const aff = out.u30 + out.a3050 + out.a5080 + out.a80p
     if (aff < floor) {
       const need = floor - aff
-      // Pull from market (most flexible). Distribute new affordable
-      // units 50/50 across moderate (50-80) and workforce (80+) by default.
       out.market = Math.max(0, out.market - need)
-      out.a5080 += need * 0.6
-      out.a80p += need * 0.4
+      const u0 = out.u30
+      const t30 = out.a3050
+      const t50 = out.a5080
+      const t80 = out.a80p
+      const aSum = u0 + t30 + t50 + t80
+      if (aSum > 1e-6) {
+        out.u30 = u0 + need * (u0 / aSum)
+        out.a3050 = t30 + need * (t30 / aSum)
+        out.a5080 = t50 + need * (t50 / aSum)
+        out.a80p = t80 + need * (t80 / aSum)
+      } else {
+        const q = need / 4
+        out.u30 = u0 + q
+        out.a3050 = t30 + q
+        out.a5080 = t50 + q
+        out.a80p = t80 + q
+      }
     }
   }
 
@@ -206,15 +219,21 @@ function applyLevers(basePct, levers) {
     out.market *= k
   }
 
-  return { pct: out, localPref: !!levers.antiDispl }
+  return { pct: out }
+}
+
+function sumAff(p) {
+  return p.u30 + p.a3050 + p.a5080 + p.a80p
+}
+function sumDeep(p) {
+  return p.u30 + p.a3050
 }
 
 /* =========================================================================
    Viz A · The Lever Rack
    --------------------------------------------------------------------------
-   Three policy toggles. Each pulls "how to build affordable homes near MBTA"
-   from the abstract into something the reader can DO. As they flip switches,
-   the 100-unit stack transforms in real time and worker icons light up.
+   Two policy toggles. As readers flip them, the stack transforms in real
+   time and worker icons show who gains a larger share of the mix.
    ========================================================================= */
 
 const TIERS = [
@@ -242,14 +261,6 @@ const LEVERS = [
       'Half of those affordable units must serve households under 50% AMI — the renters with the least access to a car.',
     peer: 'Montgomery County MPDU',
   },
-  {
-    id: 'antiDispl',
-    title: 'Tenant + resident protections',
-    short: 'Anti-displacement',
-    desc:
-      'Pair upzoning with local-resident preference, just-cause eviction, and rent stabilization so existing renters can stay.',
-    peer: 'WA HB 1491 · 2025',
-  },
 ]
 
 // Stylized worker income points (BLS Boston MSA medians, 2-person AMI base).
@@ -268,7 +279,7 @@ function workerTier(ami) {
   if (ami < 80) return 'a5080'
   return 'a80p'
 }
-// Returns the set of unit tiers a worker can compete for
+// Cumulative: unit tiers a worker can *compete for* (lottery-style) — used by WorkerPicker.
 function tiersAccessibleTo(ami) {
   if (ami < 30) return new Set(['u30'])
   if (ami < 50) return new Set(['u30', 'a3050'])
@@ -276,25 +287,47 @@ function tiersAccessibleTo(ami) {
   return new Set(['u30', 'a3050', 'a5080', 'a80p'])
 }
 
+// For the lever “who gains” read: do not sum the whole <80% left stack for
+// high earners (they are not in the running for very low-income set-asides).
+// Under-50% AMI: deep bands only. 50–80%: through moderate. 80+%: workforce
+// (80%+) set-aside slice only.
+function tiersNarrativeAccess(ami) {
+  if (ami < 50) return new Set(['u30', 'a3050'])
+  if (ami < 80) return new Set(['u30', 'a3050', 'a5080'])
+  return new Set(['a80p'])
+}
+
 function LeverPanel({ basePct, totalUnits }) {
-  const [levers, setLevers] = useState({ floor: false, deep: false, antiDispl: false })
+  const [levers, setLevers] = useState({ floor: false, deep: false })
   const result = useMemo(() => applyLevers(basePct, levers), [basePct, levers])
+  const baseNorm = useMemo(
+    () => applyLevers(basePct, { floor: false, deep: false }),
+    [basePct]
+  )
+  const rWithoutDeep = useMemo(
+    () => applyLevers(basePct, { floor: levers.floor, deep: false }),
+    [basePct, levers.floor]
+  )
+  const dAffFromFloor = levers.floor
+    ? sumAff(rWithoutDeep.pct) - sumAff(baseNorm.pct)
+    : 0
+  const dDeepFromDeep = levers.deep
+    ? sumDeep(result.pct) - sumDeep(rWithoutDeep.pct)
+    : 0
 
   const toggle = (id) => setLevers((s) => ({ ...s, [id]: !s[id] }))
-  const reset = () => setLevers({ floor: false, deep: false, antiDispl: false })
-  const enableAll = () =>
-    setLevers({ floor: true, deep: true, antiDispl: true })
+  const reset = () => setLevers({ floor: false, deep: false })
+  const enableAll = () => setLevers({ floor: true, deep: true })
 
-  // Which workers gain housing? A worker "gains" if the share of units they
-  // can compete for (their tier + below) increased by ≥1 pp vs. baseline.
+  // "Gain" = +≥1pp in the deed-restricted bands that match this wage (narrative).
   const baseAccess = (w) => {
-    const tiers = tiersAccessibleTo(w.ami)
+    const tiers = tiersNarrativeAccess(w.ami)
     let s = 0
     for (const t of tiers) s += basePct[t] || 0
     return s
   }
   const newAccess = (w) => {
-    const tiers = tiersAccessibleTo(w.ami)
+    const tiers = tiersNarrativeAccess(w.ami)
     let s = 0
     for (const t of tiers) s += result.pct[t] || 0
     return s
@@ -309,6 +342,16 @@ function LeverPanel({ basePct, totalUnits }) {
   const totalAdded = Math.round(((newAff - baseAff) / 100) * totalUnits)
   const totalDeepAdded = Math.round(((newDeep - baseDeep) / 100) * totalUnits)
   const numLevers = Object.values(levers).filter(Boolean).length
+  const mixLeverCount = (levers.floor ? 1 : 0) + (levers.deep ? 1 : 0)
+
+  const tierDeltas = TIERS.map((t) => ({
+    ...t,
+    d: result.pct[t.key] - basePct[t.key],
+  }))
+  const maxAbsDelta = Math.max(
+    0.25,
+    ...tierDeltas.map((x) => Math.abs(x.d))
+  )
 
   return (
     <div className="lever-panel">
@@ -343,16 +386,23 @@ function LeverPanel({ basePct, totalUnits }) {
         <button type="button" className="lever-mini" onClick={reset} disabled={numLevers === 0}>
           Reset
         </button>
-        <button type="button" className="lever-mini lever-mini-primary" onClick={enableAll} disabled={numLevers === 3}>
-          Pull all three
+        <button type="button" className="lever-mini lever-mini-primary" onClick={enableAll} disabled={numLevers === 2}>
+          Pull both
         </button>
       </div>
 
-      <div className="lever-output">
+      <p className="lever-legend-captions" id="lever-legend-captions">
+        Bars = <strong>pipeline</strong> units by band. <strong>Floor</strong> +{' '}
+        <strong>deep-AMI</strong> reweight the stack. The peer rows
+        only show the share floor&mdash;not the band split, which is only
+        in these bars.
+      </p>
+
+      <div className="lever-output" aria-describedby="lever-legend-captions">
         <div className="lever-output-bars">
           <div className="lever-bar-row">
             <div className="lever-bar-label">
-              <span className="lever-bar-eyebrow">Today, no levers pulled</span>
+              <span className="lever-bar-eyebrow">Current pipeline (MassBuilds) — baseline</span>
               <span className="lever-bar-stat">
                 {baseAff.toFixed(0)}% affordable · {baseDeep.toFixed(1)}% deep
               </span>
@@ -372,8 +422,8 @@ function LeverPanel({ basePct, totalUnits }) {
             <div className="lever-bar-label">
               <span className="lever-bar-eyebrow">
                 {numLevers === 0
-                  ? 'With no levers, nothing changes'
-                  : `With ${numLevers} lever${numLevers > 1 ? 's' : ''} pulled`}
+                  ? 'Levers off: same mix as above (toggle to reweight)'
+                  : `After: ${mixLeverCount} lever${mixLeverCount > 1 ? 's' : ''} in the model`}
               </span>
               <span className="lever-bar-stat">
                 {newAff.toFixed(0)}% affordable · {newDeep.toFixed(1)}% deep
@@ -401,15 +451,71 @@ function LeverPanel({ basePct, totalUnits }) {
           ))}
         </div>
 
+        {numLevers > 0 && (
+          <div
+            className="lever-delta-block"
+            aria-label="Change in the mix, percentage points vs. baseline. Each bar uses the same scale, normalized to the largest change."
+          >
+            {tierDeltas.map(({ key, label, d, color }) => {
+              const w = Math.min(100, (Math.abs(d) / maxAbsDelta) * 100)
+              const val =
+                d === 0 ? '0' : d > 0 ? `+${d.toFixed(1)}` : d.toFixed(1)
+              return (
+                <div key={key} className="lever-delta-line">
+                  <span className="lever-delta-line-label">{label}</span>
+                  <div className="lever-delta-line-track" aria-hidden="true">
+                    {d > 0 && (
+                      <div
+                        className="lever-delta-line-fill"
+                        style={{ width: `${w}%`, left: 0, background: color }}
+                      />
+                    )}
+                    {d < 0 && (
+                      <div
+                        className="lever-delta-line-fill"
+                        style={{ width: `${w}%`, right: 0, left: 'auto', background: 'rgba(90, 90, 90, 0.45)' }}
+                      />
+                    )}
+                  </div>
+                  <span className={`lever-delta-line-pp ${d < 0 ? 'lever-delta-line-pp-neg' : ''}`}>
+                    {val}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {numLevers > 0 && (
+          <ul className="lever-sidenotes" aria-label="Model notes for your selection">
+            {levers.floor && (
+              <li>
+                {Math.abs(dAffFromFloor) < 0.1
+                  ? 'Affordability floor: the modeled pipeline is already at or above a 20% deed-restricted share, so this bar may barely move. Where the share is under 20%, the floor pulls the difference out of the market segment.'
+                  : `Affordability floor: +${dAffFromFloor.toFixed(1)} pp toward deed-restricted, from market, split across the four affordable bands in proportion to the current mix.`}
+              </li>
+            )}
+            {levers.deep && (
+              <li>
+                {Math.abs(dDeepFromDeep) < 0.1
+                  ? 'Deep-AMI: the affordable stack in the model is already at least half at or below 50% AMI, so the bar can stay flat. Otherwise this lever deepens the left side of the stack from higher AMI bands and market, in that order.'
+                  : `Deep-AMI: +${dDeepFromDeep.toFixed(1)} percentage points toward &lt;50% AMI in the model.`}
+              </li>
+            )}
+          </ul>
+        )}
+
         <div className="lever-impact">
           <div className="lever-impact-stat">
             <div className="lever-impact-num">
               {totalAdded > 0 ? `+${totalAdded.toLocaleString()}` : '0'}
             </div>
             <div className="lever-impact-label">
-              affordable homes near MBTA<br/>
+              additional deed-restricted homes near MBTA
+              <br />
               <span className="lever-impact-sub">
-                projected, applied to {totalUnits.toLocaleString()} units already in the pipeline
+                projected on {totalUnits.toLocaleString()} pipeline units, vs. the
+                mix above
               </span>
             </div>
           </div>
@@ -418,32 +524,34 @@ function LeverPanel({ basePct, totalUnits }) {
               {totalDeepAdded > 0 ? `+${totalDeepAdded.toLocaleString()}` : '0'}
             </div>
             <div className="lever-impact-label">
-              deeply affordable<br/>
-              <span className="lever-impact-sub">homes for renters earning under 50% AMI</span>
+              more toward deep affordability
+              <br />
+              <span className="lever-impact-sub">
+                under 50% AMI in the model, vs. current pipeline
+              </span>
             </div>
           </div>
-          {result.localPref && (
-            <div className="lever-impact-badge">
-              + Tenant protections + local preference: keys go to current transit-dependent renters
-            </div>
-          )}
         </div>
 
         <div className="lever-workers">
           <div className="lever-workers-eyebrow">
-            Workers who gain access {numLevers === 0 ? '(pull a lever to start)' : `(${workersLitUp.length}/${WORKERS.length})`}
+            {numLevers === 0
+              ? 'Illustrative: bold = ≥1 pp in deed bands for that income. Over 80% AMI, only the workforce (80%+) band counts&mdash;not the whole <80% stack'
+              : `Bolder: ≥1 pp in bands for that income · ${workersLitUp.length} of ${WORKERS.length}`}
           </div>
           <div className="lever-workers-grid">
             {WORKERS.map((w) => {
-              const lit = workersLitUp.includes(w)
+              const mixUp = newAccess(w) - baseAccess(w) >= 1
               const wage = `$${(w.wage / 1000).toFixed(0)}k`
               return (
                 <div
                   key={w.name}
-                  className={`lever-worker ${lit ? 'lever-worker-on' : ''}`}
+                  className={`lever-worker ${mixUp ? 'lever-worker-on' : ''}`}
                   title={`${w.name} · ${wage} (${w.ami.toFixed(0)}% AMI)`}
                 >
-                  <span className="lever-worker-icon" aria-hidden="true">{w.icon}</span>
+                  <span className="lever-worker-icon" aria-hidden="true">
+                    {w.icon}
+                  </span>
                   <span className="lever-worker-name">{w.name}</span>
                   <span className="lever-worker-wage">{wage}</span>
                 </div>
@@ -899,6 +1007,12 @@ export default function PolicyGapPanels({ view = 'all' }) {
 
   const stats = useMemo(() => (builds ? computePolicyGapStats(builds) : null), [builds])
 
+  // Must run before any conditional return (same order every render).
+  const mixWithBoth = useMemo(() => {
+    if (!stats) return null
+    return applyLevers(stats.breakdownPct, { floor: true, deep: true })
+  }, [stats])
+
   if (error) {
     return <div className="motivation-empty">Could not load MassBuilds data.</div>
   }
@@ -911,6 +1025,10 @@ export default function PolicyGapPanels({ view = 'all' }) {
   }
 
   const { funnel, breakdownPct, totalUnits } = stats
+  const _affM = sumAff(mixWithBoth.pct) || 0.01
+  const _dM = sumDeep(mixWithBoth.pct) || 0.01
+  const oneInDeed = Math.max(2, Math.min(20, Math.round(100 / _affM)))
+  const oneInDeep = Math.max(2, Math.min(30, Math.round(100 / _dM)))
 
   return (
     <div className="motivation-stack">
@@ -918,37 +1036,38 @@ export default function PolicyGapPanels({ view = 'all' }) {
       {showLevers && (
       <article className="motivation-card motivation-card--combined">
         <header className="motivation-card-header">
-          <h3>How to actually build affordable homes near the MBTA: pull these three levers.</h3>
+          <h3>How to actually build affordable homes near the MBTA: pull these two levers.</h3>
           <p className="motivation-dek">
-            The MBTA Communities Act zones for density. The Affordable Homes Act funds
-            construction. Neither requires that the homes be priced for the working renters who
-            depend on transit. The fix is a third lever, an{' '}
-            <Jargon term="affordability floor">affordability floor</Jargon> near transit, and
-            it&rsquo;s already in place in peer states. Toggle the levers below to see how the
-            unit mix would shift.
+            <strong>Floor</strong> = a minimum{' '}
+            <Jargon term="affordability floor">deed-restricted</Jargon> share. <strong>Deep-AMI</strong> = more
+            of that for under-50% incomes&mdash;like the worker cards, for the
+            full pipeline. Notes if the data already sit at the floor. The
+            chart below the takeaway is the <em>first</em> of those, not
+            the deep split.
           </p>
         </header>
 
         <LeverPanel basePct={breakdownPct} totalUnits={totalUnits} />
 
         <div className="motivation-takeaway">
-          With all three levers pulled, MA would build roughly{' '}
-          <strong>1 in 5 new MBTA-near homes</strong> at deed-restricted prices, and{' '}
-          <strong>1 in 10</strong> at <Jargon term="deep affordability">deep affordability</Jargon>{' '}
-          (under 50% <Jargon term="AMI">AMI</Jargon>), without changing a single line of zoning code.
+          In this model, with both levers on, about{' '}
+          <strong>1 in {oneInDeed} pipeline homes near the MBTA</strong> are priced in the
+          deed-restricted stack, and about <strong>1 in {oneInDeep}</strong> in the
+          <Jargon term="deep affordability">deep</Jargon> (under-50%{' '}
+          <Jargon term="AMI">AMI</Jargon>) part of that stack. Your toggles may read
+          differently if the real pipeline is already at the floor and deep share.
         </div>
 
         <div className="motivation-subsection-divider" role="presentation">
-          <span className="motivation-subsection-kicker">And the blueprint is already proven</span>
+          <span className="motivation-subsection-kicker">Elsewhere: a share floor</span>
         </div>
 
         <p className="motivation-dek motivation-dek--inline">
-          Massachusetts isn&rsquo;t the first state to <Jargon term="upzone">upzone</Jargon>{' '}
-          near transit. Four peer jurisdictions paired density with a{' '}
-          <strong>statewide or county-wide <Jargon term="affordability floor">affordability
-          floor</Jargon></strong>, the exact lever MBTA Communities left out. The bar shows
-          each regime&rsquo;s required affordable share; the black diamond on the top row is
-          what MA actually built near the T, with no floor in place.
+          Each bar: a required <strong>affordable share</strong> (in-lieu where
+          applicable)&mdash;first toggle territory, not the second. The diamond is
+          what Massachusetts <em>built</em> in this view, with no similar statewide
+          floor. Rounded peer rules, for contrast&mdash;not a one-to-one with
+          the pipeline.
         </p>
 
         <PeerComparison funnel={funnel} />
@@ -967,9 +1086,10 @@ export default function PolicyGapPanels({ view = 'all' }) {
         </div>
 
         <div className="motivation-takeaway">
-          Montgomery County, Seattle, California, and Washington all reached the same conclusion:
-          density without an affordability floor leaves the workers who depend on transit behind.
-          Massachusetts has built the zoning. <strong>The missing piece is the floor</strong>.
+          The peers add density to a <strong>minimum</strong> affordable
+          share&mdash;that is the bar.{' '}
+          Who gets the deeper set-asides is the second lever (and the workers
+          before). MA has the rezoning. <strong>Still open: a share floor.</strong>
         </div>
 
         <footer className="motivation-source">

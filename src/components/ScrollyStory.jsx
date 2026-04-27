@@ -114,7 +114,7 @@ export default function ScrollyStory({ onComplete }) {
   // are derived from which station the reader has selected -- but only
   // while the section itself is on screen, so they don't bleed into
   // adjacent sections after the reader scrolls past.
-  const [activeStation, setActiveStation] = useState('savings')
+  const [activeStation, setActiveStation] = useState(null)
   const peopleSectionRef = useRef(null)
   const [mapOn, setMapOn] = useState(false)
   const costVisible = mapOn && activeStation === 'savings'
@@ -429,10 +429,19 @@ export default function ScrollyStory({ onComplete }) {
             <div
               id="t-line-panel"
               role="tabpanel"
-              aria-labelledby={`t-line-tab-${activeStation}`}
+              aria-labelledby={activeStation ? `t-line-tab-${activeStation}` : undefined}
+              aria-label={!activeStation ? 'Why your T stop matters' : undefined}
               className="t-line-panel"
               style={{ '--station-color': STATIONS.find((s) => s.id === activeStation)?.color }}
             >
+              {!activeStation && (
+                <div className="t-line-prompt" role="status" aria-live="polite">
+                  <p>
+                    Select a stop above to explore: cost savings, job access,
+                    daily needs, or climate impact.
+                  </p>
+                </div>
+              )}
               {activeStation === 'savings' && (
                 <div className="t-line-content" key="savings">
                   <div className="t-line-content-eyebrow">Orange Line &middot; Cost Savings</div>
@@ -594,6 +603,10 @@ export default function ScrollyStory({ onComplete }) {
           </div>
         )}
         <div className="policy-section-inner">
+          <p className="policy-people-hint" role="note">
+            Click a waving figure at the left or right to read what Boston-area
+            residents have said in local news.
+          </p>
           <div className="policy-section-opener-card">
             <p className="policy-section-opener">
               Housing is considered affordable when rent takes up no more than
@@ -657,7 +670,7 @@ export default function ScrollyStory({ onComplete }) {
       <section className="scrolly-section" ref={addRef(6)}>
         <header className="venn-section-header">
           <h3 className="venn-section-title">
-            Two state housing laws shape what gets built near MBTA stations.
+            Two state housing laws shape <br />what gets built near MBTA stations.
           </h3>
           <p className="venn-section-dek">
             Hover each circle to see what each law does, and where they
@@ -667,7 +680,7 @@ export default function ScrollyStory({ onComplete }) {
         <PolicyVenn />
       </section>
 
-      {/* Section 7 · Bridge paragraph + The three levers */}
+      {/* Section 7 · Bridge paragraph + policy levers */}
       <div className="section-divider" />
       <section className="scrolly-section" ref={addRef(7)}>
         <p className="policy-section-bridge">
@@ -675,22 +688,23 @@ export default function ScrollyStory({ onComplete }) {
           <em>how much</em> money flows to it. Neither controls{' '}
           <em>who gets to live there</em>. That&rsquo;s the gap above:
           density without affordability, capacity without keys for working
-          renters. So what would actually build homes for them near the
-          MBTA, and whose lives would change?
+          renters. Same price bands as earlier, now as two levers, then
+          a chart of how other places set an affordable <em>share</em>.
         </p>
         <PolicyGapPanels view="levers" />
       </section>
 
-      {/* Transition · systemic gap → personal calculus */}
+      {/* Transition · narrative + visuals → personal interactive explorer */}
       <section className="scrolly-bridge" aria-hidden="false">
         <div className="scrolly-bridge-inner">
           <p className="scrolly-bridge-text">
-            Policy change takes time. In the meantime, renters navigate these
-            tradeoffs{' '}
-            <em>one budget, one commute, one lease at a time</em>.
+            Up to here, a shared view of law, supply, and a few example workers.
+            What is left is yours:
+            the rent you can carry, the trip you will make, and the tradeoffs
+            you are willing to live with.<br /> <br />
+            From the story to <em>your</em> map.
           </p>
           <div className="scrolly-bridge-rule" />
-          <p className="scrolly-bridge-cue">What does the map look like for you?</p>
         </div>
       </section>
 
