@@ -358,15 +358,15 @@ export default function ScrollyStory({ onComplete }) {
         </div>
         <div className="scrolly-hero-content">
           <h1 className="scrolly-hero-title">
-            <span className="scrolly-hero-title-line">Housing Near</span>
+            <span className="scrolly-hero-title-line">Affordable Housing Near</span>
             <span className="scrolly-hero-title-accent">Transit</span>
           </h1>
           <p className="subtitle">
-            Why the apartments near your T stop keep getting more expensive,
-            and what&rsquo;s not being done about it
+            How Massachusetts&rsquo; two landmark housing laws can come together
+            to expand affordable homes near the MBTA.
           </p>
           <p className="scrolly-hero-authors">
-            By Gabriela Miranda, Arnav Verma &amp; Helen Bang
+            By Gabriela Miranda, Arnav Verma &amp; Hyemin (Helen) Bang
           </p>
         </div>
         <div className="scroll-hint">Scroll to explore ↓</div>
@@ -644,11 +644,6 @@ export default function ScrollyStory({ onComplete }) {
       {/* Section 5 · Analysis: What's Missing */}
       <div className="section-divider" />
       <section className="scrolly-section" ref={addRef(4)}>
-        <p>
-          Both laws control <em>where</em> housing gets built and <em>how
-          much</em> money flows to it. Neither controls{' '}
-          <em>who gets to live there</em>.
-        </p>
 
         <PolicyGapPanels />
 
