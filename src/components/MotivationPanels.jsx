@@ -10,6 +10,37 @@ const MBTA_MODES = [
   'MBTA Key Bus Route',
 ]
 
+// Hover-triggered glossary for jargon used in the Evidence panels. Mirrors the
+// pattern used in PolicyGapPanels (same CSS classes in scrolly.css).
+const MOTIVATION_GLOSSARY = {
+  'AMI': {
+    short: 'AMI · Area Median Income',
+    def: 'The middle household income for a metro area, used by HUD and the state to define who qualifies for income-restricted housing. In Greater Boston, 50% AMI is roughly $64k for a 2-person household; 80% AMI is roughly $102k. Lower percentages mean deeper affordability.',
+  },
+  'any affordable': {
+    short: '"Any affordable"',
+    def: 'Every deed-restricted unit reported to MassBuilds, at any AMI band. Includes deep-affordability units (under 50% AMI) but also workforce units priced for households earning 80%+ AMI (~$102k+ for a 2-person Boston household). A unit being "affordable" in the data only means its rent is income-capped by a legal covenant, not that it is affordable to a low-income renter.',
+  },
+  'deed-restricted': {
+    short: 'Deed-restricted',
+    def: 'Units with a legal covenant on the property that caps rent or sale price to stay affordable for a set period (typically 30+ years).',
+  },
+}
+
+function Jargon({ term, children }) {
+  const entry = MOTIVATION_GLOSSARY[term]
+  if (!entry) return <span>{children ?? term}</span>
+  return (
+    <span className="jargon-term" tabIndex={0} aria-describedby={`motivation-glossary-${term}`}>
+      {children ?? term}
+      <span className="jargon-tooltip" role="tooltip" id={`motivation-glossary-${term}`}>
+        <span className="jargon-tooltip-label">{entry.short}</span>
+        <span className="jargon-tooltip-def">{entry.def}</span>
+      </span>
+    </span>
+  )
+}
+
 const AMI_CATS = [
   {
     key: 'u30',
@@ -75,15 +106,6 @@ function isMbtaServed(modes) {
   return modes.some((m) => MBTA_MODES.includes(m))
 }
 
-function primaryTransitTier(modes) {
-  if (modes.includes('Rapid Transit')) return 'Rapid Transit'
-  if (modes.includes('Commuter Rail')) return 'Commuter Rail'
-  if (modes.includes('Ferry')) return 'Ferry'
-  if (modes.includes('MBTA Key Bus Route')) return 'MBTA Key Bus'
-  if (modes.includes('RTA')) return 'Regional Bus (RTA)'
-  return 'No transit'
-}
-
 function computeStats(builds) {
   const mbta = builds.filter((d) => isMbtaServed(parseTransitModes(d.nTransit)))
 
@@ -103,33 +125,33 @@ function computeStats(builds) {
     u30, a3050, a5080, a80p, affOther, market,
   }
 
-  // Per-transit-tier stats
-  const tierOrder = ['Rapid Transit', 'Commuter Rail', 'Ferry', 'MBTA Key Bus', 'Regional Bus (RTA)', 'No transit']
-  const tierMap = Object.fromEntries(
-    tierOrder.map((t) => [t, { tier: t, hu: 0, aff: 0, deep: 0, devs: 0 }])
-  )
-  for (const d of builds) {
-    const modes = parseTransitModes(d.nTransit)
-    const tier = primaryTransitTier(modes)
-    const bucket = tierMap[tier]
-    bucket.devs += 1
-    bucket.hu += d.hu || 0
-    bucket.aff += d.affrdUnit || 0
-    bucket.deep += (d.affU30 || 0) + (d.aff3050 || 0)
-  }
-  const tiers = tierOrder
-    .map((t) => {
-      const b = tierMap[t]
-      return {
-        ...b,
-        affPct: b.hu > 0 ? (b.aff / b.hu) * 100 : 0,
-        deepPct: b.hu > 0 ? (b.deep / b.hu) * 100 : 0,
-      }
-    })
-    .filter((t) => t.hu > 0)
-
-  return { hu, aff, breakdown, tiers, devs: mbta.length }
+  return { hu, aff, breakdown, devs: mbta.length }
 }
+
+// === Occupations strip (F) ===
+// BLS OEWS Boston-Cambridge-Nashua, MA-NH, May 2023 median annual wages
+// (median hourly wage × 2080 hrs/yr, the BLS standard conversion). Elementary
+// school teachers (25-2021) are salaried and BLS suppresses median hourly for
+// that area, so we substitute the published annual mean. AMI % is computed
+// against the Boston HMFA 100% AMI for a 2-person household ($127,200) so it
+// lines up with our supply-side AMI bands.
+// Source: https://www.bls.gov/oes/2023/May/oes_71650.htm
+const BOSTON_AMI_100_2P = 127200
+const OCCUPATIONS = [
+  { name: 'Retail salesperson', wage: 36170, soc: '41-2031' },
+  { name: 'Home health aide', wage: 37440, soc: '31-1120' },
+  { name: 'Childcare worker', wage: 39120, soc: '39-9011' },
+  { name: 'Janitor', wage: 39940, soc: '37-2011' },
+  { name: 'Line cook', wage: 44200, soc: '35-2014' },
+  { name: 'Preschool teacher', wage: 45300, soc: '25-2011' },
+  { name: 'EMT', wage: 46090, soc: '29-2042' },
+  { name: 'MBTA bus driver', wage: 62520, soc: '53-3052' },
+  { name: 'Construction laborer', wage: 62920, soc: '47-2061' },
+  { name: 'Firefighter', wage: 75050, soc: '33-2011' },
+  { name: 'Police officer', wage: 76560, soc: '33-3051' },
+  { name: 'Elementary school teacher', wage: 87660, soc: '25-2021' },
+  { name: 'Registered nurse', wage: 100360, soc: '29-1141' },
+]
 
 function allocateWaffle(breakdown) {
   // Distribute 100 cells proportional to counts, using largest-remainder so the
@@ -206,153 +228,140 @@ function WaffleChart({ breakdown, hovered, onHover }) {
   )
 }
 
-function TransitBars({ tiers }) {
+
+// Occupations strip. Plot common Boston jobs against the AMI scale, reusing
+// the same color tiers as the Evidence 01 waffle so the reader can map a
+// worker's position straight back to the unit-mix shown above.
+function OccupationStrip() {
   const svgRef = useRef(null)
   const tooltipRef = useRef(null)
 
   useEffect(() => {
-    if (!svgRef.current || !tiers.length) return
+    if (!svgRef.current) return
     const svg = d3.select(svgRef.current)
     svg.selectAll('*').remove()
 
-    // Sort from highest-capacity transit at top (most service) to least
-    const order = ['Rapid Transit', 'Commuter Rail', 'Ferry', 'MBTA Key Bus', 'Regional Bus (RTA)', 'No transit']
-    const data = order
-      .map((t) => tiers.find((x) => x.tier === t))
-      .filter(Boolean)
+    const width = 760
+    const margin = { top: 24, right: 30, bottom: 56, left: 30 }
+    const stripH = 46
+    const occH = 320
 
-    const width = 640
-    const margin = { top: 18, right: 80, bottom: 36, left: 150 }
-    const rowH = 46
-    const height = margin.top + margin.bottom + data.length * rowH
+    const amiStripY = 0
+    const occY = amiStripY + stripH + 12
+    const axisY = occY + occH
+
+    const height = margin.top + axisY + margin.bottom
 
     svg.attr('viewBox', `0 0 ${width} ${height}`)
-
     const chartW = width - margin.left - margin.right
     const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`)
 
-    const xMax = Math.max(30, d3.max(data, (d) => d.affPct) * 1.05)
-    const x = d3.scaleLinear().domain([0, xMax]).range([0, chartW])
+    const maxAmi = 130
+    const x = d3.scaleLinear().domain([0, maxAmi]).range([0, chartW])
+
+    // AMI reference scale — same colors as the Evidence 01 waffle so the
+    // reader can map a worker's position straight back to the unit-mix
+    // shown above. This strip is purely a reference axis for the
+    // occupation dots; it is not a quantitative bar.
+    const bands = [
+      { key: 'u30', x0: 0, x1: 30, color: '#6b2b27', name: 'Very low income', sub: '<30% AMI' },
+      { key: 'a3050', x0: 30, x1: 50, color: '#a14a35', name: 'Low income', sub: '30–50% AMI' },
+      { key: 'a5080', x0: 50, x1: 80, color: '#d38e42', name: 'Moderate income', sub: '50–80% AMI' },
+      { key: 'a80p', x0: 80, x1: maxAmi, color: '#e9c46a', name: 'Workforce', sub: '80%+ AMI' },
+    ]
+
+    const stripG = g.append('g').attr('transform', `translate(0, ${amiStripY})`)
+
+    stripG
+      .append('g')
+      .selectAll('rect.band')
+      .data(bands)
+      .enter()
+      .append('rect')
+      .attr('class', 'band')
+      .attr('x', (d) => x(d.x0))
+      .attr('y', 0)
+      .attr('width', (d) => x(d.x1) - x(d.x0))
+      .attr('height', stripH)
+      .attr('fill', (d) => d.color)
+      .attr('opacity', 0.55)
+
+    stripG
+      .append('g')
+      .selectAll('text.band-name')
+      .data(bands)
+      .enter()
+      .append('text')
+      .attr('x', (d) => (x(d.x0) + x(d.x1)) / 2)
+      .attr('y', stripH / 2 - 4)
+      .attr('dy', '0.35em')
+      .attr('text-anchor', 'middle')
+      .attr('font-size', 11)
+      .attr('font-weight', 700)
+      .attr('font-family', 'DM Sans, Inter, sans-serif')
+      .attr('fill', (d) => (d.key === 'a80p' ? '#5a4a1a' : '#fffaee'))
+      .text((d) => d.name)
+
+    stripG
+      .append('g')
+      .selectAll('text.band-sub')
+      .data(bands)
+      .enter()
+      .append('text')
+      .attr('x', (d) => (x(d.x0) + x(d.x1)) / 2)
+      .attr('y', stripH / 2 + 11)
+      .attr('dy', '0.35em')
+      .attr('text-anchor', 'middle')
+      .attr('font-size', 9.5)
+      .attr('font-family', 'DM Sans, Inter, sans-serif')
+      .attr('fill', (d) => (d.key === 'a80p' ? '#5a4a1a' : '#fffaee'))
+      .attr('opacity', 0.85)
+      .text((d) => d.sub)
+
+    // Occupations area
+    const occG = g.append('g').attr('transform', `translate(0, ${occY})`)
+
+    const sorted = [...OCCUPATIONS]
+      .map((o) => ({ ...o, ami: (o.wage / BOSTON_AMI_100_2P) * 100 }))
+      .sort((a, b) => a.ami - b.ami)
+
     const y = d3
       .scaleBand()
-      .domain(data.map((d) => d.tier))
-      .range([0, data.length * rowH])
-      .padding(0.28)
+      .domain(sorted.map((o) => o.name))
+      .range([0, occH])
+      .padding(0.18)
 
-    // Axis
-    g.append('g')
-      .attr('transform', `translate(0, ${data.length * rowH})`)
-      .call(d3.axisBottom(x).ticks(5).tickFormat((v) => `${v}%`))
-      .call((sel) => sel.select('.domain').attr('stroke', '#b9b3a4'))
-      .call((sel) => sel.selectAll('text').attr('fill', '#6e6e6e').attr('font-size', 11))
-      .call((sel) => sel.selectAll('line').attr('stroke', '#d4d0c4'))
-
-    g.append('text')
-      .attr('x', chartW / 2)
-      .attr('y', data.length * rowH + 30)
-      .attr('text-anchor', 'middle')
-      .attr('fill', '#6e6e6e')
-      .attr('font-size', 11)
-      .attr('font-family', 'DM Sans, Inter, sans-serif')
-      .text('Share of new units that are affordable (deed-restricted)')
-
-    // Gridlines
-    g.append('g')
-      .attr('class', 'motivation-gridlines')
-      .selectAll('line')
-      .data(x.ticks(5))
+    occG
+      .append('g')
+      .selectAll('line.guide')
+      .data(sorted)
       .enter()
       .append('line')
-      .attr('x1', (d) => x(d))
-      .attr('x2', (d) => x(d))
-      .attr('y1', 0)
-      .attr('y2', data.length * rowH)
-      .attr('stroke', '#e8e3d2')
+      .attr('x1', 0)
+      .attr('x2', (d) => x(d.ami))
+      .attr('y1', (d) => y(d.name) + y.bandwidth() / 2)
+      .attr('y2', (d) => y(d.name) + y.bandwidth() / 2)
+      .attr('stroke', '#cfc8b6')
       .attr('stroke-width', 1)
 
-    // Row groups
-    const rows = g
-      .selectAll('g.motivation-row')
-      .data(data)
-      .enter()
+    occG
       .append('g')
-      .attr('class', 'motivation-row')
-      .attr('transform', (d) => `translate(0, ${y(d.tier)})`)
-
-    // Bar track
-    rows
-      .append('rect')
-      .attr('x', 0)
-      .attr('y', 0)
-      .attr('width', chartW)
-      .attr('height', y.bandwidth())
-      .attr('fill', '#efeadb')
-
-    // Affordable bar, with Rapid Transit drawn in the story accent color
-    rows
-      .append('rect')
-      .attr('x', 0)
-      .attr('y', 0)
-      .attr('width', (d) => x(d.affPct))
-      .attr('height', y.bandwidth())
-      .attr('fill', (d) => (d.tier === 'Rapid Transit' ? '#DA291C' : '#8a9a7b'))
-
-    // Deep-affordability sub-bar (<50% AMI) layered inside
-    rows
-      .append('rect')
-      .attr('x', 0)
-      .attr('y', 0)
-      .attr('width', (d) => x(d.deepPct))
-      .attr('height', y.bandwidth())
-      .attr('fill', (d) => (d.tier === 'Rapid Transit' ? '#6b1a12' : '#4d5a3f'))
-      .attr('opacity', 0.9)
-
-    // Tier label (left)
-    rows
-      .append('text')
-      .attr('x', -12)
-      .attr('y', y.bandwidth() / 2 + 1)
-      .attr('dy', '0.35em')
-      .attr('text-anchor', 'end')
-      .attr('font-size', 12.5)
-      .attr('font-weight', 600)
-      .attr('fill', '#1a1a1a')
-      .attr('font-family', 'Inter, sans-serif')
-      .text((d) => d.tier)
-
-    // Unit-count sub-label
-    rows
-      .append('text')
-      .attr('x', -12)
-      .attr('y', y.bandwidth() / 2 + 15)
-      .attr('dy', '0.35em')
-      .attr('text-anchor', 'end')
-      .attr('font-size', 10)
-      .attr('fill', '#6e6e6e')
-      .attr('font-family', 'DM Sans, Inter, sans-serif')
-      .text((d) => `${d.hu.toLocaleString()} units`)
-
-    // Percentage label at end of bar
-    rows
-      .append('text')
-      .attr('x', (d) => x(d.affPct) + 8)
-      .attr('y', y.bandwidth() / 2 + 1)
-      .attr('dy', '0.35em')
-      .attr('font-size', 12)
-      .attr('font-weight', 700)
-      .attr('fill', (d) => (d.tier === 'Rapid Transit' ? '#DA291C' : '#1a1a1a'))
-      .attr('font-family', 'Inter, sans-serif')
-      .text((d) => `${d.affPct.toFixed(1)}%`)
-
-    // Hover tooltip
-    rows
-      .append('rect')
-      .attr('x', 0)
-      .attr('y', 0)
-      .attr('width', chartW)
-      .attr('height', y.bandwidth())
-      .attr('fill', 'transparent')
-      .style('cursor', 'default')
+      .selectAll('circle.occ')
+      .data(sorted)
+      .enter()
+      .append('circle')
+      .attr('class', 'occ')
+      .attr('cx', (d) => x(d.ami))
+      .attr('cy', (d) => y(d.name) + y.bandwidth() / 2)
+      .attr('r', 6)
+      .attr('fill', (d) => {
+        if (d.ami < 30) return '#6b2b27'
+        if (d.ami < 50) return '#a14a35'
+        if (d.ami < 80) return '#d38e42'
+        return '#e9c46a'
+      })
+      .attr('stroke', '#fffaee')
+      .attr('stroke-width', 1.5)
       .on('mousemove', (event, d) => {
         const tt = tooltipRef.current
         if (!tt) return
@@ -361,17 +370,46 @@ function TransitBars({ tiers }) {
         tt.style.top = `${event.clientY - parent.top - 10}px`
         tt.style.opacity = 1
         tt.innerHTML = `
-          <div class="motivation-tooltip-title">${d.tier}</div>
-          <div class="motivation-tooltip-row"><span>Total units</span><b>${d.hu.toLocaleString()}</b></div>
-          <div class="motivation-tooltip-row"><span>Affordable units</span><b>${d.aff.toLocaleString()} (${d.affPct.toFixed(1)}%)</b></div>
-          <div class="motivation-tooltip-row"><span>Deep affordability (&lt;50% AMI)</span><b>${d.deep.toLocaleString()} (${d.deepPct.toFixed(2)}%)</b></div>
-          <div class="motivation-tooltip-row"><span>Developments</span><b>${d.devs.toLocaleString()}</b></div>
+          <div class="motivation-tooltip-title">${d.name}</div>
+          <div class="motivation-tooltip-row"><span>Median wage (Boston MSA)</span><b>$${d.wage.toLocaleString()}</b></div>
+          <div class="motivation-tooltip-row"><span>As % of 100% AMI (2p)</span><b>${d.ami.toFixed(1)}%</b></div>
         `
       })
       .on('mouseleave', () => {
         if (tooltipRef.current) tooltipRef.current.style.opacity = 0
       })
-  }, [tiers])
+
+    occG
+      .append('g')
+      .selectAll('text.occ-label')
+      .data(sorted)
+      .enter()
+      .append('text')
+      .attr('x', (d) => x(d.ami) + 12)
+      .attr('y', (d) => y(d.name) + y.bandwidth() / 2)
+      .attr('dy', '0.35em')
+      .attr('font-size', 12)
+      .attr('font-family', 'Inter, sans-serif')
+      .attr('fill', '#1a1a1a')
+      .text((d) => `${d.name} · $${(d.wage / 1000).toFixed(0)}k`)
+
+    // Bottom AMI axis
+    g.append('g')
+      .attr('transform', `translate(0, ${axisY})`)
+      .call(d3.axisBottom(x).ticks(7).tickFormat((v) => `${v}%`))
+      .call((sel) => sel.select('.domain').attr('stroke', '#b9b3a4'))
+      .call((sel) => sel.selectAll('text').attr('fill', '#6e6e6e').attr('font-size', 11))
+      .call((sel) => sel.selectAll('line').attr('stroke', '#d4d0c4'))
+
+    g.append('text')
+      .attr('x', chartW / 2)
+      .attr('y', axisY + 42)
+      .attr('text-anchor', 'middle')
+      .attr('fill', '#6e6e6e')
+      .attr('font-size', 11)
+      .attr('font-family', 'DM Sans, Inter, sans-serif')
+      .text('Worker income, as % of Boston Area Median Income (100% AMI = $127k for a 2-person household)')
+  }, [])
 
   return (
     <div className="motivation-bars-wrap">
@@ -381,6 +419,7 @@ function TransitBars({ tiers }) {
   )
 }
 
+
 export default function MotivationPanels() {
   const [builds, setBuilds] = useState(null)
   const [error, setError] = useState(false)
@@ -389,8 +428,9 @@ export default function MotivationPanels() {
   useEffect(() => {
     let alive = true
     loadMassBuilds()
-      .then((data) => {
-        if (alive) setBuilds(data)
+      .then((buildsData) => {
+        if (!alive) return
+        setBuilds(buildsData)
       })
       .catch(() => {
         if (alive) setError(true)
@@ -402,18 +442,42 @@ export default function MotivationPanels() {
 
   const stats = useMemo(() => (builds ? computeStats(builds) : null), [builds])
 
+  // Supply-side distribution near MBTA transit, in the same 4 AMI bands plus
+  // a separate market-rate segment. `affOther` (deed-restricted but tier
+  // unspecified) is allocated proportionally across the four affordable bands
+  // so the supply bar still adds to 100%.
+  const supply = useMemo(() => {
+    if (!stats) return null
+    const { breakdown, hu } = stats
+    const knownAff = breakdown.u30 + breakdown.a3050 + breakdown.a5080 + breakdown.a80p
+    const splitOther = (band) => {
+      if (knownAff <= 0) return 0
+      return breakdown.affOther * (breakdown[band] / knownAff)
+    }
+    return {
+      total: hu,
+      values: {
+        u30: breakdown.u30 + splitOther('u30'),
+        a3050: breakdown.a3050 + splitOther('a3050'),
+        a5080: breakdown.a5080 + splitOther('a5080'),
+        a80p: breakdown.a80p + splitOther('a80p'),
+        market: breakdown.market,
+      },
+    }
+  }, [stats])
+
   if (error) {
     return (
       <div className="motivation-empty">Could not load MassBuilds data.</div>
     )
   }
-  if (!stats) {
+  if (!stats || !supply) {
     return (
       <div className="motivation-empty" aria-live="polite">Loading MassBuilds data…</div>
     )
   }
 
-  const { breakdown, hu, tiers, devs } = stats
+  const { breakdown, hu, devs } = stats
   const deepCount = breakdown.u30 + breakdown.a3050
   const pctDeep = (deepCount / hu) * 100
 
@@ -421,9 +485,6 @@ export default function MotivationPanels() {
     const count = breakdown[c.key] || 0
     return { ...c, count, pct: (count / hu) * 100 }
   })
-
-  const rapid = tiers.find((t) => t.tier === 'Rapid Transit')
-  const bus = tiers.find((t) => t.tier === 'MBTA Key Bus')
 
   return (
     <div className="motivation-stack">
@@ -471,7 +532,7 @@ export default function MotivationPanels() {
         </div>
 
         <div className="motivation-takeaway">
-          Only <strong>{pctDeep.toFixed(1)}%</strong> of new units near MBTA transit are targeted at households earning below 50% AMI.
+          Only <strong>{pctDeep.toFixed(1)}%</strong> of new units near MBTA transit are targeted at households earning below 50% <Jargon term="AMI">AMI</Jargon>.
           Those are the renters with the least ability to afford a car, and the most to gain from living near transit.
           The other <strong>{((breakdown.market / hu) * 100).toFixed(0)}%</strong> of units are market-rate.
         </div>
@@ -482,38 +543,34 @@ export default function MotivationPanels() {
         </footer>
       </article>
 
-      {/* Visualization 2: Transit-tier bars */}
+      {/* Visualization 2: Who is the new housing actually for? */}
       <article className="motivation-card">
         <header className="motivation-card-header">
           <span className="motivation-eyebrow">Evidence · 02</span>
-          <h3>The better the transit, the less affordable the housing.</h3>
+          <h3>The people who keep Boston running can&rsquo;t afford the housing built next to their bus stop.</h3>
           <p className="motivation-dek">
-            Sort the same developments by their primary transit service. The most frequent,
-            most job-rich mode, rapid transit, produces the <em>lowest</em> share of affordable units.
-            Lower-income households get pushed to bus-served areas where service is less frequent.
+            Across <strong>{OCCUPATIONS.length}</strong> common Greater Boston occupations,
+            from childcare workers and line cooks to teachers and nurses, median wages
+            line up against the same <Jargon term="AMI">AMI</Jargon> tiers shown in the
+            unit-mix waffle above.
           </p>
         </header>
 
-        <TransitBars tiers={tiers} />
+        <OccupationStrip />
 
-        <div className="motivation-bars-legend">
-          <span className="motivation-swatch" style={{ background: '#6b1a12' }} /> Deep affordability (&lt;50% AMI)
-          <span className="motivation-swatch" style={{ background: '#DA291C' }} /> Rapid transit: any affordable
-          <span className="motivation-swatch" style={{ background: '#8a9a7b' }} /> Other tiers: any affordable
+        <div className="motivation-takeaway">
+          Childcare workers, line cooks, and EMTs earn under 50% AMI: only{' '}
+          <strong>{((supply.values.u30 + supply.values.a3050) / supply.total * 100).toFixed(0)}</strong>{' '}
+          of every 100 new MBTA-near units are priced for them. Even elementary
+          teachers and registered nurses (60&ndash;80% AMI) would need a
+          deed-restricted lottery to afford most of the rest.
         </div>
 
-        {rapid && bus && (
-          <div className="motivation-takeaway">
-            Near rapid transit, just <strong>{rapid.affPct.toFixed(1)}%</strong> of new units are affordable,
-            compared to <strong>{bus.affPct.toFixed(1)}%</strong> along MBTA key bus routes.
-            The places with the best job access and lowest car dependence are where zoning has produced
-            the most market-rate housing, not the most affordable housing.
-          </div>
-        )}
-
         <footer className="motivation-source">
-          Source: MassBuilds (Mar 2026). &ldquo;Affordable&rdquo; counts deed-restricted units reported to MassBuilds;
-          projects may report multiple transit types, so each is assigned to its highest-service mode.
+          Sources. Wages: U.S. Bureau of Labor Statistics, Occupational Employment and
+          Wage Statistics (OEWS), May 2023, Boston-Cambridge-Nashua MA-NH MSA, median
+          annual wage by SOC code. AMI base: HUD FY2024 income limits, Boston HMFA,
+          2-person 100% AMI = $127,200. Hover any dot for the underlying numbers.
         </footer>
       </article>
     </div>

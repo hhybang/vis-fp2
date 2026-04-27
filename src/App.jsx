@@ -4,6 +4,7 @@ import OnboardingModal from './components/OnboardingModal'
 import MapPanel from './components/MapPanel'
 import ChartsPanel from './components/ChartsPanel'
 import Toolbar from './components/Toolbar'
+import KeyTermsButton from './components/KeyTermsButton'
 import { loadMBTAStops, loadMassBuilds, loadACSIncomeData } from './utils/dataLoaders'
 import { fetchIsochrone, fetchDirections, fetchCensusRentData, fetchTractBoundaries } from './utils/api'
 import { getOuterIsochrone, pointInPolygon, tractIntersectsIsochrone } from './utils/geo'
@@ -282,6 +283,7 @@ function App() {
           </div>
         </div>
       </div>
+      <KeyTermsButton />
     </div>
   )
 }

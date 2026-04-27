@@ -76,6 +76,20 @@ export async function loadMassBuilds() {
     }))
 }
 
+// Greater Boston tract IDs derived from the project's `boston_tracts.geojson`,
+// which is the same Greater Boston footprint used elsewhere in the app.
+export async function loadBostonTractIds() {
+  const url = import.meta.env.BASE_URL + 'data/boston_tracts.geojson'
+  const res = await fetch(url)
+  const geo = await res.json()
+  const ids = new Set()
+  for (const f of geo.features || []) {
+    const id = f?.properties?.GEOID
+    if (id) ids.add(String(id))
+  }
+  return ids
+}
+
 export async function loadACSIncomeData() {
   const data = await loadCSV('/data/ACSDP5Y2023-2/ACSDP5Y2023.DP03-Data.csv')
   // Skip the first row which contains column labels

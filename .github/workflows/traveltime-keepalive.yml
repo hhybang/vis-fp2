@@ -1,0 +1,51 @@
+name: TravelTime keep-alive
+
+on:
+  schedule:
+    # Every Monday at 14:00 UTC (well under the 60-day window)
+    - cron: '0 14 * * 1'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping TravelTime time-map endpoint
+        env:
+          TT_APP_ID: ${{ secrets.TRAVELTIME_APP_ID }}
+          TT_API_KEY: ${{ secrets.TRAVELTIME_API_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${TT_APP_ID}" ] || [ -z "${TT_API_KEY}" ]; then
+            echo "Missing TRAVELTIME_APP_ID or TRAVELTIME_API_KEY secret."
+            exit 1
+          fi
+
+          # Use a future departure time (needs to be in the future for time-map).
+          DEP=$(date -u -d '+2 days' '+%Y-%m-%dT08:00:00Z')
+
+          HTTP=$(curl -sS -o /tmp/tt.json -w '%{http_code}' \
+            -X POST https://api.traveltimeapp.com/v4/time-map \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
+            -H "X-Application-Id: ${TT_APP_ID}" \
+            -H "X-Api-Key: ${TT_API_KEY}" \
+            -d "{
+              \"departure_searches\": [{
+                \"id\": \"keepalive\",
+                \"coords\": {\"lat\": 42.3601, \"lng\": -71.0589},
+                \"departure_time\": \"${DEP}\",
+                \"travel_time\": 900,
+                \"transportation\": {\"type\": \"public_transport\"}
+              }]
+            }")
+
+          echo "HTTP ${HTTP}"
+          head -c 500 /tmp/tt.json || true
+          echo
+
+          if [ "${HTTP}" != "200" ]; then
+            echo "TravelTime keep-alive failed."
+            exit 1
+          fi
+          echo "TravelTime key is healthy."

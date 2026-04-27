@@ -2000,6 +2000,17 @@
   margin-left: 0;
 }
 
+.motivation-bars-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.motivation-bars-legend-item .motivation-swatch {
+  margin-left: 0;
+  margin-right: 6px;
+}
+
 /* ----- Shared takeaway + source ----- */
 .motivation-takeaway {
   background: var(--paper-bg);

@@ -4,6 +4,7 @@ import DailyNeedsPanel from './DailyNeedsPanel'
 import JobAccessPanel from './JobAccessPanel'
 import MotivationPanels from './MotivationPanels'
 import PolicyGapPanels from './PolicyGapPanels'
+import KeyTermsButton from './KeyTermsButton'
 import tree1 from '../imgs/trees/cartoon-tree-1.png'
 import tree2 from '../imgs/trees/cartoon-tree-2.png'
 import tree3 from '../imgs/trees/cartoon-tree-3.png'
@@ -283,8 +284,8 @@ export default function ScrollyStory({ onComplete }) {
             <span className="scrolly-hero-title-accent">Transit</span>
           </h1>
           <p className="subtitle">
-            Why the apartments near your T stop keep getting more expensive
-            &mdash; and what&rsquo;s not being done about it
+            Why the apartments near your T stop keep getting more expensive,
+            and what&rsquo;s not being done about it
           </p>
           <p className="scrolly-hero-authors">
             Gabriela Miranda, Arnav Verma, Helen Bang
@@ -292,7 +293,7 @@ export default function ScrollyStory({ onComplete }) {
           <p className="intro">
             If you rent in Greater Boston, you already know the tradeoff: the
             closer you live to a T stop, the more you pay. Transit means
-            jobs, groceries, healthcare &mdash; your whole daily life without
+            jobs, groceries, healthcare, your whole daily life without
             a car. But the neighborhoods with the best access are
             increasingly out of reach for the people who depend on it most.
             This is the story of how that happened, what the state promised
@@ -302,7 +303,7 @@ export default function ScrollyStory({ onComplete }) {
         <div className="scroll-hint">Scroll to explore ↓</div>
       </div>
 
-      {/* Renter voices — surfaced early so the audience hears real people first */}
+      {/* Renter voices, surfaced early so the audience hears real people first */}
       <section className="renter-voices" ref={addRef(0)}>
         <div className="renter-voices-inner">
           {QUOTES.map((q, i) => (
@@ -331,7 +332,7 @@ export default function ScrollyStory({ onComplete }) {
           <span className="section-eyebrow">Why It Matters</span>
           <h2>Your T Stop Is More Than a Commute</h2>
           <p>
-            If you don&rsquo;t own a car &mdash; or can&rsquo;t afford one &mdash;
+            If you don&rsquo;t own a car, or can&rsquo;t afford one,
             your nearest transit stop shapes everything: which jobs you can get
             to, where you buy groceries, how you reach a doctor. Living close
             to a station isn&rsquo;t a luxury. For many renters in Greater
@@ -353,8 +354,8 @@ export default function ScrollyStory({ onComplete }) {
               </div>
               <div className="benefit-expand">
                 <div className="expand-saving">
-                  Without a car, you keep <strong>$910/month</strong> &mdash;{' '}
-                  <strong>$10,920/year</strong> that can go toward rent instead
+                  Without a car, you keep <strong>$910/month</strong>, or{' '}
+                  <strong>$10,920/year</strong>, that can go toward rent instead
                   of a car payment.
                 </div>
                 <div className="expand-source">
@@ -371,12 +372,12 @@ export default function ScrollyStory({ onComplete }) {
               <div className="benefit-title">Your Job Options</div>
               <div className="benefit-desc">
                 Living near a T stop puts you within reach of the region&rsquo;s
-                biggest job centers &mdash; without needing a car to get there.
+                biggest job centers, without needing a car to get there.
               </div>
               <div className="benefit-expand">
                 <div className="expand-saving">
-                  The Financial District, Kendall Square, Back Bay, Longwood
-                  &mdash; each is just <strong>minutes on foot</strong> from
+                  The Financial District, Kendall Square, Back Bay, Longwood:
+                  each is just <strong>minutes on foot</strong> from
                   a T station. Move away from transit and those commutes get
                   longer, costlier, or impossible.
                 </div>
@@ -393,7 +394,7 @@ export default function ScrollyStory({ onComplete }) {
               <div className="benefit-icon">&#9878;</div>
               <div className="benefit-title">Your Daily Errands</div>
               <div className="benefit-desc">
-                Groceries, a clinic, your kid&rsquo;s school &mdash; near a T
+                Groceries, a clinic, your kid&rsquo;s school: near a T
                 stop, these are a walk away. Further out, each errand becomes a
                 trip.
               </div>
@@ -449,17 +450,6 @@ export default function ScrollyStory({ onComplete }) {
             </div>
           </div>
 
-          <p>
-            The MBTA &mdash; subway, commuter rail, bus, and light rail &mdash;
-            is the backbone of how you get around Greater Boston. But not
-            everyone has the same access.
-          </p>
-
-          <p>
-            Some neighborhoods have stations every few blocks. Others have
-            none. And where transit does exist, living nearby comes at a
-            premium &mdash; one that keeps climbing.
-          </p>
         </div>
       </section>
 
@@ -497,7 +487,7 @@ export default function ScrollyStory({ onComplete }) {
           <h2>The Closer to Transit, the Higher Your Rent</h2>
           <p>
             Every time a new station opens or a line improves, the apartments
-            nearby get more expensive. It&rsquo;s not a mystery &mdash; better
+            nearby get more expensive. It&rsquo;s not a mystery: better
             transit makes a neighborhood more desirable, and landlords price
             accordingly. Rents near MBTA stations have been climbing faster
             than rents everywhere else.
@@ -532,12 +522,6 @@ export default function ScrollyStory({ onComplete }) {
             below that line.
           </p>
           <p>
-            So the people who need transit the most &mdash; renters without
-            cars, working hourly jobs, cobbling together bus-and-train commutes
-            &mdash; are exactly the ones being priced out of the neighborhoods
-            where transit actually exists.
-          </p>
-          <p>
             You&rsquo;re not imagining the squeeze. The gap between where you
             can afford to live and where the T can take you is real, and
             it&rsquo;s growing.
@@ -553,11 +537,9 @@ export default function ScrollyStory({ onComplete }) {
             <span className="section-eyebrow">What the State Promised</span>
             <h2>Two Big Laws. Neither Guarantees You a Home.</h2>
             <p className="policy-section-lead">
-              Massachusetts passed two landmark housing policies &mdash; the
+              Massachusetts passed two landmark housing policies, the
               most ambitious in state history. They sound like good news for
-              renters. But look closer, and you&rsquo;ll find a critical blind
-              spot in both: neither one requires that the new housing near your
-              T stop is something you can actually afford.
+              renters. Look closer.
             </p>
           </header>
 
@@ -693,21 +675,13 @@ export default function ScrollyStory({ onComplete }) {
       <div className="section-divider" />
       <section className="scrolly-section" ref={addRef(3)}>
         <span className="section-eyebrow">Who Actually Gets In</span>
-        <h2>New Buildings, Same Problem</h2>
-        <p>
-          So new housing <em>is</em> going up near transit. But who is it for?
-          We looked at every completed and in-progress project in the
-          state&rsquo;s MassBuilds database and asked two simple questions: at
-          what income level are these apartments priced, and which T lines
-          are they near? The answers show why the new construction you see
-          near your stop probably isn&rsquo;t making your rent any cheaper.
-        </p>
+        <h2>So Who Is the New Housing For?</h2>
 
         <MotivationPanels />
 
         <p>
-          The pattern is clear: the stations with the best service &mdash; the
-          ones you depend on most &mdash; are surrounded by the most
+          The pattern is clear: the stations with the best service, the
+          ones you depend on most, are surrounded by the most
           market-rate housing. The new buildings going up near your Red Line
           or Orange Line stop are overwhelmingly not priced for you. They&rsquo;re
           priced for someone earning twice what you do.
@@ -720,12 +694,9 @@ export default function ScrollyStory({ onComplete }) {
         <span className="section-eyebrow">The Missing Piece</span>
         <h2>Why Nobody Required Affordable Units</h2>
         <p>
-          The state changed zoning in 177 communities and committed
-          $5.4&nbsp;billion to housing. Both are real steps. But here&rsquo;s
-          what neither law does: require that a single unit near your T stop
-          be priced at a rent you can afford. They control <em>where</em>{' '}
-          housing can be built and <em>how much</em> money flows to it. They
-          don&rsquo;t control <em>who gets to live there</em>.
+          Both laws control <em>where</em> housing gets built and <em>how
+          much</em> money flows to it. Neither controls{' '}
+          <em>who gets to live there</em>.
         </p>
 
         <PolicyGapPanels />
@@ -734,7 +705,7 @@ export default function ScrollyStory({ onComplete }) {
           Other states have figured this out. Washington now requires affordable
           units in every development near a transit station. California
           fast-tracks projects that include them. Massachusetts has the zoning
-          and the money &mdash; what it&rsquo;s still missing is the rule that
+          and the money. What it&rsquo;s still missing is the rule that
           says some of those new apartments near your stop have to be ones you
           can actually sign a lease on.
         </p>
@@ -746,7 +717,7 @@ export default function ScrollyStory({ onComplete }) {
           <span className="scrolly-bridge-eyebrow">In the Meantime</span>
           <p className="scrolly-bridge-text">
             Policy change is slow. And while legislators debate, you&rsquo;re
-            the one making the tradeoffs &mdash;{' '}
+            the one making the tradeoffs:{' '}
             <em>one budget, one commute, one lease at a time</em>.
           </p>
           <div className="scrolly-bridge-rule" />
@@ -774,6 +745,7 @@ export default function ScrollyStory({ onComplete }) {
           </button>
         </div>
       </section>
+      <KeyTermsButton />
     </div>
   )
 }

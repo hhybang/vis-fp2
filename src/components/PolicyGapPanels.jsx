@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import * as d3 from 'd3'
 import { loadMassBuilds } from '../utils/dataLoaders'
+import { GLOSSARY, KEY_GLOSSARY_TERMS } from '../utils/glossary'
 
 /* =========================================================================
    Inline jargon tooltips + glossary strip
@@ -8,65 +9,6 @@ import { loadMassBuilds } from '../utils/dataLoaders'
    on each jargon word, a hover/focus definition popup, and a persistent key-
    terms strip at the top of the section for baseline context.
    ========================================================================= */
-
-const GLOSSARY = {
-  'inclusionary zoning': {
-    short: 'Inclusionary zoning',
-    def: 'A rule that requires a share of units in new residential developments to be rented or sold below market rate to lower-income households.',
-  },
-  'inclusionary floor': {
-    short: 'Inclusionary floor',
-    def: 'The minimum share of units in new development that must be affordable. A "floor" is a requirement; a "cap" is a ceiling. Massachusetts has a cap, not a floor.',
-  },
-  'affordability floor': {
-    short: 'Affordability floor',
-    def: 'Same idea as an inclusionary floor: a statutory minimum share of affordable units in new housing, set at the state or local level.',
-  },
-  'deed-restricted': {
-    short: 'Deed-restricted',
-    def: 'Units with a legal covenant on the property that caps rent or sale price to stay affordable for a set period — typically 30+ years.',
-  },
-  'AMI': {
-    short: 'AMI',
-    def: 'Area Median Income. The middle household income for a metro area. In Greater Boston, 80% AMI is roughly $102k for a 2-person household; 50% AMI is roughly $64k.',
-  },
-  'area median income': {
-    short: 'Area Median Income (AMI)',
-    def: 'The middle household income for a metro area. Used to define who counts as "low-income" for affordable-housing rules.',
-  },
-  'deep affordability': {
-    short: 'Deep affordability',
-    def: 'Housing targeted at households earning less than 50% of Area Median Income — the renters most reliant on transit and least able to afford a car.',
-  },
-  'safe-harbor cap': {
-    short: 'Safe-harbor cap',
-    def: 'Under MBTA Communities rules, a municipality\'s inclusionary policy can\'t exceed 10% affordable at 80% AMI without an economic feasibility study — effectively capping ambition at that level.',
-  },
-  'as-of-right': {
-    short: 'As-of-right zoning',
-    def: 'Zoning that approves development automatically if it meets the rules, without requiring a discretionary vote or special permit.',
-  },
-  'by-right': {
-    short: 'By-right zoning',
-    def: 'Same as as-of-right: development is permitted automatically when it complies with objective zoning standards.',
-  },
-  'anti-displacement': {
-    short: 'Anti-displacement protections',
-    def: 'Rules like rent stabilization, just-cause eviction, and tenant right-of-first-refusal that help existing renters stay in place when their neighborhood upzones.',
-  },
-  'TOD': {
-    short: 'Transit-oriented development (TOD)',
-    def: 'Dense, walkable, mixed-use development intentionally located near transit stations to reduce car dependence and expand access to jobs and services.',
-  },
-  'upzone': {
-    short: 'Upzone',
-    def: 'To change a neighborhood\'s zoning to allow more or denser housing than previously permitted.',
-  },
-  'Section 3A': {
-    short: 'Section 3A',
-    def: 'The statute (MGL c. 40A §3A) behind the MBTA Communities Act, which sets the zoning-capacity rules for 177 transit-served municipalities.',
-  },
-}
 
 function Jargon({ term, children }) {
   const entry = GLOSSARY[term]
@@ -81,15 +23,6 @@ function Jargon({ term, children }) {
     </span>
   )
 }
-
-const KEY_GLOSSARY_TERMS = [
-  'inclusionary floor',
-  'deed-restricted',
-  'AMI',
-  'deep affordability',
-  'safe-harbor cap',
-  'anti-displacement',
-]
 
 function GlossaryStrip() {
   const [open, setOpen] = useState(false)
@@ -237,7 +170,7 @@ function CollapseBars({ funnel }) {
         sub: 'Serves the renters with least car access',
         pct: funnel.deepPct,
         count: funnel.mbtaDeep,
-        note: `${funnel.deepPct.toFixed(1)}% — the households most in need`,
+        note: `${funnel.deepPct.toFixed(1)}%: the households most in need`,
         color: '#6b1a12',
       },
     ]
@@ -567,7 +500,7 @@ const PEER_POLICIES = [
     year: 2021,
     floor: 0,
     floorLabel: 'No floor',
-    // Realized, from MassBuilds — wired in at render-time from `funnel`.
+    // Realized, from MassBuilds. Wired in at render-time from `funnel`.
     usesRealized: true,
     description:
       'Zones for density near transit but sets no affordability requirement. Local inclusionary ordinances are capped at 10% of units at 80% AMI to remain as-of-right.',
@@ -609,7 +542,7 @@ const PEER_POLICIES = [
     floorLabel: '20% required (Bay Area)',
     realized: null,
     description:
-      'By-right, 6-month approval for housing projects that meet local affordability minimums — 20% in the Bay Area. 18,000+ units approved in the first five years, most 100% affordable.',
+      'By-right, 6-month approval for housing projects that meet local affordability minimums (20% in the Bay Area). 18,000+ units approved in the first five years, most 100% affordable.',
     accent: '#4d5a3f',
     isFocus: false,
   },
@@ -931,7 +864,7 @@ export default function PolicyGapPanels() {
           lets local politics, not state policy, decide who gets to live near transit. Closing this
           gap means pairing zoning capacity with a minimum affordable share,{' '}
           <Jargon term="AMI">AMI</Jargon> targeting below 80%, and{' '}
-          <Jargon term="anti-displacement">anti-displacement protections</Jargon> — the pieces
+          <Jargon term="anti-displacement">anti-displacement protections</Jargon>: the pieces
           Massachusetts&rsquo; two landmark laws leave to local discretion.
         </div>
 
@@ -954,7 +887,7 @@ export default function PolicyGapPanels() {
             Massachusetts isn&rsquo;t the first state to <Jargon term="upzone">upzone</Jargon>{' '}
             near transit. Four peer jurisdictions paired density with a{' '}
             <strong>statewide or county-wide <Jargon term="affordability floor">affordability
-            floor</Jargon></strong> &mdash; the exact lever MBTA Communities left out. The bar
+            floor</Jargon></strong>: the exact lever MBTA Communities left out. The bar
             below shows the required share of affordable units in each regime; the black
             diamond on the top row is what MA has <em>actually</em> built near MBTA, with no
             floor in place.
@@ -980,7 +913,7 @@ export default function PolicyGapPanels() {
           The common thread across Montgomery County, Seattle, California, and Washington is
           simple: <strong>they require a minimum share of affordable units</strong> in the same
           developments that MBTA Communities enables. Massachusetts has built the zoning. The
-          missing piece is the floor &mdash; a statutory minimum that converts capacity into
+          missing piece is the floor: a statutory minimum that converts capacity into
           the homes transit-dependent households can actually afford.
         </div>
 
