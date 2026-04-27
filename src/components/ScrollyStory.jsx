@@ -648,12 +648,15 @@ export default function ScrollyStory({ onComplete }) {
         <PolicyGapPanels />
 
         <p>
-          Other states pair density with required affordability near transit.
-          Washington requires affordable units in every development near a
-          transit station; California fast-tracks projects that include them.
-          Massachusetts has the zoning capacity and the funding in place. An
-          affordability requirement tied to transit proximity would close the
-          remaining gap.
+          The blueprint isn&rsquo;t hypothetical. Washington requires
+          affordable units in every development near a transit station;
+          California fast-tracks projects that include them; Montgomery
+          County has been doing it since 1974. Massachusetts already has
+          the zoning capacity from MBTA Communities and the $5.4 billion
+          from the Affordable Homes Act. Adding a statewide affordability
+          floor near transit would convert that capacity into homes a
+          line cook, a teacher, or a home health aide can actually afford
+          near the station they take to work.
         </p>
       </section>
 
