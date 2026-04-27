@@ -55,20 +55,23 @@
 
 .app-header-back {
   flex-shrink: 0;
-  padding: 8px 14px;
+  padding: 9px 16px;
   font-size: 13px;
   font-family: var(--font-label);
   font-weight: 700;
-  background: var(--paper-bg);
-  color: var(--ink);
-  border: 1px solid var(--paper-rule-strong);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: var(--ink);
+  color: var(--paper-bg);
+  border: 1px solid var(--ink);
   border-radius: 0;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.15s, color 0.15s;
 }
 
 .app-header-back:hover {
-  background: var(--paper-card);
+  background: var(--paper-bg);
+  color: var(--ink);
 }
 
 .header-info {
@@ -816,9 +819,77 @@ button.header-info:focus-visible {
   box-shadow: var(--ui-card-shadow);
 }
 
+/* Combined rent + income distribution card. "Ledger paper" motif: thin red
+   left-margin rule + faint horizontal blue ruling, like the lined paper a
+   household accountant or a building-permit clerk would use to tally numbers.
+   Different metaphor from the intro card's architect's grid, but the same
+   editorial-paper visual family — they read as part of the same publication.
+   The horizontal lines sit at 24px so they don't compete with the histogram
+   bars, which always render above them. */
+.chart-card-distribution {
+  position: relative;
+  border: 0;
+  box-shadow: none;
+  background:
+    linear-gradient(to bottom, rgba(74, 98, 130, 0.06) 1px, transparent 1px) 0 0 / 100% 24px,
+    var(--paper-card);
+}
+
+.chart-card-distribution::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 14px;
+  width: 1px;
+  background: rgba(218, 41, 28, 0.45);
+  pointer-events: none;
+}
+
+/* Subhead between the two halves of the combined card. Lighter than .chart-card h3
+   so the card-level title reads as primary; section subheads as siblings. */
+.distribution-subhead {
+  margin: 0 0 12px;
+  font-family: var(--font-label);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.distribution-section + .distribution-section {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--paper-rule);
+}
+
+/* "From the story to your block" — drafting-board background that picks up
+   the architect's-grid motif from the story's prescription card, so the
+   handoff into the explorer feels like the same surface continued. The grid
+   is desaturated chart-blue at low alpha (8px minor + 40px major rules) over
+   a warm paper base. A thin brown rule on the left echoes the AMI palette
+   used everywhere else in the explorer. */
 .explorer-intro {
+  position: relative;
   border-color: var(--paper-rule-strong);
-  background: linear-gradient(180deg, #fffaee 0%, var(--paper-card) 70%);
+  background:
+    linear-gradient(to right, rgba(74, 98, 130, 0.08) 1px, transparent 1px) 0 0 / 40px 40px,
+    linear-gradient(to bottom, rgba(74, 98, 130, 0.08) 1px, transparent 1px) 0 0 / 40px 40px,
+    linear-gradient(to right, rgba(74, 98, 130, 0.04) 1px, transparent 1px) 0 0 / 8px 8px,
+    linear-gradient(to bottom, rgba(74, 98, 130, 0.04) 1px, transparent 1px) 0 0 / 8px 8px,
+    #fffaee;
+}
+
+.explorer-intro::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 3px;
+  background: #6b2b27;
+  pointer-events: none;
 }
 
 .explorer-intro-eyebrow {
@@ -860,21 +931,21 @@ button.header-info:focus-visible {
   margin-bottom: 0;
 }
 
-/* Today vs counterfactual impact card */
+/* Today vs counterfactual impact card. Transparent so the parent
+   .explorer-intro's drafting-board grid reads through continuously — the
+   inner card is just a content frame, not a separate surface. */
 .cf-impact-card {
-  border: 1px solid var(--paper-rule);
-  background: var(--paper-card);
+  border: 0;
+  background: transparent;
   padding: 14px 16px 12px;
   margin: 4px 0 14px;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  transition: border-color 180ms ease, background 180ms ease;
 }
 
 .cf-impact-card.is-cf {
-  border-color: #6b2b27;
-  background: #fff5f3;
+  background: transparent;
 }
 
 .cf-impact-eyebrow {
@@ -936,6 +1007,20 @@ button.header-info:focus-visible {
   line-height: 1;
 }
 
+/* Compact restyle of the story's .lever button so it works as the middle
+   item in the impact-row grid (single SVG, no text column, tight margins). */
+.cf-impact-lever {
+  grid-template-columns: 72px;
+  padding: 0;
+  margin: 0;
+  justify-self: center;
+}
+
+.cf-impact-lever .lever-svg {
+  width: 72px;
+  height: 72px;
+}
+
 .cf-impact-foot {
   font-size: 12.5px;
   line-height: 1.5;
@@ -989,6 +1074,34 @@ button.header-info:focus-visible {
   color: var(--ink);
   padding-bottom: 10px;
   border-bottom: 1px solid var(--paper-rule);
+}
+
+.rent-budget-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: -6px 0 14px;
+}
+
+.rent-budget-slider-hint {
+  margin: 0 0 4px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-muted);
+}
+
+.rent-budget-slider-label {
+  font-family: var(--font-label);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.rent-budget-slider input[type='range'] {
+  width: 100%;
+  accent-color: var(--ink-muted);
 }
 
 .chart-card .empty-state {

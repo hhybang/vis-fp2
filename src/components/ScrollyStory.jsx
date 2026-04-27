@@ -719,13 +719,11 @@ export default function ScrollyStory({ onComplete }) {
       <section className="scrolly-bridge" aria-hidden="false">
         <div className="scrolly-bridge-inner">
           <p className="scrolly-bridge-text">
-            Up to here, the argument has lived at the scale of a state: two
-            laws, a pipeline, and a policy package that would build thousands
-            of new affordable homes near the MBTA.<br /><br />
-            The next view drops you onto a map at the scale of a single
-            renter &mdash; <em>your</em> income, <em>your</em> workplace,{' '}
-            <em>your</em> reach area &mdash; and lets you compare today&rsquo;s
-            pipeline to the same pipeline under both levers.
+            Up to here, a shared view of law, supply, and a few example workers. 
+            What follows lets you sit with the choice that any one renter has to make: 
+            the rent they can carry, the commute they can absorb, the tradeoffs they end up living with.
+            <br /><br />
+            From the story to <em>one renter's</em> map.
           </p>
           <div className="scrolly-bridge-rule" />
         </div>
@@ -736,9 +734,9 @@ export default function ScrollyStory({ onComplete }) {
         <div className="scrolly-cta-inner">
           <h2>See it on your block.</h2>
           <p className="scrolly-cta-lead">
-            The choice set for any one renter today &mdash; rent share,
-            commute distance, whether to keep a car &mdash; is the choice set
-            <em> current law</em> produces. The explorer lets you place
+            The choice set for any one renter today, rent share or
+            commute distance, is the choice set
+            <em> current law</em> produces. <br /> <br />The explorer lets you place
             yourself on the map and see two versions of the same neighborhood
             side by side: the homes priced for you in today&rsquo;s pipeline,
             and the homes that would be priced for you if Massachusetts
@@ -746,8 +744,7 @@ export default function ScrollyStory({ onComplete }) {
             in-lieu fund.
           </p>
           <p className="scrolly-cta-sub">
-            Toggle <em>Today</em> vs <em>both levers pulled</em> and watch the
-            housing dots, and the count of homes priced for you, change.
+            Use the explorer to step through the decision a Greater Boston renter is making right now.
           </p>
           <button type="button" onClick={onComplete}>
             Place yourself on the map

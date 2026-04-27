@@ -279,12 +279,16 @@ function workerTier(ami) {
   if (ami < 80) return 'a5080'
   return 'a80p'
 }
-// Cumulative: unit tiers a worker can *compete for* (lottery-style) — used by WorkerPicker.
+// Unit tiers a worker can realistically secure. Below 80% AMI: cumulative
+// access to deed-restricted lotteries at her tier and below (market is out of
+// reach). At 80%+ AMI: she ages out of low-income set-asides — what the
+// pipeline actually offers her is the workforce (80%+) slice plus the entire
+// market-rate stock she can now afford at list price.
 function tiersAccessibleTo(ami) {
   if (ami < 30) return new Set(['u30'])
   if (ami < 50) return new Set(['u30', 'a3050'])
   if (ami < 80) return new Set(['u30', 'a3050', 'a5080'])
-  return new Set(['u30', 'a3050', 'a5080', 'a80p'])
+  return new Set(['a80p', 'market'])
 }
 
 // For the lever “who gains” read: do not sum the whole <80% left stack for
@@ -529,7 +533,7 @@ function ScoreboardChart({ pct, totalUnits, levers }) {
           </span>
         </span>
         <span className="scoreboard-subline">
-          {totalDeep.toLocaleString()} deeply affordable (&le;50% AMI)
+          {totalDeep.toLocaleString()} <Jargon term="deeply affordable">deeply affordable</Jargon> (&le;50% AMI)
           {fundActive && fundedAff > 0 ? (
             <>
               {' '}&middot; of which <strong>{fundedAff.toLocaleString()}</strong> funded by{' '}
@@ -938,8 +942,20 @@ function WorkerPicker({ basePct, totalUnits }) {
             </div>
 
             <div className="worker-callout-foot">
-              The accessible homes (colored) are the only units a {worker.name.toLowerCase()} can win in a
-              housing lottery near a T stop. The rest are priced above her income tier.
+              {worker.ami >= 80 ? (
+                <>
+                  The accessible homes (colored) are the workforce (80%+ AMI) set-asides she
+                  qualifies for, plus market-rate units she can rent at list price. The
+                  remaining homes are deeper-affordable lottery slots reserved for
+                  lower-income tiers.
+                </>
+              ) : (
+                <>
+                  The accessible homes (colored) are the only units a {worker.name.toLowerCase()}
+                  {' '}can win in a housing lottery near a T stop. The rest are priced above
+                  her income tier.
+                </>
+              )}
             </div>
           </div>
         </div>

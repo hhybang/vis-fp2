@@ -1,8 +1,6 @@
 export default function Toolbar({
   travelMode,
   onTravelModeChange,
-  affordabilityPct,
-  onAffordabilityChange,
   isLoading,
   routeLoading,
   commuteTime,
@@ -12,8 +10,6 @@ export default function Toolbar({
   onClearExploration,
   selectedHousing,
   onClearHousingSelection,
-  policyPackage,
-  onPolicyPackageChange,
 }) {
   const busy = isLoading || routeLoading
   const showFooter =
@@ -21,33 +17,6 @@ export default function Toolbar({
 
   return (
     <div className="toolbar">
-      <div className="toolbar-row toolbar-row-package">
-        <div className="package-toggle" role="group" aria-label="Policy package view">
-          <span className="package-toggle-label">View:</span>
-          <button
-            type="button"
-            className={`package-toggle-btn${!policyPackage ? ' is-on' : ''}`}
-            aria-pressed={!policyPackage}
-            onClick={() => onPolicyPackageChange?.(false)}
-          >
-            Today
-          </button>
-          <button
-            type="button"
-            className={`package-toggle-btn package-toggle-btn-cf${policyPackage ? ' is-on' : ''}`}
-            aria-pressed={policyPackage}
-            onClick={() => onPolicyPackageChange?.(true)}
-          >
-            With both levers pulled
-          </button>
-        </div>
-        <p className="package-toggle-hint">
-          {policyPackage
-            ? 'Counterfactual: every TOD project reserves \u226520% deed-restricted, half at \u226450% AMI.'
-            : 'Today\u2019s MassBuilds pipeline. Toggle to see how the policy package would change the same projects.'}
-        </p>
-      </div>
-
       <div className="toolbar-row toolbar-row-controls">
         <div className="toolbar-group">
           <span className="toolbar-label">Map layer</span>
@@ -80,24 +49,6 @@ export default function Toolbar({
             <option value="foot-walking">Walking</option>
             <option value="driving-car">Driving</option>
           </select>
-        </div>
-      </div>
-
-      <div className="toolbar-row">
-        <div className="toolbar-group slider-group">
-          <span className="toolbar-label">
-            Rent budget: <strong>{affordabilityPct}%</strong> of income
-          </span>
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={affordabilityPct}
-            onChange={(e) => onAffordabilityChange(Number(e.target.value))}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={affordabilityPct}
-          />
         </div>
       </div>
 

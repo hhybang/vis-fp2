@@ -231,14 +231,14 @@ function App() {
       )}
       <header className="app-header">
         <div className="app-header-title-row">
-          <h1>Boston Housing Affordability & Commute Explorer</h1>
           <button
             type="button"
             className="app-header-back"
             onClick={() => setStoryComplete(false)}
           >
-            Back to story
+            ← Back to story
           </button>
+          <h1>Where rent and commute trade off</h1>
         </div>
         <button
           type="button"
@@ -280,8 +280,6 @@ function App() {
             <Toolbar
               travelMode={travelMode}
               onTravelModeChange={setTravelMode}
-              affordabilityPct={affordabilityPct}
-              onAffordabilityChange={setAffordabilityPct}
               isLoading={isLoading}
               routeLoading={routeLoading}
               commuteTime={commuteTime}
@@ -291,8 +289,6 @@ function App() {
               onClearExploration={handleClearExploration}
               selectedHousing={selectedHousing}
               onClearHousingSelection={handleClearHousingSelection}
-              policyPackage={policyPackage}
-              onPolicyPackageChange={setPolicyPackage}
             />
           </div>
           <div className="charts-panel-scroll">
@@ -303,6 +299,7 @@ function App() {
               tractBoundaries={tractBoundaries}
               monthlyIncome={monthlyIncome}
               affordabilityPct={affordabilityPct}
+              onAffordabilityChange={setAffordabilityPct}
               avgRent={avgRent}
               filteredHousing={filteredHousing}
               cfFilteredHousing={cfFilteredHousing}

@@ -22,6 +22,14 @@ const ISO_COLORS = [
   { min: 1200, max: 1800, color: '#e94560', opacity: 0.12, label: '20-30 min' },
 ]
 
+// Project unit counts can be fractional after the policy-package transform
+// (it apportions deed-restricted units across AMI bands proportionally).
+// Round for display: whole numbers stay whole, fractions show 2 decimals.
+function fmt2(n) {
+  const v = Number(n) || 0
+  return Number.isInteger(v) ? v.toString() : v.toFixed(2)
+}
+
 export default function MapPanel({
   mbtaStops,
   isochroneData,
@@ -216,7 +224,7 @@ export default function MapPanel({
         .bindTooltip(
           `<div class="housing-tooltip">
             <strong>${h.name}</strong>
-            Units: ${h.hu} | Affordable: ${h.affrdUnit}<br/>
+            Units: ${fmt2(h.hu)} | Affordable: ${fmt2(h.affrdUnit)}<br/>
             ${h.municipal}${h.nhood ? ', ' + h.nhood : ''}<br/>
             Status: ${h.status}
           </div>`,
@@ -295,15 +303,15 @@ export default function MapPanel({
               Colors show whether a project has units designated for your income tier.
             </p>
             <div className="legend-item" title="This project has units designated for your AMI tier or below. You are likely eligible.">
-              <div className="legend-dot" style={{ background: '#00843D' }} />
+              <div className="legend-dot" style={{ background: '#6b2b27' }} />
               <span>Affordable</span>
             </div>
             <div className="legend-item" title="This project has units one AMI tier above yours. You may qualify depending on availability.">
-              <div className="legend-dot" style={{ background: '#ED8B00' }} />
+              <div className="legend-dot" style={{ background: '#d38e42' }} />
               <span>Moderate</span>
             </div>
             <div className="legend-item" title="This project has no units at or near your AMI tier, so it is unlikely to be affordable for your income.">
-              <div className="legend-dot" style={{ background: '#DA291C' }} />
+              <div className="legend-dot" style={{ background: '#d4d0c4' }} />
               <span>Above Budget</span>
             </div>
           </>

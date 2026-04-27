@@ -649,7 +649,7 @@ export default function MotivationPanels({ view = 'all' }) {
 
         <div className="motivation-takeaway">
           Childcare workers, line cooks, and EMTs earn under 50% AMI: only{' '}
-          <strong>{((supply.values.u30 + supply.values.a3050) / supply.total * 100).toFixed(0)}</strong>{' '}
+          <strong>{Math.ceil((supply.values.u30 + supply.values.a3050) / supply.total * 100)}</strong>{' '}
           of every 100 new MBTA-near units are priced for them, using the same unit-mix
           model as the chart above. Only at the software-engineer tier (above 80% AMI) does
           market-rate housing near transit start to feel within reach.

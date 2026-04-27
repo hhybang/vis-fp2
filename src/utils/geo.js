@@ -1,4 +1,5 @@
 import * as turf from '@turf/turf'
+import { unitsAccessibleToIncome, PROJECT_ACCESSIBLE_SHARE } from './policyPackage'
 
 export function pointInPolygon(lat, lng, geojsonFeature) {
   const pt = turf.point([lng, lat])
@@ -58,29 +59,28 @@ export function filterHousingByAffordability(projects, annualIncome) {
   })
 }
 
+// Color a project dot by the *share* of its units this renter can actually
+// compete for, not by the binary "has any unit at all in the right band."
+// The binary version painted every project brown the moment the policy
+// package guaranteed >=20% deed-restricted everywhere, since a single
+// rounded-up unit was enough to flip the dot. Using a share threshold lets
+// the lever's effect on the map mirror the counter's: dots only turn brown
+// for projects where the renter gains meaningful access.
+const AFFORDABLE_SHARE_THRESHOLD = PROJECT_ACCESSIBLE_SHARE
+const MODERATE_SHARE_THRESHOLD = 0.05
+
 export function getAffordabilityColor(project, annualIncome) {
-  const AMI = 140200
-  const ratio = annualIncome / AMI
+  const hu = project.hu || 0
+  if (hu <= 0) return '#d4d0c4'
 
-  // Check if this project has units at or below the user's AMI tier
-  let hasAffordableUnits = false
-  let hasModerateUnits = false
+  const accessible = unitsAccessibleToIncome(project, annualIncome)
+  const share = accessible / hu
 
-  if (ratio < 0.3) {
-    hasAffordableUnits = project.affU30 > 0
-    hasModerateUnits = project.aff3050 > 0
-  } else if (ratio < 0.5) {
-    hasAffordableUnits = project.affU30 > 0 || project.aff3050 > 0
-    hasModerateUnits = project.aff5080 > 0
-  } else if (ratio < 0.8) {
-    hasAffordableUnits = project.affU30 > 0 || project.aff3050 > 0 || project.aff5080 > 0
-    hasModerateUnits = project.aff80p > 0
-  } else {
-    hasAffordableUnits = project.affrdUnit > 0
-    hasModerateUnits = false
-  }
-
-  if (hasAffordableUnits) return '#00843D'
-  if (hasModerateUnits) return '#ED8B00'
-  return '#DA291C'
+  // Palette matches the AMI tier colors used throughout the story (MotivationPanels
+  // waffle, PolicyGapPanels TIERS): brown for affordable, amber for one tier above,
+  // muted paper for above-budget — so a reader carries the same color memory from
+  // the narrative into the explorer.
+  if (share >= AFFORDABLE_SHARE_THRESHOLD) return '#6b2b27'
+  if (share >= MODERATE_SHARE_THRESHOLD) return '#d38e42'
+  return '#d4d0c4'
 }

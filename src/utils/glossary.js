@@ -31,6 +31,10 @@ export const GLOSSARY = {
     short: 'Deep affordability',
     def: 'Housing targeted at households earning less than 50% of Area Median Income: the renters most reliant on transit and least able to afford a car.',
   },
+  'deeply affordable': {
+    short: 'Deeply affordable',
+    def: 'Housing targeted at households earning less than 50% of Area Median Income: the renters most reliant on transit and least able to afford a car.',
+  },
   'as-of-right': {
     short: 'As-of-right zoning',
     def: 'Zoning that approves development automatically if it meets the rules, without requiring a discretionary vote or special permit.',

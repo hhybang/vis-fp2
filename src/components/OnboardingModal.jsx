@@ -15,11 +15,11 @@ export default function OnboardingModal({
 
   const [budgetMode, setBudgetMode] = useState('income')
   const [income, setIncome] = useState(() =>
-    isEdit && initialProfile ? String(Math.round(initialProfile.monthlyIncome)) : ''
+    isEdit && initialProfile ? String(Math.round(initialProfile.monthlyIncome)) : '3000'
   )
   const [rentBudget, setRentBudget] = useState('')
   const [address, setAddress] = useState(() =>
-    isEdit && initialProfile ? initialProfile.workAddress || '' : ''
+    isEdit && initialProfile ? initialProfile.workAddress || '' : '32 Vassar Street, Cambridge MA'
   )
   const [selectedLocation, setSelectedLocation] = useState(() =>
     isEdit && initialProfile ? initialProfile.workLocation : null

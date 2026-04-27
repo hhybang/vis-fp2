@@ -115,3 +115,23 @@ export function unitsInReachAccessible(projects, annualIncome) {
     0
   )
 }
+
+// Project-level counts that mirror the map dot semantics. A project counts as
+// "accessible" only when at least PROJECT_ACCESSIBLE_SHARE of its units are
+// in this renter's AMI tier — same threshold used to paint the brown dots in
+// getAffordabilityColor — so the counter on ExplorerIntro stays in sync with
+// what the reader sees on the map.
+export const PROJECT_ACCESSIBLE_SHARE = 0.20
+
+export function isProjectAccessible(project, annualIncome) {
+  const hu = project?.hu || 0
+  if (hu <= 0) return false
+  return unitsAccessibleToIncome(project, annualIncome) / hu >= PROJECT_ACCESSIBLE_SHARE
+}
+
+export function projectsAccessibleInReach(projects, annualIncome) {
+  return projects.reduce(
+    (s, p) => s + (isProjectAccessible(p, annualIncome) ? 1 : 0),
+    0
+  )
+}

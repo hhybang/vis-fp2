@@ -3780,8 +3780,8 @@
 
 .motivation-source {
   font-family: var(--font-label);
-  font-size: 11px;
-  line-height: 1.6;
+  font-size: 10px;
+  line-height: 1.5;
   color: var(--ink-faint);
   padding-top: 14px;
   border-top: 1px solid var(--paper-rule);
@@ -3789,6 +3789,9 @@
 
 .motivation-source p {
   margin: 0;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
 }
 
 .motivation-source p + p {
@@ -3833,13 +3836,13 @@
 
 .motivation-source-method {
   color: var(--ink-muted);
-  font-size: 11px;
+  font-size: 10px;
   line-height: 1.45;
   letter-spacing: 0.02em;
-  transform: scale(0.7);
+  transform: scale(0.85);
   transform-origin: top left;
-  width: 142.86%;
-  margin-bottom: -1.4em;
+  width: 117.65%;
+  margin-bottom: -0.6em;
 }
 
 .motivation-source-method strong {
