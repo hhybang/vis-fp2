@@ -2532,6 +2532,24 @@
   gap: 22px;
 }
 
+/* "How to actually build affordable homes near the MBTA" — the prescription
+   card gets an architect's-blueprint grid: 8px minor + 40px major rules in a
+   desaturated chart-blue, sitting on a slightly warmer paper than the default
+   card so the grid reads. Reinforces the "drafting plans" metaphor without
+   competing with the viz inside. */
+.motivation-card--combined {
+  background:
+    linear-gradient(to right, rgba(74, 98, 130, 0.10) 1px, transparent 1px) 0 0 / 40px 40px,
+    linear-gradient(to bottom, rgba(74, 98, 130, 0.10) 1px, transparent 1px) 0 0 / 40px 40px,
+    linear-gradient(to right, rgba(74, 98, 130, 0.05) 1px, transparent 1px) 0 0 / 8px 8px,
+    linear-gradient(to bottom, rgba(74, 98, 130, 0.05) 1px, transparent 1px) 0 0 / 8px 8px,
+    #fbf7ea;
+}
+
+.motivation-card--combined .motivation-card-header {
+  border-bottom-color: var(--paper-rule-strong);
+}
+
 .motivation-card-header {
   display: flex;
   flex-direction: column;
