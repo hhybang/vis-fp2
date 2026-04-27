@@ -4,9 +4,8 @@ import { loadMassBuilds } from '../utils/dataLoaders'
 import { GLOSSARY } from '../utils/glossary'
 
 /* =========================================================================
-   Inline jargon tooltips
-   Housing-policy copy is full of domain terms. Readers get a dotted underline
-   on each jargon word with a hover/focus definition popup.
+   Inline jargon tooltips (housing-policy copy is full of domain terms;
+   readers get a dotted underline + hover/focus definition popup).
    ========================================================================= */
 
 function Jargon({ term, children }) {
@@ -23,13 +22,7 @@ function Jargon({ term, children }) {
   )
 }
 
-// MBTA-served transit modes (match MotivationPanels)
-const MBTA_MODES = [
-  'Rapid Transit',
-  'Commuter Rail',
-  'Ferry',
-  'MBTA Key Bus Route',
-]
+const MBTA_MODES = ['Rapid Transit', 'Commuter Rail', 'Ferry', 'MBTA Key Bus Route']
 
 function parseTransitModes(nTransit) {
   if (!nTransit) return []
@@ -46,26 +39,54 @@ function isMbtaServed(modes) {
   return modes.some((m) => MBTA_MODES.includes(m))
 }
 
+/* =========================================================================
+   Stats: aggregate MassBuilds into the breakdown the panels need.
+   We compute (a) the overall MBTA-near unit mix in five AMI tiers + market,
+   and (b) a per-municipality table for the peer/scatter context.
+   ========================================================================= */
+
 function computePolicyGapStats(builds) {
-  // Aggregate overall near-MBTA vs. away-from-MBTA
-  let mbtaHu = 0, mbtaAff = 0, mbtaDeep = 0
-  let awayHu = 0, awayAff = 0
+  let mbtaHu = 0,
+    mbtaAff = 0,
+    u30 = 0,
+    a3050 = 0,
+    a5080 = 0,
+    a80p = 0
+  let awayHu = 0,
+    awayAff = 0
   for (const d of builds) {
     const modes = parseTransitModes(d.nTransit)
     const hu = d.hu || 0
     const aff = d.affrdUnit || 0
-    const deep = (d.affU30 || 0) + (d.aff3050 || 0)
     if (isMbtaServed(modes)) {
       mbtaHu += hu
       mbtaAff += aff
-      mbtaDeep += deep
+      u30 += d.affU30 || 0
+      a3050 += d.aff3050 || 0
+      a5080 += d.aff5080 || 0
+      a80p += d.aff80p || 0
     } else {
       awayHu += hu
       awayAff += aff
     }
   }
+  const affOther = Math.max(0, mbtaAff - (u30 + a3050 + a5080 + a80p))
+  const market = Math.max(0, mbtaHu - mbtaAff)
 
-  // Per-municipality, MBTA-served only
+  // Allocate the "tier-unspecified" affordable units proportionally across
+  // the four known AMI bands so the breakdown still sums to 100%.
+  const knownAff = u30 + a3050 + a5080 + a80p
+  const splitOther = (band) =>
+    knownAff > 0 ? affOther * (band / knownAff) : 0
+  const breakdown = {
+    u30: u30 + splitOther(u30),
+    a3050: a3050 + splitOther(a3050),
+    a5080: a5080 + splitOther(a5080),
+    a80p: a80p + splitOther(a80p),
+    market,
+  }
+
+  // Per-municipality, MBTA-served only, for peer/scatter context.
   const muniMap = new Map()
   for (const d of builds) {
     const modes = parseTransitModes(d.nTransit)
@@ -78,374 +99,572 @@ function computePolicyGapStats(builds) {
     muniMap.set(key, bucket)
   }
   const munis = Array.from(muniMap.values())
-    .filter((m) => m.hu >= 200) // only municipalities with meaningful production
+    .filter((m) => m.hu >= 200)
     .map((m) => ({ ...m, affPct: m.hu > 0 ? (m.aff / m.hu) * 100 : 0 }))
 
+  const deepCount = breakdown.u30 + breakdown.a3050
+  const affCount = deepCount + breakdown.a5080 + breakdown.a80p
   return {
     funnel: {
       mbtaHu,
       mbtaAff,
-      mbtaDeep,
+      mbtaDeep: deepCount,
       affPct: mbtaHu ? (mbtaAff / mbtaHu) * 100 : 0,
-      deepPct: mbtaHu ? (mbtaDeep / mbtaHu) * 100 : 0,
+      deepPct: mbtaHu ? (deepCount / mbtaHu) * 100 : 0,
       awayHu,
       awayAff,
       awayAffPct: awayHu ? (awayAff / awayHu) * 100 : 0,
     },
+    breakdown,
+    breakdownPct: {
+      u30: mbtaHu ? (breakdown.u30 / mbtaHu) * 100 : 0,
+      a3050: mbtaHu ? (breakdown.a3050 / mbtaHu) * 100 : 0,
+      a5080: mbtaHu ? (breakdown.a5080 / mbtaHu) * 100 : 0,
+      a80p: mbtaHu ? (breakdown.a80p / mbtaHu) * 100 : 0,
+      market: mbtaHu ? (breakdown.market / mbtaHu) * 100 : 0,
+    },
     munis,
+    totalUnits: mbtaHu,
+    affCount,
+    deepCount,
   }
 }
 
 /* =========================================================================
-   Viz A · The collapse: capacity → built → affordable → deep affordability
+   Counterfactual model used by the Lever Panel and Worker Picker.
+
+   We model a stylized policy package — the same one MA peer states already
+   use — as three independently toggleable levers. Each lever applies a
+   simple, conservative rule on top of the breakdown.
+
+     1. FLOOR        — at least 20% of new units must be deed-restricted.
+                       Top up `affordable` by pulling from `market`.
+     2. DEEP_TARGET  — half of the required affordable share must be at
+                       <=50% AMI. Reallocate within the affordable pool.
+     3. ANTI_DISPL   — local resident preference + tenant protections.
+                       Doesn't change unit count, but it does change WHO
+                       gets the keys: the same units now go to current
+                       transit-dependent renters instead of new arrivals.
+
+   Output: a {u30, a3050, a5080, a80p, market} pct breakdown that always
+   sums to ~100, plus a `localPref` flag that the UI uses to annotate.
    ========================================================================= */
 
-function CollapseBars({ funnel }) {
-  const svgRef = useRef(null)
+function applyLevers(basePct, levers) {
+  const out = { ...basePct }
+  const total = 100
 
-  useEffect(() => {
-    if (!svgRef.current) return
-    const svg = d3.select(svgRef.current)
-    svg.selectAll('*').remove()
+  if (levers.floor) {
+    // Bring total affordable share up to 20%
+    const floor = 20
+    const aff = out.u30 + out.a3050 + out.a5080 + out.a80p
+    if (aff < floor) {
+      const need = floor - aff
+      // Pull from market (most flexible). Distribute new affordable
+      // units 50/50 across moderate (50-80) and workforce (80+) by default.
+      out.market = Math.max(0, out.market - need)
+      out.a5080 += need * 0.6
+      out.a80p += need * 0.4
+    }
+  }
 
-    // Each stage is scaled relative to mbtaHu = 100%.
-    const stages = [
-      {
-        key: 'built',
-        label: 'Built near MBTA',
-        sub: 'All new units within transit-served areas',
-        pct: 100,
-        count: funnel.mbtaHu,
-        note: '100% of what actually got delivered',
-        color: '#1a1a1a',
-      },
-      {
-        key: 'aff',
-        label: 'Affordable (deed-restricted)',
-        sub: 'Any income-restricted unit',
-        pct: funnel.affPct,
-        count: funnel.mbtaAff,
-        note: `${funnel.affPct.toFixed(1)}% of units near transit`,
-        color: '#8a9a7b',
-      },
-      {
-        key: 'deep',
-        label: 'Deep affordability (<50% AMI)',
-        sub: 'Serves the renters with least car access',
-        pct: funnel.deepPct,
-        count: funnel.mbtaDeep,
-        note: `${funnel.deepPct.toFixed(1)}%: the households most in need`,
-        color: '#6b1a12',
-      },
-    ]
+  if (levers.deep) {
+    // Of total affordable, at least half must be <=50% AMI (deep).
+    const aff = out.u30 + out.a3050 + out.a5080 + out.a80p
+    const deepTarget = aff * 0.5
+    const currentDeep = out.u30 + out.a3050
+    if (currentDeep < deepTarget) {
+      const need = deepTarget - currentDeep
+      // Pull from a5080/a80p first (still affordable), then market last.
+      let remaining = need
+      const pullA80p = Math.min(out.a80p, remaining)
+      out.a80p -= pullA80p
+      remaining -= pullA80p
+      const pullA5080 = Math.min(out.a5080, remaining)
+      out.a5080 -= pullA5080
+      remaining -= pullA5080
+      if (remaining > 0) {
+        const pullMkt = Math.min(out.market, remaining)
+        out.market -= pullMkt
+        remaining -= pullMkt
+      }
+      // Add to deep affordability (split 60/40 across u30, a3050)
+      const added = need - remaining
+      out.u30 += added * 0.4
+      out.a3050 += added * 0.6
+    }
+  }
 
-    const width = 780
-    const margin = { top: 18, right: 110, bottom: 48, left: 270 }
-    const rowH = 64
-    const height = margin.top + margin.bottom + stages.length * rowH
+  // Normalize tiny float drift
+  const sum = out.u30 + out.a3050 + out.a5080 + out.a80p + out.market
+  if (Math.abs(sum - total) > 0.01) {
+    const k = total / sum
+    out.u30 *= k
+    out.a3050 *= k
+    out.a5080 *= k
+    out.a80p *= k
+    out.market *= k
+  }
 
-    svg.attr('viewBox', `0 0 ${width} ${height}`)
-    svg.attr('preserveAspectRatio', 'xMidYMid meet')
-    const chartW = width - margin.left - margin.right
-
-    const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`)
-
-    const x = d3.scaleLinear().domain([0, 100]).range([0, chartW])
-    const y = d3
-      .scaleBand()
-      .domain(stages.map((s) => s.key))
-      .range([0, stages.length * rowH])
-      .padding(0.32)
-
-    // Axis along bottom
-    g.append('g')
-      .attr('transform', `translate(0, ${stages.length * rowH})`)
-      .call(d3.axisBottom(x).ticks(5).tickFormat((v) => `${v}%`))
-      .call((sel) => sel.select('.domain').attr('stroke', '#b9b3a4'))
-      .call((sel) => sel.selectAll('text').attr('fill', '#6e6e6e').attr('font-size', 11))
-      .call((sel) => sel.selectAll('line').attr('stroke', '#d4d0c4'))
-
-    g.append('text')
-      .attr('x', chartW / 2)
-      .attr('y', stages.length * rowH + 36)
-      .attr('text-anchor', 'middle')
-      .attr('fill', '#6e6e6e')
-      .attr('font-size', 11)
-      .attr('font-family', 'DM Sans, Inter, sans-serif')
-      .text('Share of units built near MBTA transit')
-
-    // Gridlines
-    g.append('g')
-      .selectAll('line')
-      .data(x.ticks(5))
-      .enter()
-      .append('line')
-      .attr('x1', (d) => x(d))
-      .attr('x2', (d) => x(d))
-      .attr('y1', 0)
-      .attr('y2', stages.length * rowH)
-      .attr('stroke', '#e8e3d2')
-      .attr('stroke-width', 1)
-
-    const rows = g
-      .selectAll('g.policy-collapse-row')
-      .data(stages)
-      .enter()
-      .append('g')
-      .attr('class', 'policy-collapse-row')
-      .attr('transform', (d) => `translate(0, ${y(d.key)})`)
-
-    // Track
-    rows
-      .append('rect')
-      .attr('x', 0)
-      .attr('y', 0)
-      .attr('width', chartW)
-      .attr('height', y.bandwidth())
-      .attr('fill', '#efeadb')
-
-    // Value bar
-    rows
-      .append('rect')
-      .attr('x', 0)
-      .attr('y', 0)
-      .attr('width', (d) => Math.max(x(d.pct), 2))
-      .attr('height', y.bandwidth())
-      .attr('fill', (d) => d.color)
-
-    // Stage label (left)
-    rows
-      .append('text')
-      .attr('x', -14)
-      .attr('y', y.bandwidth() / 2 - 4)
-      .attr('dy', '0.35em')
-      .attr('text-anchor', 'end')
-      .attr('font-size', 13)
-      .attr('font-weight', 700)
-      .attr('fill', '#1a1a1a')
-      .attr('font-family', 'Inter, sans-serif')
-      .text((d) => d.label)
-
-    rows
-      .append('text')
-      .attr('x', -14)
-      .attr('y', y.bandwidth() / 2 + 14)
-      .attr('dy', '0.35em')
-      .attr('text-anchor', 'end')
-      .attr('font-size', 10.5)
-      .attr('fill', '#6e6e6e')
-      .attr('font-family', 'DM Sans, Inter, sans-serif')
-      .text((d) => d.sub)
-
-    // Percent + count label at end of bar
-    rows
-      .append('text')
-      .attr('x', (d) => Math.max(x(d.pct), 2) + 10)
-      .attr('y', y.bandwidth() / 2 - 3)
-      .attr('dy', '0.35em')
-      .attr('font-size', 14)
-      .attr('font-weight', 800)
-      .attr('fill', (d) => d.color)
-      .attr('font-family', 'Inter, sans-serif')
-      .text((d) => `${d.pct.toFixed(1)}%`)
-
-    rows
-      .append('text')
-      .attr('x', (d) => Math.max(x(d.pct), 2) + 10)
-      .attr('y', y.bandwidth() / 2 + 14)
-      .attr('dy', '0.35em')
-      .attr('font-size', 10.5)
-      .attr('fill', '#6e6e6e')
-      .attr('font-family', 'DM Sans, Inter, sans-serif')
-      .text((d) => `${d.count.toLocaleString()} units`)
-  }, [funnel])
-
-  return <svg ref={svgRef} className="policy-gap-svg" aria-label="Collapse from built to affordable to deeply affordable units near MBTA" />
+  return { pct: out, localPref: !!levers.antiDispl }
 }
 
 /* =========================================================================
-   Viz B · Municipality scatter: units built vs. share affordable
+   Viz A · The Lever Rack
+   --------------------------------------------------------------------------
+   Three policy toggles. Each pulls "how to build affordable homes near MBTA"
+   from the abstract into something the reader can DO. As they flip switches,
+   the 100-unit stack transforms in real time and worker icons light up.
    ========================================================================= */
 
-function MunicipalityScatter({ munis }) {
-  const svgRef = useRef(null)
-  const tooltipRef = useRef(null)
+const TIERS = [
+  { key: 'u30', label: 'Very low income', sub: '<30% AMI', color: '#6b2b27' },
+  { key: 'a3050', label: 'Low income', sub: '30–50% AMI', color: '#a14a35' },
+  { key: 'a5080', label: 'Moderate', sub: '50–80% AMI', color: '#d38e42' },
+  { key: 'a80p', label: 'Workforce', sub: '80%+ AMI', color: '#e9c46a' },
+  { key: 'market', label: 'Market-rate', sub: 'no cap', color: '#d4d0c4' },
+]
 
-  useEffect(() => {
-    if (!svgRef.current || !munis.length) return
-    const svg = d3.select(svgRef.current)
-    svg.selectAll('*').remove()
+const LEVERS = [
+  {
+    id: 'floor',
+    title: '20% inclusionary floor',
+    short: 'Affordability floor',
+    desc:
+      'Require every TOD project near MBTA to set aside at least 20% of units as deed-restricted affordable.',
+    peer: 'CA SB 35 · Bay Area',
+  },
+  {
+    id: 'deep',
+    title: 'Cap at 50% AMI',
+    short: 'Deep AMI targeting',
+    desc:
+      'Half of those affordable units must serve households under 50% AMI — the renters with the least access to a car.',
+    peer: 'Montgomery County MPDU',
+  },
+  {
+    id: 'antiDispl',
+    title: 'Tenant + resident protections',
+    short: 'Anti-displacement',
+    desc:
+      'Pair upzoning with local-resident preference, just-cause eviction, and rent stabilization so existing renters can stay.',
+    peer: 'WA HB 1491 · 2025',
+  },
+]
 
-    const width = 720
-    const margin = { top: 28, right: 28, bottom: 56, left: 60 }
-    const height = 420
-    svg.attr('viewBox', `0 0 ${width} ${height}`)
+// Stylized worker income points (BLS Boston MSA medians, 2-person AMI base).
+// Used by both the Lever Rack (which workers light up) and the Worker Picker.
+const BOSTON_AMI_100_2P = 127200
+const WORKERS = [
+  { name: 'Retail salesperson', wage: 36170, icon: '🛍️' },
+  { name: 'Home health aide', wage: 37440, icon: '🏥' },
+  { name: 'Childcare worker', wage: 39120, icon: '🧸' },
+  { name: 'Janitor', wage: 39940, icon: '🧹' },
+  { name: 'Line cook', wage: 44200, icon: '🍳' },
+  { name: 'Preschool teacher', wage: 45300, icon: '✏️' },
+  { name: 'EMT', wage: 46090, icon: '🚑' },
+  { name: 'MBTA bus driver', wage: 62520, icon: '🚌' },
+  { name: 'Construction laborer', wage: 62920, icon: '🔨' },
+  { name: 'Firefighter', wage: 75050, icon: '🚒' },
+  { name: 'Police officer', wage: 76560, icon: '🚓' },
+  { name: 'Elementary teacher', wage: 87660, icon: '🍎' },
+  { name: 'Registered nurse', wage: 100360, icon: '💉' },
+].map((w) => ({ ...w, ami: (w.wage / BOSTON_AMI_100_2P) * 100 }))
 
-    const chartW = width - margin.left - margin.right
-    const chartH = height - margin.top - margin.bottom
-    const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`)
+function workerTier(ami) {
+  if (ami < 30) return 'u30'
+  if (ami < 50) return 'a3050'
+  if (ami < 80) return 'a5080'
+  return 'a80p'
+}
+// Returns the set of unit tiers a worker can compete for
+function tiersAccessibleTo(ami) {
+  if (ami < 30) return new Set(['u30'])
+  if (ami < 50) return new Set(['u30', 'a3050'])
+  if (ami < 80) return new Set(['u30', 'a3050', 'a5080'])
+  return new Set(['u30', 'a3050', 'a5080', 'a80p'])
+}
 
-    const xMax = d3.max(munis, (d) => d.hu) || 1
-    const x = d3.scaleSqrt().domain([0, xMax]).range([0, chartW]).nice()
-    const yMax = Math.max(35, d3.max(munis, (d) => d.affPct) * 1.05)
-    const y = d3.scaleLinear().domain([0, yMax]).range([chartH, 0]).nice()
+function LeverPanel({ basePct, totalUnits }) {
+  const [levers, setLevers] = useState({ floor: false, deep: false, antiDispl: false })
+  const result = useMemo(() => applyLevers(basePct, levers), [basePct, levers])
 
-    // Gridlines
-    g.append('g')
-      .selectAll('line')
-      .data(y.ticks(5))
-      .enter()
-      .append('line')
-      .attr('x1', 0)
-      .attr('x2', chartW)
-      .attr('y1', (d) => y(d))
-      .attr('y2', (d) => y(d))
-      .attr('stroke', '#e8e3d2')
-      .attr('stroke-width', 1)
+  const toggle = (id) => setLevers((s) => ({ ...s, [id]: !s[id] }))
+  const reset = () => setLevers({ floor: false, deep: false, antiDispl: false })
+  const enableAll = () =>
+    setLevers({ floor: true, deep: true, antiDispl: true })
 
-    // Reference band: "safe-harbor" cap 10% and ambitious floor 20%
-    g.append('rect')
-      .attr('x', 0)
-      .attr('y', y(20))
-      .attr('width', chartW)
-      .attr('height', y(10) - y(20))
-      .attr('fill', '#f5ecd7')
-      .attr('opacity', 0.6)
+  // Which workers gain housing? A worker "gains" if the share of units they
+  // can compete for (their tier + below) increased by ≥1 pp vs. baseline.
+  const baseAccess = (w) => {
+    const tiers = tiersAccessibleTo(w.ami)
+    let s = 0
+    for (const t of tiers) s += basePct[t] || 0
+    return s
+  }
+  const newAccess = (w) => {
+    const tiers = tiersAccessibleTo(w.ami)
+    let s = 0
+    for (const t of tiers) s += result.pct[t] || 0
+    return s
+  }
+  const workersLitUp = WORKERS.filter((w) => newAccess(w) - baseAccess(w) >= 1)
 
-    const refs = [
-      { pct: 10, label: 'MBTA Communities "safe-harbor" cap (10%)', color: '#b36a2a' },
-      { pct: 20, label: 'Typical inclusionary floor (20%)', color: '#4d5a3f' },
-    ]
-    refs.forEach((r) => {
-      g.append('line')
-        .attr('x1', 0)
-        .attr('x2', chartW)
-        .attr('y1', y(r.pct))
-        .attr('y2', y(r.pct))
-        .attr('stroke', r.color)
-        .attr('stroke-width', 1.25)
-        .attr('stroke-dasharray', '5 4')
-      g.append('text')
-        .attr('x', chartW - 6)
-        .attr('y', y(r.pct) - 5)
-        .attr('text-anchor', 'end')
-        .attr('font-size', 10.5)
-        .attr('font-family', 'DM Sans, Inter, sans-serif')
-        .attr('fill', r.color)
-        .attr('font-weight', 700)
-        .text(r.label)
-    })
-
-    // X axis
-    g.append('g')
-      .attr('transform', `translate(0, ${chartH})`)
-      .call(
-        d3
-          .axisBottom(x)
-          .tickValues([500, 2000, 5000, 10000, 25000, 50000].filter((v) => v <= xMax))
-          .tickFormat((v) => (v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v))
-      )
-      .call((sel) => sel.select('.domain').attr('stroke', '#b9b3a4'))
-      .call((sel) => sel.selectAll('text').attr('fill', '#6e6e6e').attr('font-size', 11))
-      .call((sel) => sel.selectAll('line').attr('stroke', '#d4d0c4'))
-
-    g.append('text')
-      .attr('x', chartW / 2)
-      .attr('y', chartH + 40)
-      .attr('text-anchor', 'middle')
-      .attr('fill', '#6e6e6e')
-      .attr('font-size', 11)
-      .attr('font-family', 'DM Sans, Inter, sans-serif')
-      .text('New units built near MBTA (√ scale)')
-
-    // Y axis
-    g.append('g')
-      .call(d3.axisLeft(y).ticks(6).tickFormat((v) => `${v}%`))
-      .call((sel) => sel.select('.domain').attr('stroke', '#b9b3a4'))
-      .call((sel) => sel.selectAll('text').attr('fill', '#6e6e6e').attr('font-size', 11))
-      .call((sel) => sel.selectAll('line').attr('stroke', '#d4d0c4'))
-
-    g.append('text')
-      .attr('transform', 'rotate(-90)')
-      .attr('x', -chartH / 2)
-      .attr('y', -44)
-      .attr('text-anchor', 'middle')
-      .attr('fill', '#6e6e6e')
-      .attr('font-size', 11)
-      .attr('font-family', 'DM Sans, Inter, sans-serif')
-      .text('Share of new units that are affordable')
-
-    // Points
-    const dotRadius = (d) => Math.max(4, Math.min(14, Math.sqrt(d.hu) / 6))
-    const labelFor = new Set([
-      'Boston',
-      'Cambridge',
-      'Somerville',
-      'Lynn',
-      'Medford',
-      'Malden',
-      'Chelsea',
-      'Quincy',
-      'Revere',
-      'Lawrence',
-    ])
-
-    const dots = g
-      .selectAll('circle.policy-muni-dot')
-      .data(munis)
-      .enter()
-      .append('circle')
-      .attr('class', 'policy-muni-dot')
-      .attr('cx', (d) => x(d.hu))
-      .attr('cy', (d) => y(d.affPct))
-      .attr('r', dotRadius)
-      .attr('fill', (d) => (d.affPct >= 20 ? '#4d5a3f' : d.affPct >= 10 ? '#b36a2a' : '#DA291C'))
-      .attr('fill-opacity', 0.82)
-      .attr('stroke', '#1a1a1a')
-      .attr('stroke-width', 0.8)
-      .style('cursor', 'default')
-
-    dots
-      .on('mousemove', function (event, d) {
-        d3.select(this).attr('stroke-width', 1.8)
-        const tt = tooltipRef.current
-        if (!tt) return
-        const parent = tt.parentElement.getBoundingClientRect()
-        tt.style.left = `${event.clientX - parent.left + 14}px`
-        tt.style.top = `${event.clientY - parent.top - 10}px`
-        tt.style.opacity = 1
-        tt.innerHTML = `
-          <div class="motivation-tooltip-title">${d.name}</div>
-          <div class="motivation-tooltip-row"><span>Units near MBTA</span><b>${d.hu.toLocaleString()}</b></div>
-          <div class="motivation-tooltip-row"><span>Affordable</span><b>${d.aff.toLocaleString()} (${d.affPct.toFixed(1)}%)</b></div>
-          <div class="motivation-tooltip-row"><span>Developments</span><b>${d.devs.toLocaleString()}</b></div>
-        `
-      })
-      .on('mouseleave', function () {
-        d3.select(this).attr('stroke-width', 0.8)
-        if (tooltipRef.current) tooltipRef.current.style.opacity = 0
-      })
-
-    // Labels for key municipalities
-    const labeled = munis.filter((m) => labelFor.has(m.name))
-    g.selectAll('text.policy-muni-label')
-      .data(labeled)
-      .enter()
-      .append('text')
-      .attr('class', 'policy-muni-label')
-      .attr('x', (d) => x(d.hu) + dotRadius(d) + 4)
-      .attr('y', (d) => y(d.affPct) + 3)
-      .attr('font-size', 10.5)
-      .attr('font-family', 'Inter, sans-serif')
-      .attr('font-weight', 600)
-      .attr('fill', '#1a1a1a')
-      .text((d) => d.name)
-  }, [munis])
+  // Counts for the headline
+  const baseAff = basePct.u30 + basePct.a3050 + basePct.a5080 + basePct.a80p
+  const newAff = result.pct.u30 + result.pct.a3050 + result.pct.a5080 + result.pct.a80p
+  const baseDeep = basePct.u30 + basePct.a3050
+  const newDeep = result.pct.u30 + result.pct.a3050
+  const totalAdded = Math.round(((newAff - baseAff) / 100) * totalUnits)
+  const totalDeepAdded = Math.round(((newDeep - baseDeep) / 100) * totalUnits)
+  const numLevers = Object.values(levers).filter(Boolean).length
 
   return (
-    <div className="policy-gap-scatter-wrap">
-      <svg ref={svgRef} className="policy-gap-svg" />
-      <div ref={tooltipRef} className="motivation-tooltip" />
+    <div className="lever-panel">
+      <div className="lever-rack" role="group" aria-label="Policy levers">
+        {LEVERS.map((lv) => {
+          const on = levers[lv.id]
+          return (
+            <button
+              key={lv.id}
+              type="button"
+              className={`lever ${on ? 'lever-on' : ''}`}
+              aria-pressed={on}
+              onClick={() => toggle(lv.id)}
+            >
+              <div className="lever-switch" aria-hidden="true">
+                <span className="lever-knob" />
+                <span className="lever-glow" />
+              </div>
+              <div className="lever-text">
+                <div className="lever-eyebrow">{lv.short}</div>
+                <div className="lever-title">{lv.title}</div>
+                <div className="lever-desc">{lv.desc}</div>
+                <div className="lever-peer">{lv.peer}</div>
+              </div>
+              <div className="lever-state" aria-hidden="true">{on ? 'ON' : 'OFF'}</div>
+            </button>
+          )
+        })}
+      </div>
+
+      <div className="lever-controls">
+        <button type="button" className="lever-mini" onClick={reset} disabled={numLevers === 0}>
+          Reset
+        </button>
+        <button type="button" className="lever-mini lever-mini-primary" onClick={enableAll} disabled={numLevers === 3}>
+          Pull all three
+        </button>
+      </div>
+
+      <div className="lever-output">
+        <div className="lever-output-bars">
+          <div className="lever-bar-row">
+            <div className="lever-bar-label">
+              <span className="lever-bar-eyebrow">Today, no levers pulled</span>
+              <span className="lever-bar-stat">
+                {baseAff.toFixed(0)}% affordable · {baseDeep.toFixed(1)}% deep
+              </span>
+            </div>
+            <div className="lever-bar lever-bar-base">
+              {TIERS.map((t) => (
+                <div
+                  key={t.key}
+                  className="lever-bar-seg"
+                  style={{ width: `${basePct[t.key]}%`, background: t.color }}
+                  title={`${t.label} · ${basePct[t.key].toFixed(1)}%`}
+                />
+              ))}
+            </div>
+          </div>
+          <div className="lever-bar-row">
+            <div className="lever-bar-label">
+              <span className="lever-bar-eyebrow">
+                {numLevers === 0
+                  ? 'With no levers, nothing changes'
+                  : `With ${numLevers} lever${numLevers > 1 ? 's' : ''} pulled`}
+              </span>
+              <span className="lever-bar-stat">
+                {newAff.toFixed(0)}% affordable · {newDeep.toFixed(1)}% deep
+              </span>
+            </div>
+            <div className="lever-bar lever-bar-new">
+              {TIERS.map((t) => (
+                <div
+                  key={t.key}
+                  className="lever-bar-seg"
+                  style={{ width: `${result.pct[t.key]}%`, background: t.color }}
+                  title={`${t.label} · ${result.pct[t.key].toFixed(1)}%`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="lever-bar-legend">
+          {TIERS.map((t) => (
+            <span key={t.key} className="lever-legend-item">
+              <span className="lever-legend-swatch" style={{ background: t.color }} />
+              {t.label}
+              <span className="lever-legend-sub"> · {t.sub}</span>
+            </span>
+          ))}
+        </div>
+
+        <div className="lever-impact">
+          <div className="lever-impact-stat">
+            <div className="lever-impact-num">
+              {totalAdded > 0 ? `+${totalAdded.toLocaleString()}` : '0'}
+            </div>
+            <div className="lever-impact-label">
+              affordable homes near MBTA<br/>
+              <span className="lever-impact-sub">
+                projected, applied to {totalUnits.toLocaleString()} units already in the pipeline
+              </span>
+            </div>
+          </div>
+          <div className="lever-impact-stat lever-impact-stat-alt">
+            <div className="lever-impact-num">
+              {totalDeepAdded > 0 ? `+${totalDeepAdded.toLocaleString()}` : '0'}
+            </div>
+            <div className="lever-impact-label">
+              deeply affordable<br/>
+              <span className="lever-impact-sub">homes for renters earning under 50% AMI</span>
+            </div>
+          </div>
+          {result.localPref && (
+            <div className="lever-impact-badge">
+              + Tenant protections + local preference: keys go to current transit-dependent renters
+            </div>
+          )}
+        </div>
+
+        <div className="lever-workers">
+          <div className="lever-workers-eyebrow">
+            Workers who gain access {numLevers === 0 ? '(pull a lever to start)' : `(${workersLitUp.length}/13)`}
+          </div>
+          <div className="lever-workers-grid">
+            {WORKERS.map((w) => {
+              const lit = workersLitUp.includes(w)
+              const wage = `$${(w.wage / 1000).toFixed(0)}k`
+              return (
+                <div
+                  key={w.name}
+                  className={`lever-worker ${lit ? 'lever-worker-on' : ''}`}
+                  title={`${w.name} · ${wage} (${w.ami.toFixed(0)}% AMI)`}
+                >
+                  <span className="lever-worker-icon" aria-hidden="true">{w.icon}</span>
+                  <span className="lever-worker-name">{w.name}</span>
+                  <span className="lever-worker-wage">{wage}</span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* =========================================================================
+   Viz B · The Worker Picker
+   --------------------------------------------------------------------------
+   Pick one of 13 Greater Boston occupations. A grid of 100 little "houses"
+   recolors live to show: under today's law, how many of every 100 new MBTA-
+   near homes are priced for her — and how that changes if MA adds a 20%
+   inclusionary floor at 50% AMI. Designed for empathy: the abstract policy
+   gap becomes "Maria can compete for 6 homes today, 32 with the floor."
+   ========================================================================= */
+
+function buildHouseLayout(pct) {
+  // Allocate 100 cells to the five tiers using largest-remainder; preserve
+  // tiny slivers (deep affordability) so they don't round to zero.
+  const order = ['u30', 'a3050', 'a5080', 'a80p', 'market']
+  const raw = order.map((k) => ({ key: k, exact: pct[k] || 0 }))
+  const withFloor = raw.map((r) => ({
+    ...r,
+    floor: Math.floor(r.exact),
+    frac: r.exact - Math.floor(r.exact),
+  }))
+  // Guarantee at least 1 cell to deep tiers if any exist
+  for (const r of withFloor) {
+    if ((r.key === 'u30' || r.key === 'a3050') && r.exact > 0 && r.floor === 0) {
+      r.floor = 1
+    }
+  }
+  let assigned = withFloor.reduce((s, r) => s + r.floor, 0)
+  if (assigned < 100) {
+    const remainders = withFloor
+      .map((r, i) => ({ i, frac: r.frac }))
+      .sort((a, b) => b.frac - a.frac)
+    let j = 0
+    while (assigned < 100 && j < remainders.length * 4) {
+      withFloor[remainders[j % remainders.length].i].floor += 1
+      assigned += 1
+      j += 1
+    }
+  } else if (assigned > 100) {
+    const marketIdx = withFloor.findIndex((r) => r.key === 'market')
+    while (assigned > 100 && marketIdx >= 0 && withFloor[marketIdx].floor > 0) {
+      withFloor[marketIdx].floor -= 1
+      assigned -= 1
+    }
+  }
+  // Flatten with a deterministic order so the same cell positions move
+  // smoothly between Today / With-floor states.
+  const flat = []
+  for (const seg of withFloor) {
+    for (let i = 0; i < seg.floor; i++) flat.push(seg.key)
+  }
+  while (flat.length < 100) flat.push('market')
+  return flat.slice(0, 100)
+}
+
+function WorkerPicker({ basePct, totalUnits }) {
+  const [selected, setSelected] = useState('Childcare worker')
+  const [showFloor, setShowFloor] = useState(false)
+
+  const worker = WORKERS.find((w) => w.name === selected) || WORKERS[2]
+  const tiers = tiersAccessibleTo(worker.ami)
+  const accessibleTier = workerTier(worker.ami)
+
+  // Apply the proposed package: 20% floor + deep AMI cap.
+  const projected = useMemo(
+    () => applyLevers(basePct, { floor: true, deep: true }).pct,
+    [basePct]
+  )
+
+  const housesNow = useMemo(() => buildHouseLayout(basePct), [basePct])
+  const housesNew = useMemo(() => buildHouseLayout(projected), [projected])
+  const houses = showFloor ? housesNew : housesNow
+
+  // Per-100 counts she can compete for
+  const accessibleCount = (layout) => layout.filter((k) => tiers.has(k)).length
+  const nowCount = accessibleCount(housesNow)
+  const newCount = accessibleCount(housesNew)
+  const realNow = Math.round((nowCount / 100) * totalUnits)
+  const realNew = Math.round((newCount / 100) * totalUnits)
+  const delta = realNew - realNow
+
+  return (
+    <div className="worker-picker">
+      <div className="worker-chip-row" role="radiogroup" aria-label="Pick a worker">
+        {WORKERS.map((w) => {
+          const isOn = w.name === selected
+          return (
+            <button
+              key={w.name}
+              type="button"
+              role="radio"
+              aria-checked={isOn}
+              className={`worker-chip ${isOn ? 'worker-chip-on' : ''}`}
+              onClick={() => setSelected(w.name)}
+            >
+              <span className="worker-chip-icon" aria-hidden="true">{w.icon}</span>
+              <span className="worker-chip-text">
+                <span className="worker-chip-name">{w.name}</span>
+                <span className="worker-chip-wage">${(w.wage / 1000).toFixed(0)}k · {w.ami.toFixed(0)}% AMI</span>
+              </span>
+            </button>
+          )
+        })}
+      </div>
+
+      <div className="worker-picker-board">
+        <div className="worker-picker-headline">
+          <div className="worker-picker-name">
+            <span className="worker-picker-icon" aria-hidden="true">{worker.icon}</span>
+            <div>
+              <div className="worker-picker-title">{worker.name}</div>
+              <div className="worker-picker-subtitle">
+                Median wage <strong>${worker.wage.toLocaleString()}</strong> · {worker.ami.toFixed(0)}% of Boston AMI ·
+                fits in <span style={{ color: TIERS.find((t) => t.key === accessibleTier).color, fontWeight: 800 }}>
+                  {TIERS.find((t) => t.key === accessibleTier).label}
+                </span> tier and below
+              </div>
+            </div>
+          </div>
+
+          <div className="worker-toggle" role="group" aria-label="Toggle policy state">
+            <button
+              type="button"
+              className={`worker-toggle-btn ${!showFloor ? 'on' : ''}`}
+              onClick={() => setShowFloor(false)}
+              aria-pressed={!showFloor}
+            >
+              Today
+            </button>
+            <button
+              type="button"
+              className={`worker-toggle-btn ${showFloor ? 'on' : ''}`}
+              onClick={() => setShowFloor(true)}
+              aria-pressed={showFloor}
+            >
+              With 20% floor at 50% AMI
+            </button>
+          </div>
+        </div>
+
+        <div className="worker-picker-layout">
+          <div className="worker-house-grid" aria-label="100 representative homes built near MBTA">
+            {houses.map((tier, i) => {
+              const accessible = tiers.has(tier)
+              const tierMeta = TIERS.find((t) => t.key === tier)
+              return (
+                <div
+                  key={i}
+                  className={`worker-house ${accessible ? 'worker-house-on' : ''}`}
+                  style={{
+                    background: accessible ? tierMeta.color : 'transparent',
+                    borderColor: accessible ? tierMeta.color : '#d4d0c4',
+                    transitionDelay: `${(i % 10) * 14 + Math.floor(i / 10) * 6}ms`,
+                  }}
+                  title={`${tierMeta.label}${accessible ? ' (priced for ' + worker.name + ')' : ' (out of reach)'}`}
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path
+                      d="M12 3 L2 13 L5 13 L5 22 L19 22 L19 13 L22 13 Z"
+                      fill={accessible ? '#fffaee' : '#d4d0c4'}
+                    />
+                  </svg>
+                </div>
+              )
+            })}
+          </div>
+
+          <div className="worker-callout">
+            <div className="worker-callout-row">
+              <div className="worker-callout-eyebrow">Of every 100 new homes near MBTA</div>
+              <div className="worker-callout-num">
+                <span className={`worker-callout-now ${!showFloor ? 'is-active' : ''}`}>{nowCount}</span>
+                <span className="worker-callout-arrow">→</span>
+                <span className={`worker-callout-new ${showFloor ? 'is-active' : ''}`}>{newCount}</span>
+              </div>
+              <div className="worker-callout-sub">
+                priced for a {worker.name.toLowerCase()}
+              </div>
+            </div>
+
+            <div className="worker-callout-row worker-callout-real">
+              <div className="worker-callout-eyebrow">In real units already in the MBTA-near pipeline</div>
+              <div className="worker-callout-real-row">
+                <span>{realNow.toLocaleString()}</span>
+                <span className="worker-callout-arrow">→</span>
+                <span className="worker-callout-real-new">{realNew.toLocaleString()}</span>
+              </div>
+              <div className="worker-callout-delta">
+                {delta > 0
+                  ? `+${delta.toLocaleString()} more homes a ${worker.name.toLowerCase()} could compete for`
+                  : 'No change'}
+              </div>
+            </div>
+
+            <div className="worker-callout-foot">
+              The accessible homes (colored) are the only units a {worker.name.toLowerCase()} can win in a
+              housing lottery near a T stop. The rest are priced above her income tier.
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
@@ -454,8 +673,6 @@ function MunicipalityScatter({ munis }) {
    Viz C · Peer comparison: what other jurisdictions require near transit
    ========================================================================= */
 
-// Each entry = one policy regime. `floor` = required share of affordable units
-// (0 if none). `floorLabel` = copy for the bar end.
 const PEER_POLICIES = [
   {
     key: 'ma',
@@ -464,10 +681,9 @@ const PEER_POLICIES = [
     year: 2021,
     floor: 0,
     floorLabel: 'No floor',
-    // Realized, from MassBuilds. Wired in at render-time from `funnel`.
     usesRealized: true,
     description:
-      'Zones for density near transit but sets no affordability requirement. Local inclusionary ordinances are capped at 10% of units at 80% AMI to remain as-of-right.',
+      'Zones for density near transit but sets no affordability requirement. Local inclusionary ordinances are capped at 10% at 80% AMI to remain as-of-right.',
     accent: '#DA291C',
     isFocus: true,
   },
@@ -476,7 +692,7 @@ const PEER_POLICIES = [
     place: 'Montgomery County, MD',
     policy: 'Moderately-Priced Dwelling Unit (MPDU)',
     year: 1974,
-    floor: 13.5, // midpoint of 12.5-15% range
+    floor: 13.5,
     floorLabel: '12.5–15% required',
     realized: null,
     description:
@@ -489,7 +705,7 @@ const PEER_POLICIES = [
     place: 'Seattle, WA',
     policy: 'Mandatory Housing Affordability',
     year: 2019,
-    floor: 9, // city-wide average of 5-11% varying zones
+    floor: 9,
     floorLabel: '5–11% required',
     realized: null,
     description:
@@ -519,7 +735,7 @@ const PEER_POLICIES = [
     floorLabel: 'Every TOD must include affordable',
     realized: null,
     description:
-      'Requires affordable units in every residential development inside transit station areas, with property-tax exemptions and fee reductions as incentives. Replaces the "safe-harbor cap" approach with a real floor.',
+      'Requires affordable units in every residential development inside transit station areas, with property-tax exemptions and fee reductions as incentives.',
     accent: '#4d5a3f',
     isFocus: false,
   },
@@ -533,11 +749,8 @@ function PeerComparison({ funnel }) {
     const svg = d3.select(svgRef.current)
     svg.selectAll('*').remove()
 
-    // Build the data rows, wiring MA's realized 16.1% in as the comparator.
     const data = PEER_POLICIES.map((p) =>
-      p.usesRealized
-        ? { ...p, realized: funnel.affPct }
-        : p
+      p.usesRealized ? { ...p, realized: funnel.affPct } : p
     )
 
     const width = 740
@@ -557,7 +770,6 @@ function PeerComparison({ funnel }) {
       .range([0, data.length * rowH])
       .padding(0.32)
 
-    // Axis
     g.append('g')
       .attr('transform', `translate(0, ${data.length * rowH})`)
       .call(d3.axisBottom(x).ticks(5).tickFormat((v) => `${v}%`))
@@ -574,7 +786,6 @@ function PeerComparison({ funnel }) {
       .attr('font-family', 'DM Sans, Inter, sans-serif')
       .text('Required affordable share in new development near transit')
 
-    // Gridlines
     g.append('g')
       .selectAll('line')
       .data(x.ticks(5))
@@ -595,7 +806,6 @@ function PeerComparison({ funnel }) {
       .attr('class', 'policy-peer-row')
       .attr('transform', (d) => `translate(0, ${y(d.key)})`)
 
-    // Track
     rows
       .append('rect')
       .attr('x', 0)
@@ -604,7 +814,6 @@ function PeerComparison({ funnel }) {
       .attr('height', y.bandwidth())
       .attr('fill', (d) => (d.isFocus ? '#faeaeb' : '#efeadb'))
 
-    // Required-floor bar
     rows
       .append('rect')
       .attr('x', 0)
@@ -614,7 +823,6 @@ function PeerComparison({ funnel }) {
       .attr('fill', (d) => d.accent)
       .attr('opacity', 0.9)
 
-    // "No floor" marker for MA
     rows
       .filter((d) => d.floor === 0)
       .append('g')
@@ -636,14 +844,10 @@ function PeerComparison({ funnel }) {
           .attr('stroke-width', 1.75)
       })
 
-    // Realized marker for MA (separate diamond showing what actually got built)
     rows
       .filter((d) => d.realized != null)
       .append('path')
-      .attr(
-        'd',
-        d3.symbol().type(d3.symbolDiamond).size(110)
-      )
+      .attr('d', d3.symbol().type(d3.symbolDiamond).size(110))
       .attr(
         'transform',
         (d) => `translate(${x(Math.min(d.realized, xMax))}, ${y.bandwidth() / 2})`
@@ -663,7 +867,6 @@ function PeerComparison({ funnel }) {
       .attr('fill', '#1a1a1a')
       .text((d) => `${d.realized.toFixed(1)}% realized`)
 
-    // Place label
     rows
       .append('text')
       .attr('x', -12)
@@ -676,7 +879,6 @@ function PeerComparison({ funnel }) {
       .attr('font-family', 'Inter, sans-serif')
       .text((d) => d.place)
 
-    // Policy sub-label
     rows
       .append('text')
       .attr('x', -12)
@@ -688,7 +890,6 @@ function PeerComparison({ funnel }) {
       .attr('font-family', 'DM Sans, Inter, sans-serif')
       .text((d) => `${d.policy} (${d.year})`)
 
-    // Floor-label at end of bar (skip for MA since "No floor" is shown via icon)
     rows
       .filter((d) => d.floor > 0)
       .append('text')
@@ -750,106 +951,83 @@ export default function PolicyGapPanels() {
     )
   }
 
-  const { funnel, munis } = stats
-  const gap = funnel.awayAffPct - funnel.affPct
-
-  // Identify outliers for the takeaway text
-  const above20 = munis.filter((m) => m.affPct >= 20).length
-  const below10 = munis.filter((m) => m.affPct < 10).length
-  const between = munis.length - above20 - below10
+  const { funnel, breakdownPct, totalUnits } = stats
 
   return (
     <div className="motivation-stack">
-      {/* Viz 1: Collapse bars */}
+      {/* Viz 1: The Lever Rack — interactive prescription */}
       <article className="motivation-card">
         <header className="motivation-card-header">
-          <h3>Capacity without affordability: units built near transit are less affordable than units built away from it.</h3>
+          <h3>How to actually build affordable homes near the MBTA: pull these three levers.</h3>
           <p className="motivation-dek">
-            The MBTA Communities Act requires <Jargon term="as-of-right">as-of-right</Jargon> zoning
-            for multi-family housing, not construction, and <strong>sets no income targets</strong>.
-            The Affordable Homes Act funds housing, but does not tie its $5.4B to transit
-            proximity. What this means, in the units that actually got built near MBTA transit:
+            The MBTA Communities Act zones for density. The Affordable Homes Act funds construction.
+            Neither requires that the homes be priced for the working renters who depend on transit.
+            Three policy levers — already in place in peer states — would turn that capacity into
+            homes for workers. Toggle them below to see how the unit mix shifts.
           </p>
         </header>
 
-        <CollapseBars funnel={funnel} />
+        <LeverPanel basePct={breakdownPct} totalUnits={totalUnits} />
 
         <div className="motivation-takeaway">
-          Housing built <em>near</em> MBTA transit is <strong>{gap.toFixed(1)} percentage points less affordable</strong>{' '}
-          than housing built away from transit ({funnel.affPct.toFixed(1)}% vs.{' '}
-          {funnel.awayAffPct.toFixed(1)}%). The places with the best transit access are where
-          Massachusetts has produced the <em>least</em> affordable housing.
+          With all three levers pulled, MA would build roughly{' '}
+          <strong>1 in 5 new MBTA-near homes</strong> at deed-restricted prices — and{' '}
+          <strong>1 in 10</strong> at <Jargon term="deep affordability">deep affordability</Jargon>{' '}
+          (under 50% <Jargon term="AMI">AMI</Jargon>) — without changing a single line of zoning code.
+          The blueprint is already proven from California to Maryland to Washington.
         </div>
 
         <footer className="motivation-source">
-          Source: MassBuilds development inventory (Mar 2026). Policy context:{' '}
+          Counterfactual model: 20% inclusionary floor with at least half of the affordable share
+          targeted at &le;50% AMI, applied to the {totalUnits.toLocaleString()} MBTA-near units in
+          the MassBuilds pipeline (Mar 2026). Sources:{' '}
           <a href="https://www.mass.gov/info-details/multi-family-zoning-requirement-for-mbta-communities" target="_blank" rel="noopener noreferrer">MBTA Communities</a>{' '}·{' '}
           <a href="https://www.mass.gov/info-details/the-affordable-homes-act-smart-housing-livable-communities" target="_blank" rel="noopener noreferrer">Affordable Homes Act</a>{' '}·{' '}
           <a href="https://www.mapc.org/planning101/affordability-effectiveness-section-3a/" target="_blank" rel="noopener noreferrer">MAPC Section 3A analysis</a>.
         </footer>
       </article>
 
-      {/* Viz 2: Municipality scatter */}
+      {/* Viz 2: Worker Picker — interactive empathy */}
       <article className="motivation-card">
         <header className="motivation-card-header">
-          <h3>Without a statewide <Jargon term="affordability floor">affordability floor</Jargon>, outcomes range from 2% to 28% under the same law.</h3>
+          <h3>Pick a worker. See the homes near her T stop.</h3>
           <p className="motivation-dek">
-            Every municipality below is subject to the MBTA Communities Act. Each dot is one
-            community, sized by units built. With no statewide affordability mandate, some
-            communities clear a 20% <Jargon term="inclusionary zoning">inclusionary</Jargon> floor
-            while others barely crack 2%.
+            A line cook makes $44k. A childcare worker, $39k. A registered nurse, $100k. Each
+            occupies a different rung of the income ladder — and the housing built next to their
+            bus stops treats them very differently. Tap a worker to see how many of every 100
+            new MBTA-near homes she can compete for, and how that changes with the proposed
+            floor.
           </p>
         </header>
 
-        <MunicipalityScatter munis={munis} />
-
-        <div className="motivation-bars-legend">
-          <span>
-            <span className="motivation-swatch" style={{ background: '#4d5a3f' }} />
-            ≥20% affordable · {above20} communities
-          </span>
-          <span>
-            <span className="motivation-swatch" style={{ background: '#b36a2a' }} />
-            10–20% · {between} communities
-          </span>
-          <span>
-            <span className="motivation-swatch" style={{ background: '#DA291C' }} />
-            &lt;10% · {below10} communities
-          </span>
-        </div>
+        <WorkerPicker basePct={breakdownPct} totalUnits={totalUnits} />
 
         <div className="motivation-takeaway">
-          A law that{' '}
-          <strong>permits density but doesn&rsquo;t require affordability</strong>{' '}
-          lets local politics, not state policy, decide who gets to live near transit. Closing this
-          gap means pairing zoning capacity with a minimum affordable share,{' '}
-          <Jargon term="AMI">AMI</Jargon> targeting below 80%, and{' '}
-          <Jargon term="anti-displacement">anti-displacement protections</Jargon>: the pieces
-          Massachusetts&rsquo; two landmark laws leave to local discretion.
+          Today, a <strong>childcare worker</strong> can compete for fewer than 7 of every 100
+          new MBTA-near homes. With a 20% floor at 50% AMI, that more than triples — and the
+          same lever delivers homes for line cooks, EMTs, teachers, and nurses too. Affordability
+          isn&rsquo;t one bracket; it&rsquo;s a ladder, and the floor adds rungs near the bottom.
         </div>
 
         <footer className="motivation-source">
-          Source: MassBuilds (Mar 2026), MBTA-served municipalities with at least 200 new units
-          on record. Reference lines reflect the{' '}
-          <a href="https://www.mapc.org/planning101/affordability-effectiveness-section-3a/" target="_blank" rel="noopener noreferrer">
-            10% / 80% AMI &ldquo;<Jargon term="safe-harbor cap">safe-harbor cap</Jargon>&rdquo;
-          </a>{' '}
-          under <Jargon term="Section 3A">Section 3A</Jargon> and a typical 20% inclusionary floor.
+          Wages: U.S. Bureau of Labor Statistics, OEWS, May 2023, Boston-Cambridge-Nashua MA-NH
+          MSA, median annual wage by SOC code. AMI base: HUD FY2024 income limits, Boston HMFA,
+          2-person 100% AMI = $127,200. Unit mix: MassBuilds (Mar 2026), MBTA-served projects
+          completed and under construction.
         </footer>
       </article>
 
       {/* Viz 3: Peer comparison */}
       <article className="motivation-card">
         <header className="motivation-card-header">
-          <h3>Other states solved the same problem by requiring a floor.</h3>
+          <h3>Peer states already paired their density laws with a floor.</h3>
           <p className="motivation-dek">
             Massachusetts isn&rsquo;t the first state to <Jargon term="upzone">upzone</Jargon>{' '}
             near transit. Four peer jurisdictions paired density with a{' '}
             <strong>statewide or county-wide <Jargon term="affordability floor">affordability
-            floor</Jargon></strong>: the exact lever MBTA Communities left out. The bar
-            below shows the required share of affordable units in each regime; the black
-            diamond on the top row is what MA has <em>actually</em> built near MBTA, with no
-            floor in place.
+            floor</Jargon></strong> — the exact lever MBTA Communities left out. The bar shows
+            each regime&rsquo;s required affordable share; the black diamond on the top row is
+            what MA actually built near the T, with no floor in place.
           </p>
         </header>
 
@@ -869,20 +1047,17 @@ export default function PolicyGapPanels() {
         </div>
 
         <div className="motivation-takeaway">
-          The common thread across Montgomery County, Seattle, California, and Washington is
-          simple: <strong>they require a minimum share of affordable units</strong> in the same
-          developments that MBTA Communities enables. Massachusetts has built the zoning. The
-          missing piece is the floor: a statutory minimum that converts capacity into
-          the homes transit-dependent households can actually afford.
+          Montgomery County, Seattle, California, and Washington all reached the same conclusion:
+          density without an affordability floor leaves the workers who depend on transit behind.
+          Massachusetts has built the zoning. <strong>The missing piece is the floor</strong>.
         </div>
 
         <footer className="motivation-source">
           Sources:{' '}
-          <a href="https://montgomerycountymd.gov/DHCA/housing/singlefamily/mpdu/produced.html" target="_blank" rel="noopener noreferrer">Montgomery County MPDU production</a>{' '}·{' '}
-          <a href="https://www.seattle.gov/housing/housing-developers/mandatory-housing-affordability" target="_blank" rel="noopener noreferrer">Seattle MHA program</a>{' '}·{' '}
+          <a href="https://montgomerycountymd.gov/DHCA/housing/singlefamily/mpdu/produced.html" target="_blank" rel="noopener noreferrer">Montgomery County MPDU</a>{' '}·{' '}
+          <a href="https://www.seattle.gov/housing/housing-developers/mandatory-housing-affordability" target="_blank" rel="noopener noreferrer">Seattle MHA</a>{' '}·{' '}
           <a href="https://ternercenter.berkeley.edu/research-and-policy/sb-35-evaluation/" target="_blank" rel="noopener noreferrer">Terner Center SB 35 evaluation</a>{' '}·{' '}
           <a href="https://app.leg.wa.gov/billsummary?BillNumber=1491&Year=2025" target="_blank" rel="noopener noreferrer">Washington HB 1491</a>.
-          MA realized figure: MassBuilds (Mar 2026).
         </footer>
       </article>
     </div>

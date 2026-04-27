@@ -647,18 +647,24 @@ export default function ScrollyStory({ onComplete }) {
         <p>
           Both laws control <em>where</em> housing gets built and <em>how
           much</em> money flows to it. Neither controls{' '}
-          <em>who gets to live there</em>.
+          <em>who gets to live there</em>. The result is the gap above:
+          density without affordability, capacity without keys for working
+          renters. So what would actually build homes for them near the
+          MBTA, and whose lives would change?
         </p>
 
         <PolicyGapPanels />
 
         <p>
-          Other states pair density with required affordability near transit.
-          Washington requires affordable units in every development near a
-          transit station; California fast-tracks projects that include them.
-          Massachusetts has the zoning capacity and the funding in place. An
-          affordability requirement tied to transit proximity would close the
-          remaining gap.
+          The blueprint isn&rsquo;t hypothetical. Washington requires
+          affordable units in every development near a transit station;
+          California fast-tracks projects that include them; Montgomery
+          County has been doing it since 1974. Massachusetts already has
+          the zoning capacity from MBTA Communities and the $5.4 billion
+          from the Affordable Homes Act. Adding a statewide affordability
+          floor near transit would convert that capacity into homes a
+          line cook, a teacher, or a home health aide can actually afford
+          near the station they take to work.
         </p>
       </section>
 
