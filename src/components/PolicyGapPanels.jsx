@@ -1,26 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import * as d3 from 'd3'
 import { loadMassBuilds } from '../utils/dataLoaders'
-import { GLOSSARY } from '../utils/glossary'
-
-/* =========================================================================
-   Inline jargon tooltips (housing-policy copy is full of domain terms;
-   readers get a dotted underline + hover/focus definition popup).
-   ========================================================================= */
-
-function Jargon({ term, children }) {
-  const entry = GLOSSARY[term]
-  if (!entry) return <span>{children ?? term}</span>
-  return (
-    <span className="jargon-term" tabIndex={0} aria-describedby={`glossary-${term}`}>
-      {children ?? term}
-      <span className="jargon-tooltip" role="tooltip" id={`glossary-${term}`}>
-        <span className="jargon-tooltip-label">{entry.short}</span>
-        <span className="jargon-tooltip-def">{entry.def}</span>
-      </span>
-    </span>
-  )
-}
 
 const MBTA_MODES = ['Rapid Transit', 'Commuter Rail', 'Ferry', 'MBTA Key Bus Route']
 
@@ -230,6 +210,148 @@ function sumDeep(p) {
 }
 
 /* =========================================================================
+   Shared house glyph · used by the trace-one-home grid and by the embedded
+   peer-panel definitions. SVG kept inline (no external assets) so we can
+   recolor cells with a CSS fill transition.
+   ========================================================================= */
+
+function HouseGlyph({ fill, stroke = '#1a1a1a' }) {
+  return (
+    <svg viewBox="0 0 24 24" className="primer-house" aria-hidden="true">
+      <path
+        d="M3 12 L12 4 L21 12 L21 21 L3 21 Z"
+        fill={fill}
+        stroke={stroke}
+        strokeWidth="1.25"
+        strokeLinejoin="round"
+      />
+      <rect x="10" y="14" width="4" height="7" fill={stroke} opacity="0.55" />
+    </svg>
+  )
+}
+
+/* =========================================================================
+   Trace one home · a focused 10-house pipeline with one cell highlighted as
+   "the traced home." When the reader pulls the floor, the traced home
+   flips from gray (market-rate) to brown (deed-restricted). When the deep
+   lever is pulled, an extra fund-funded home appears above the grid with a
+   green halo. Captions update in lockstep so the model's three steps —
+   (1) baseline, (2) floor, (3) fund — read as a story, not a chart.
+   ========================================================================= */
+
+function TraceOneHome({ levers }) {
+  // We always render 10 homes. Position 0 is the traced home; positions 1–9
+  // are context. With the floor on, positions 0 and 1 become deed-restricted
+  // (matching the 20% rule). The traced home is always the first to flip.
+  const TRACED = 0
+  const homes = Array.from({ length: 10 }, (_, i) => {
+    const isAff = levers.floor && i < 2
+    return {
+      i,
+      tier: isAff ? (i === 0 ? 'a3050' : 'a5080') : 'market',
+      traced: i === TRACED,
+    }
+  })
+  const colorFor = (tier) => {
+    if (tier === 'a3050') return '#a14a35'
+    if (tier === 'a5080') return '#d38e42'
+    return '#d4d0c4'
+  }
+
+  let stepTitle = 'Today: market-rate'
+  let stepBody = (
+    <>
+      Without the levers, the traced home is one of the gray ones — a{' '}
+      <strong>market-rate</strong> unit with no price cap. The pipeline
+      delivers it at whatever rent the market bears.
+    </>
+  )
+  if (levers.floor && !levers.deep) {
+    stepTitle = 'Floor pulled: 1 in 5 must be deed-restricted'
+    stepBody = (
+      <>
+        The 20% floor pulls 2 of every 10 new homes out of market-rate. The
+        traced home <strong>flipped to deed-restricted</strong> — capped
+        below market and held there for 30+ years.
+      </>
+    )
+  } else if (levers.deep && !levers.floor) {
+    stepTitle = 'Fund pulled: an extra deeply-affordable home appears'
+    stepBody = (
+      <>
+        Every market-rate unit pays{' '}
+        ~${(FEE_PER_NONAFF_UNIT / 1000).toFixed(0)}k into a local fund. Stacked
+        with LIHTC at ~${(FUND_COST_PER_AFF_UNIT / 1000).toFixed(0)}k per
+        affordable unit, that fee builds an{' '}
+        <strong>extra home on top</strong> — priced for a household under 50%
+        AMI. The traced home is still market-rate without the floor on.
+      </>
+    )
+  } else if (levers.floor && levers.deep) {
+    stepTitle = 'Both pulled: traced home flips, plus a funded extra'
+    stepBody = (
+      <>
+        The traced home is now deed-restricted on-site, and the fund builds
+        an <strong>extra deeply-affordable home</strong> on top of the
+        pipeline — the bulk of fund-funded units land at &le;50% AMI.
+      </>
+    )
+  }
+
+  const showFundedExtra = levers.deep
+  const tracedTier = homes[TRACED].tier
+
+  return (
+    <div className="trace-home" aria-label="Trace one home through the policy package">
+      <div className="trace-home-header">
+        <span className="trace-home-title">{stepTitle}</span>
+      </div>
+
+      <div className="trace-home-stage">
+        {/* Funded-extra row sits above the main grid; it's empty until deep
+            is on, then a single haloed home glyph slides in. */}
+        <div
+          className={`trace-home-extra-row${showFundedExtra ? ' is-on' : ''}`}
+          aria-hidden={!showFundedExtra}
+        >
+          <div className="trace-home-extra-cell">
+            {showFundedExtra && (
+              <>
+                <span className="trace-home-extra-halo" />
+                <HouseGlyph fill="#4d5a3f" stroke="#3d4732" />
+                <span className="trace-home-extra-label">+1 funded by fund</span>
+              </>
+            )}
+          </div>
+        </div>
+
+        <div className="trace-home-grid">
+          {homes.map((h) => (
+            <div
+              key={h.i}
+              className={`trace-home-cell${h.traced ? ' is-traced' : ''}`}
+              data-tier={h.tier}
+            >
+              <HouseGlyph fill={colorFor(h.tier)} />
+              {h.traced && (
+                <span
+                  className={`trace-home-marker trace-home-marker--${tracedTier === 'market' ? 'market' : 'aff'}`}
+                  aria-label="Traced home"
+                >
+                  this one
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <p className="trace-home-caption" aria-live="polite">{stepBody}</p>
+    </div>
+  )
+}
+
+/* =========================================================================
    Viz A · The Lever Rack
    --------------------------------------------------------------------------
    Two policy toggles. As readers flip them, the stack transforms in real
@@ -247,19 +369,15 @@ const TIERS = [
 const LEVERS = [
   {
     id: 'floor',
-    title: (
-      <>
-        20% <Jargon term="inclusionary floor">inclusionary floor</Jargon>
-      </>
-    ),
+    title: '20% inclusionary floor',
     desc: 'Every TOD project reserves \u226520% as deed-restricted.',
     peer: 'CA SB\u00a035',
   },
   {
     id: 'deep',
     title: 'Mandatory share + housing fund',
-    desc: 'Build affordable on-site or pay in; fund $ stack with LIHTC.',
-    peer: 'Seattle MHA',
+    desc: 'Each market-rate unit pays an in-lieu fee into a city housing fund; the fund builds extra units at ≤50% AMI.',
+    peer: 'Seattle MHA · WA HB 1491',
   },
 ]
 
@@ -533,7 +651,7 @@ function ScoreboardChart({ pct, totalUnits, levers }) {
           </span>
         </span>
         <span className="scoreboard-subline">
-          {totalDeep.toLocaleString()} <Jargon term="deeply affordable">deeply affordable</Jargon> (&le;50% AMI)
+          {totalDeep.toLocaleString()} deeply affordable (&le;50% AMI)
           {fundActive && fundedAff > 0 ? (
             <>
               {' '}&middot; of which <strong>{fundedAff.toLocaleString()}</strong> funded by{' '}
@@ -544,23 +662,14 @@ function ScoreboardChart({ pct, totalUnits, levers }) {
       </figcaption>
       <svg ref={ref} className="scoreboard-svg" />
       <details className="scoreboard-foot">
-        <summary>How this is calculated</summary>
+        <summary>Sources &amp; absorption note</summary>
         <p>
-          The MBTA-near pipeline contains{' '}
-          <strong>{totalUnits.toLocaleString()}</strong> units over a ten-year
-          linear-absorption horizon. The bottom four bands are the on-site
-          affordable mix produced by a CA SB&nbsp;35-style 20% inclusionary
-          floor, broken out by AMI tier. The top green band is what the
-          remaining{' '}
-          <strong>{Math.round(numbers.nonAffUnitsTotal).toLocaleString()}</strong>{' '}
-          market-rate units would produce under Seattle&rsquo;s MHA in-lieu
-          mechanic at{' '}
-          <strong>${(FEE_PER_NONAFF_UNIT / 1000).toFixed(0)}k</strong> per
-          market-rate unit, with{' '}
-          <strong>${(FUND_COST_PER_AFF_UNIT / 1000).toFixed(0)}k</strong> of
-          local fund money buying each affordable unit (the rest filled by
-          LIHTC + state credits, which is why these units count as deeply
-          affordable).{' '}
+          Pipeline modeled as{' '}
+          <strong>{totalUnits.toLocaleString()}</strong> MBTA-near units over
+          a ten-year linear absorption. Lever parameters (20% on-site floor,
+          ${(FEE_PER_NONAFF_UNIT / 1000).toFixed(0)}k per-unit fee,
+          ${(FUND_COST_PER_AFF_UNIT / 1000).toFixed(0)}k LIHTC-stacked cost)
+          are sourced from each peer&rsquo;s panel above.{' '}
           <strong>Sources:</strong>{' '}
           <a
             href="https://www.seattle.gov/housing/housing-developers/mandatory-housing-affordability/mha-annual-reports"
@@ -730,6 +839,9 @@ function LeverPanel({ basePct, totalUnits }) {
           Pull both
         </button>
       </div>
+
+      <TraceOneHome levers={levers} />
+
       <div className="lever-output" aria-describedby="lever-legend-captions">
         <ScoreboardChart
           pct={result.pct}
@@ -971,6 +1083,8 @@ function WorkerPicker({ basePct, totalUnits }) {
 const PEER_POLICIES = [
   {
     key: 'ca',
+    step: 1,
+    definitionKind: 'floor',
     place: 'California',
     policy: 'SB 35 Streamlining',
     policyShort: 'SB 35',
@@ -979,6 +1093,7 @@ const PEER_POLICIES = [
     year: 2017,
     floor: 20,
     floorLabel: '20% required (Bay Area)',
+    barLabel: '20%',
     accent: '#4d5a3f',
     isFocus: false,
     pieces: {
@@ -998,33 +1113,9 @@ const PEER_POLICIES = [
     ],
   },
   {
-    key: 'mont',
-    place: 'Montgomery County, MD',
-    policy: 'Moderately-Priced Dwelling Unit',
-    policyShort: 'MPDU',
-    policyUrl: 'https://montgomerycountymd.gov/DHCA/housing/singlefamily/mpdu/produced.html',
-    year: 1974,
-    floor: 13.5,
-    floorLabel: '12.5–15% required',
-    accent: '#4d5a3f',
-    isFocus: false,
-    pieces: {
-      zoning: { has: false, label: 'No TOD-specific upzoning', detail: 'Countywide, not transit-targeted' },
-      floor: { has: true, label: 'Affordability floor', detail: '12.5–15% on every 20+ unit project' },
-    },
-    stats: [
-      { num: '12.5–15%', unit: '', label: 'required affordable share' },
-      { num: '50', unit: 'yrs', label: 'in operation since 1974' },
-      { num: '17,300', unit: '+', label: 'deed-restricted homes produced' },
-    ],
-    description:
-      'One of the oldest inclusionary-zoning laws in the US. Every development of 20+ units must include 12.5–15% deed-restricted affordable. Proves a share floor can run for half a century without choking off supply.',
-    sources: [
-      { label: 'Montgomery County DHCA', url: 'https://montgomerycountymd.gov/DHCA/housing/singlefamily/mpdu/produced.html' },
-    ],
-  },
-  {
     key: 'sea',
+    step: 2,
+    definitionKind: 'ami',
     place: 'Seattle, WA',
     policy: 'Mandatory Housing Affordability',
     policyShort: 'MHA',
@@ -1032,6 +1123,7 @@ const PEER_POLICIES = [
     year: 2019,
     floor: 9,
     floorLabel: '5–11% required',
+    barLabel: '5–11%',
     accent: '#4d5a3f',
     isFocus: false,
     pieces: {
@@ -1052,6 +1144,8 @@ const PEER_POLICIES = [
   },
   {
     key: 'ma',
+    step: 3,
+    definitionKind: 'gap',
     place: 'Massachusetts',
     policy: 'MBTA Communities Act',
     policyShort: 'MA today',
@@ -1059,6 +1153,7 @@ const PEER_POLICIES = [
     year: 2021,
     floor: 0,
     floorLabel: 'No floor',
+    barLabel: 'No floor',
     accent: '#DA291C',
     isFocus: true,
     usesRealized: true,
@@ -1080,255 +1175,312 @@ const PEER_POLICIES = [
   },
 ]
 
-function PeerComparison({ funnel, activeKey, onSelect }) {
-  const svgRef = useRef(null)
+/* =========================================================================
+   Peer stepper · three CSS-styled step cards in a horizontal row, with
+   integrated Back/Next nav. Replaces the d3 chart: the comparison data
+   lives inline (a tiny bar inside each card) so the cards both *show* the
+   sequence and *control* it, freeing the panel below to take full width.
+   ========================================================================= */
 
-  useEffect(() => {
-    if (!svgRef.current) return
-    const svg = d3.select(svgRef.current)
-    svg.selectAll('*').remove()
+const STEPPER_BAR_MAX = 25 // shared scale across all three cards (%)
 
-    const data = PEER_POLICIES.map((p) =>
-      p.usesRealized ? { ...p, realized: funnel.affPct } : p
-    )
+function PeerStepperCard({ peer, isActive, funnel }) {
+  const realized = peer.usesRealized ? funnel.affPct : null
+  const fillPct = Math.min(100, (peer.floor / STEPPER_BAR_MAX) * 100)
+  const realizedPct =
+    realized != null ? Math.min(100, (realized / STEPPER_BAR_MAX) * 100) : null
+  return (
+    <li
+      className={`peer-stepper-card${isActive ? ' is-active' : ''}${peer.isFocus ? ' is-focus' : ''}`}
+      style={{ '--card-accent': peer.accent }}
+      aria-current={isActive ? 'step' : undefined}
+    >
+      <div className="peer-stepper-card-head">
+        <span className="peer-stepper-badge" aria-hidden="true">{peer.step}</span>
+        <div className="peer-stepper-place-block">
+          <div className="peer-stepper-place">{peer.place}</div>
+          <div className="peer-stepper-policy">
+            {peer.policyShort} · {peer.year}
+          </div>
+        </div>
+      </div>
 
-    const width = 740
-    const margin = { top: 16, right: 60, bottom: 54, left: 230 }
-    const rowH = 56
-    const height = margin.top + margin.bottom + data.length * rowH
+      <div className="peer-stepper-bar" aria-hidden="true">
+        <div className="peer-stepper-bar-track">
+          {peer.floor > 0 && (
+            <div
+              className="peer-stepper-bar-fill"
+              style={{ width: `${fillPct}%`, background: peer.accent }}
+            />
+          )}
+          {realizedPct != null && (
+            <div
+              className="peer-stepper-bar-diamond"
+              style={{ left: `${realizedPct}%` }}
+              title={`Actually built today: ${realized.toFixed(1)}%`}
+            />
+          )}
+        </div>
+      </div>
 
-    svg.attr('viewBox', `0 0 ${width} ${height}`)
-    const chartW = width - margin.left - margin.right
-    const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`)
+      <div className="peer-stepper-bar-foot">
+        <span
+          className={`peer-stepper-barlabel${peer.floor === 0 ? ' peer-stepper-barlabel-empty' : ''}`}
+          style={peer.floor > 0 ? { color: peer.accent } : undefined}
+        >
+          {peer.floor > 0
+            ? `${peer.barLabel} must be affordable`
+            : `${peer.barLabel} required`}
+        </span>
+        {realized != null && (
+          <span className="peer-stepper-bar-realized">
+            <span className="peer-stepper-bar-diamond-mini" aria-hidden="true" />
+            {realized.toFixed(1)}% built
+          </span>
+        )}
+      </div>
+    </li>
+  )
+}
 
-    // Keep the everyday peer comparison anchored at 25% so the bars stay
-    // legible, but stretch if any value (required floor or MA's realized
-    // diamond) exceeds that.
-    const maxFloor = d3.max(data, (d) => d.floor) || 0
-    const maxRealized = d3.max(data, (d) => d.realized || 0) || 0
-    const xMax = Math.max(25, Math.ceil(Math.max(maxFloor, maxRealized) * 1.1))
-    const x = d3.scaleLinear().domain([0, xMax]).range([0, chartW])
-    const y = d3
-      .scaleBand()
-      .domain(data.map((d) => d.key))
-      .range([0, data.length * rowH])
-      .padding(0.32)
+function PeerStepper({ peers, activeKey, funnel, prevPeer, nextPeer, onSelect, termLabel }) {
+  return (
+    <div className="peer-stepper" aria-label="Three peer policies">
+      <p className="peer-stepper-subtitle">
+        Each bar = the share of new homes near transit that must be set aside
+        as affordable (deed-restricted, priced below market for 30+ years).
+      </p>
+      <ol className="peer-stepper-list" role="list">
+        {peers.map((p) => (
+          <PeerStepperCard
+            key={p.key}
+            peer={p}
+            isActive={p.key === activeKey}
+            funnel={funnel}
+          />
+        ))}
+      </ol>
 
-    g.append('g')
-      .attr('transform', `translate(0, ${data.length * rowH})`)
-      .call(d3.axisBottom(x).ticks(5).tickFormat((v) => `${v}%`))
-      .call((sel) => sel.select('.domain').attr('stroke', '#b9b3a4'))
-      .call((sel) => sel.selectAll('text').attr('fill', '#6e6e6e').attr('font-size', 11))
-      .call((sel) => sel.selectAll('line').attr('stroke', '#d4d0c4'))
-
-    g.append('text')
-      .attr('x', chartW / 2)
-      .attr('y', data.length * rowH + 40)
-      .attr('text-anchor', 'middle')
-      .attr('fill', '#6e6e6e')
-      .attr('font-size', 11)
-      .attr('font-family', 'DM Sans, Inter, sans-serif')
-      .text('Required affordable share in new development near transit')
-
-    g.append('g')
-      .selectAll('line')
-      .data(x.ticks(5))
-      .enter()
-      .append('line')
-      .attr('x1', (d) => x(d))
-      .attr('x2', (d) => x(d))
-      .attr('y1', 0)
-      .attr('y2', data.length * rowH)
-      .attr('stroke', '#e8e3d2')
-      .attr('stroke-width', 1)
-
-    const rows = g
-      .selectAll('g.policy-peer-row')
-      .data(data)
-      .enter()
-      .append('g')
-      .attr('class', (d) => `policy-peer-row${d.key === activeKey ? ' policy-peer-row-active' : ''}`)
-      .attr('transform', (d) => `translate(0, ${y(d.key)})`)
-      .attr('tabindex', onSelect ? 0 : null)
-      .attr('role', onSelect ? 'button' : null)
-      .attr('aria-label', (d) => (onSelect ? `Show details for ${d.place} ${d.policy}` : null))
-      .style('cursor', onSelect ? 'pointer' : null)
-      .on('click', onSelect ? (_, d) => onSelect(d.key) : null)
-      .on('mouseenter', onSelect ? (_, d) => onSelect(d.key) : null)
-      .on('focus', onSelect ? (_, d) => onSelect(d.key) : null)
-      .on('keydown', onSelect
-        ? (event, d) => {
-            if (event.key === 'Enter' || event.key === ' ') {
-              event.preventDefault()
-              onSelect(d.key)
-            }
-          }
-        : null)
-
-    rows
-      .append('rect')
-      .attr('x', -margin.left + 4)
-      .attr('y', -2)
-      .attr('width', chartW + margin.left + margin.right - 8)
-      .attr('height', y.bandwidth() + 4)
-      .attr('fill', (d) => (d.key === activeKey ? '#fff5d6' : 'transparent'))
-      .attr('rx', 3)
-
-    rows
-      .append('rect')
-      .attr('x', 0)
-      .attr('y', 0)
-      .attr('width', chartW)
-      .attr('height', y.bandwidth())
-      .attr('fill', (d) => (d.isFocus ? '#faeaeb' : '#efeadb'))
-
-    rows
-      .append('rect')
-      .attr('x', 0)
-      .attr('y', 0)
-      .attr('width', (d) => Math.max(x(d.floor), 0))
-      .attr('height', y.bandwidth())
-      .attr('fill', (d) => d.accent)
-      .attr('opacity', 0.9)
-
-    rows
-      .filter((d) => d.floor === 0)
-      .append('g')
-      .attr('transform', `translate(2, ${y.bandwidth() / 2})`)
-      .call((sel) => {
-        sel
-          .append('circle')
-          .attr('r', 6)
-          .attr('fill', 'none')
-          .attr('stroke', '#DA291C')
-          .attr('stroke-width', 1.75)
-        sel
-          .append('line')
-          .attr('x1', -4)
-          .attr('x2', 4)
-          .attr('y1', 0)
-          .attr('y2', 0)
-          .attr('stroke', '#DA291C')
-          .attr('stroke-width', 1.75)
-      })
-
-    // Faded "today" diamond — what MA's realized share is right now.
-    rows
-      .filter((d) => d.realized != null)
-      .append('path')
-      .attr('d', d3.symbol().type(d3.symbolDiamond).size(80))
-      .attr(
-        'transform',
-        (d) => `translate(${x(Math.min(d.realized, xMax))}, ${y.bandwidth() / 2})`
-      )
-      .attr('fill', '#9a948a')
-      .attr('stroke', '#fff')
-      .attr('stroke-width', 1.25)
-
-    rows
-      .filter((d) => d.realized != null)
-      .append('text')
-      .attr('x', (d) => x(Math.min(d.realized, xMax)))
-      .attr('y', y.bandwidth() / 2 + 22)
-      .attr('text-anchor', 'middle')
-      .attr('font-size', 10)
-      .attr('font-weight', 600)
-      .attr('font-family', 'DM Sans, Inter, sans-serif')
-      .attr('fill', '#6e6e6e')
-      .text((d) => `actually built · ${d.realized.toFixed(1)}%`)
-
-    rows
-      .append('text')
-      .attr('x', -12)
-      .attr('y', y.bandwidth() / 2 - 5)
-      .attr('dy', '0.35em')
-      .attr('text-anchor', 'end')
-      .attr('font-size', 13)
-      .attr('font-weight', 700)
-      .attr('fill', (d) => (d.isFocus ? '#DA291C' : '#1a1a1a'))
-      .attr('font-family', 'Inter, sans-serif')
-      .text((d) => d.place)
-
-    rows
-      .append('text')
-      .attr('x', -12)
-      .attr('y', y.bandwidth() / 2 + 11)
-      .attr('dy', '0.35em')
-      .attr('text-anchor', 'end')
-      .attr('font-size', 10.5)
-      .attr('fill', '#6e6e6e')
-      .attr('font-family', 'DM Sans, Inter, sans-serif')
-      .text((d) => `${d.policy} (${d.year})`)
-
-    rows
-      .filter((d) => d.floor > 0)
-      .append('text')
-      .attr('x', (d) => Math.max(x(d.floor), 0) + 10)
-      .attr('y', y.bandwidth() / 2 + 4)
-      .attr('font-size', 11)
-      .attr('font-weight', 700)
-      .attr('fill', (d) => d.accent)
-      .attr('font-family', 'Inter, sans-serif')
-      .text((d) => d.floorLabel)
-
-    rows
-      .filter((d) => d.floor === 0)
-      .append('text')
-      .attr('x', 18)
-      .attr('y', y.bandwidth() / 2 - 6)
-      .attr('font-size', 11)
-      .attr('font-weight', 700)
-      .attr('fill', '#DA291C')
-      .attr('font-family', 'Inter, sans-serif')
-      .text('No statewide floor')
-  }, [funnel, activeKey, onSelect])
-
-  return <svg ref={svgRef} className="policy-gap-svg" />
+      <nav className="peer-stepper-nav" aria-label="Walk through the three peers">
+        <button
+          type="button"
+          className="peer-stepper-nav-btn"
+          onClick={() => prevPeer && onSelect(prevPeer.key)}
+          disabled={!prevPeer}
+          aria-label={prevPeer ? `Back to step ${prevPeer.step}: ${prevPeer.place}` : 'No previous step'}
+        >
+          <span aria-hidden="true">&larr;</span> Back
+        </button>
+        <div className="peer-stepper-nav-label">
+          <span className="peer-stepper-nav-term">{termLabel}</span>
+        </div>
+        <button
+          type="button"
+          className="peer-stepper-nav-btn peer-stepper-nav-btn-next"
+          onClick={() => nextPeer && onSelect(nextPeer.key)}
+          disabled={!nextPeer}
+          aria-label={nextPeer ? `Next to step ${nextPeer.step}: ${nextPeer.place}` : 'No next step'}
+        >
+          Next <span aria-hidden="true">&rarr;</span>
+        </button>
+      </nav>
+    </div>
+  )
 }
 
 /* =========================================================================
    Viz D · Policy Explorer
    --------------------------------------------------------------------------
-   Tabs across all five jurisdictions. Each tab opens a detail panel showing
-   what that jurisdiction has (the two-piece stack: by-right zoning + share
-   floor), what the law produced (a 3-stat outcomes strip), and a one-line
-   description with citation links. Designed to mirror the T-line tabs in
-   ScrollyStory so the visual language of "interactive comparison" stays
-   consistent across the piece.
+   Three peers walked in order: California introduces the affordable floor,
+   Seattle introduces the AMI cap + in-lieu fund, Massachusetts is the gap.
+   Each panel is a single coherent narrative paragraph — the bill is named,
+   the mechanism is explained, the term it introduces is defined, all in
+   one go. Bolded phrases mark the terms that show up again on the levers.
    ========================================================================= */
 
-function PolicyExplorer({ activeKey, onSelect, peers, funnel }) {
+// Pull-quote pill: small yellow-card eyebrow that names the step + the term
+// the panel is about to teach. Sits between the header and the narrative.
+function PeerPill({ kind, term }) {
+  const isGap = kind === 'gap'
+  if (isGap) {
+    return (
+      <div className="peer-pill peer-pill-gap">
+        <span className="peer-pill-term">{term}</span>
+      </div>
+    )
+  }
+  return (
+    <div className={`peer-pill${isGap ? ' peer-pill-gap' : ''}`}>
+      <span className="">
+        This bill introduces the 
+      </span>
+      <span className="peer-pill-term">"{term}"</span>
+    </div>
+  )
+}
+
+// Reused inside Seattle's narrative — the AMI tier strip with a 50% cap
+// marker. Anchors the "≤50% AMI" phrasing to the income spectrum visually.
+function AmiBarVisual() {
+  const amiBands = [
+    { key: 'u30',   label: '<30%',   wage: '<$38k',    color: '#6b2b27' },
+    { key: 'a3050', label: '30–50%', wage: '$38–64k',  color: '#a14a35' },
+    { key: 'a5080', label: '50–80%', wage: '$64–102k', color: '#d38e42' },
+    { key: 'a80p',  label: '80%+',   wage: '$102k+',   color: '#e9c46a' },
+  ]
+  return (
+    <div className="peer-narrative-vis">
+      <div className="primer-ami-bar" role="img" aria-label="AMI tiers from very-low income to workforce, with a cap marker at 50%">
+        {amiBands.map((b) => (
+          <div key={b.key} className="primer-ami-seg" style={{ background: b.color }}>
+            <span className="primer-ami-seg-label">{b.label}</span>
+            <span className="primer-ami-seg-wage">{b.wage}</span>
+          </div>
+        ))}
+        <div className="primer-ami-cap" aria-hidden="true">
+          <div className="primer-ami-cap-line" />
+          <div className="primer-ami-cap-label">50% AMI cap</div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// One narrative per peer. Each is a single paragraph describing the bill,
+// the mechanism, and the term it introduces — with <strong> on the
+// phrases the levers below reuse, so the reader recognizes them on sight.
+function PeerNarrative({ peer }) {
+  if (peer.key === 'ca') {
+    return (
+      <p className="peer-narrative">
+        California&rsquo;s <strong>SB&nbsp;35</strong> gives developers
+        fast-track permits — &le;90-day ministerial approval, no CEQA review
+        — but only if the project sets aside at least <strong>20%</strong>
+        of new homes as <strong>deed-restricted</strong> affordable, with
+        half priced at <strong>&le;50% AMI</strong>. This is the{' '}
+        <strong>affordable floor</strong>: a statewide minimum that fixes
+        what counts as &ldquo;enough affordability&rdquo; before density
+        gets the green light.
+      </p>
+    )
+  }
+  if (peer.key === 'sea') {
+    return (
+      <>
+        <p className="peer-narrative">
+          Seattle&rsquo;s <strong>MHA</strong> pairs upzoning with a choice:
+          every new multifamily project either builds 5–11% deed-restricted
+          units on-site or pays a per-unit fee into a city housing fund.
+          That <strong>in-lieu fund</strong> stacks with federal LIHTC tax
+          credits to build extra units at <strong>&le;50% AMI</strong> —
+          what the article calls <em>deep affordability</em>. The{' '}
+          <strong>AMI cap</strong> sets <em>how deep</em> the affordability
+          goes; the fund finances units developers don&rsquo;t build
+          directly. WA HB&nbsp;1491 took this statewide in 2025.
+        </p>
+        <AmiBarVisual />
+      </>
+    )
+  }
+  if (peer.key === 'ma') {
+    return (
+      <p className="peer-narrative">
+        The <strong>MBTA Communities Act</strong> zones for density across
+        177 transit-served towns — but sets{' '}
+        <strong>no statewide affordability floor</strong> and{' '}
+        <strong>no in-lieu fund</strong>. Cities can still require modest
+        inclusionary shares, but only up to ~10% at 80% AMI without risking
+        the law&rsquo;s by-right protection. So a community can comply by
+        zoning a district of entirely market-rate towers.
+      </p>
+    )
+  }
+  return null
+}
+
+// "In the lever model" strip — names the parameters this peer contributes
+// to the counterfactual model below, so the numbers the levers use have a
+// visible source. Only CA and Seattle contribute parameters; MA renders
+// nothing here (it's the contrast peer, not a model input).
+function PeerModelStrip({ peer, totalUnits }) {
+  if (peer.key === 'ca') {
+    const floorUnits = Math.round(totalUnits * 0.20)
+    return (
+      <div className="peer-model">
+        <div className="peer-model-eyebrow">In the lever model →</div>
+        <div className="peer-model-row">
+          <span className="peer-model-num">20%</span>
+          <span className="peer-model-text">
+            of every new TOD unit must be deed-restricted on-site
+          </span>
+        </div>
+        <div className="peer-model-result">
+          ≈ <strong>{floorUnits.toLocaleString()}</strong> deed-restricted
+          homes in the {totalUnits.toLocaleString()}-unit MBTA-near pipeline
+        </div>
+      </div>
+    )
+  }
+  if (peer.key === 'sea') {
+    const fee = FEE_PER_NONAFF_UNIT
+    const cost = FUND_COST_PER_AFF_UNIT
+    // Ratio of market-rate units needed to fund 1 extra ≤50% AMI home.
+    const ratio = Math.round(cost / fee)
+    return (
+      <div className="peer-model">
+        <div className="peer-model-eyebrow">In the lever model →</div>
+        <div className="peer-model-row">
+          <span className="peer-model-num">${(fee / 1000).toFixed(0)}k</span>
+          <span className="peer-model-text">
+            in-lieu fee per market-rate unit → city housing fund
+          </span>
+        </div>
+        <div className="peer-model-row">
+          <span className="peer-model-num">${(cost / 1000).toFixed(0)}k</span>
+          <span className="peer-model-text">
+            of fund $ buys each ≤50% AMI home (LIHTC + state credits fill
+            the rest)
+          </span>
+        </div>
+        <div className="peer-model-result">
+          ≈ <strong>1 extra deeply-affordable home</strong> per {ratio}{' '}
+          market-rate units built
+        </div>
+      </div>
+    )
+  }
+  return null
+}
+
+function PolicyExplorer({ activeKey, onSelect, peers, funnel, totalUnits }) {
   const active = peers.find((p) => p.key === activeKey) || peers[0]
   const dynamicValue = (stat) => {
     if (!stat.dynamic) return null
     if (stat.dynamic === 'affPctRealized') return `${funnel.affPct.toFixed(1)}%`
     return null
   }
+  // Step navigation: peers are walked in declared order (CA → Seattle → MA).
+  // We compute the active index here so Back/Next buttons can move to the
+  // adjacent peer without reaching into the chart's selection model.
+  const activeIdx = peers.findIndex((p) => p.key === active.key)
+  const prevPeer = activeIdx > 0 ? peers[activeIdx - 1] : null
+  const nextPeer = activeIdx >= 0 && activeIdx < peers.length - 1 ? peers[activeIdx + 1] : null
+  const TERM_LABEL = { floor: 'Affordable floor', ami: 'AMI cap + in-lieu fund', gap: 'The gap' }
+  // Receipts: drop the first stat (already in the bar chart above) and use
+  // the two outcome numbers as the panel's "proof" strip.
+  const receipts = active.stats.slice(1)
 
   return (
     <div className="policy-explorer">
-      <figure
-        className="policy-explorer-compare"
-        aria-label="Required affordable share, all five jurisdictions"
-      >
-        <figcaption className="policy-explorer-compare-cap">
-          Each <strong>bar</strong> is the affordable share that policy
-          <em> requires</em> in new transit-area development. MA&rsquo;s bar is
-          empty because the law mandates none. For MA we plot
-          <span className="policy-compare-legend">
-            <span className="policy-compare-legend-swatch policy-compare-legend-swatch-today" aria-hidden="true" />
-            the grey diamond
-          </span>
-          instead: the share actually being built in the MBTA-near pipeline
-          today ({funnel.affPct.toFixed(1)}%). Hover any row to read about
-          that bill &darr;
-        </figcaption>
-        <PeerComparison
-          funnel={funnel}
-          activeKey={activeKey}
-          onSelect={onSelect}
-        />
-      </figure>
+      <PeerStepper
+        peers={peers}
+        activeKey={activeKey}
+        funnel={funnel}
+        prevPeer={prevPeer}
+        nextPeer={nextPeer}
+        onSelect={onSelect}
+        termLabel={TERM_LABEL[active.definitionKind]}
+      />
 
       <div
         id="policy-explorer-panel"
@@ -1352,40 +1504,33 @@ function PolicyExplorer({ activeKey, onSelect, peers, funnel }) {
           </h4>
         </div>
 
-        <div className="policy-explorer-pieces" aria-label="What this jurisdiction has">
-          {[active.pieces.zoning, active.pieces.floor].map((piece, i) => (
-            <div
-              key={i}
-              className={`policy-explorer-piece${piece.has ? ' policy-explorer-piece-on' : ' policy-explorer-piece-off'}`}
-            >
-              <span className="policy-explorer-piece-mark" aria-hidden="true">
-                {piece.has ? '\u2713' : '\u2014'}
-              </span>
-              <div className="policy-explorer-piece-label">{piece.label}</div>
-              <div className="policy-explorer-piece-detail">{piece.detail}</div>
-            </div>
-          ))}
-        </div>
+        <PeerPill
+          kind={active.definitionKind}
+          term={TERM_LABEL[active.definitionKind]}
+        />
+
+        <PeerNarrative peer={active} />
+
+        <PeerModelStrip peer={active} totalUnits={totalUnits} />
 
         <div
-          className="policy-explorer-stats"
+          className="peer-receipts"
           role="group"
           aria-label={`${active.place} ${active.policy} outcomes`}
         >
-          {active.stats.map((stat, i) => (
-            <div key={i} className="policy-explorer-stat">
-              <div className="policy-explorer-stat-num">
+          {receipts.map((stat, i) => (
+            <div key={i} className="peer-receipt">
+              <div className="peer-receipt-num">
                 {dynamicValue(stat) ?? stat.num}
                 {stat.unit && !stat.dynamic && (
-                  <span className="policy-explorer-stat-unit">{stat.unit}</span>
+                  <span className="peer-receipt-unit">{stat.unit}</span>
                 )}
               </div>
-              <div className="policy-explorer-stat-label">{stat.label}</div>
+              <div className="peer-receipt-label">{stat.label}</div>
             </div>
           ))}
         </div>
 
-        <p className="policy-explorer-desc">{active.description}</p>
 
         <div className="policy-explorer-sources">
           {active.sources.length > 0 && (
@@ -1487,8 +1632,8 @@ export default function PolicyGapPanels({ view = 'all' }) {
         <header className="motivation-card-header">
           <h3>How MBTA-near housing policies can help build affordable homes</h3>
           <p className="motivation-dek">
-            Three other places have tried to address this problem by pairing transit-area zoning with an{' '}
-            affordability floor and an in-lieu fund. Hover any bar to read about that policy &darr;
+            Two other places have tried to address this problem by pairing transit-area zoning with an{' '}
+            affordability floor and an in-lieu fund. Walk through them in order &darr;
           </p>
         </header>
 
@@ -1497,6 +1642,7 @@ export default function PolicyGapPanels({ view = 'all' }) {
           activeKey={activePeer}
           onSelect={setActivePeer}
           funnel={funnel}
+          totalUnits={totalUnits}
         />
 
         <div className="motivation-subsection-divider" role="presentation">
@@ -1518,8 +1664,8 @@ export default function PolicyGapPanels({ view = 'all' }) {
           <strong>{totalAdded.toLocaleString()}</strong> more built on-site as
           the inclusionary floor lifts the affordable share to 20%, and{' '}
           <strong>{fundedAffUnits.toLocaleString()}</strong> funded by the
-          in-lieu fund, the bulk priced for households under 50%{' '}
-          <Jargon term="AMI">AMI</Jargon>. That&rsquo;s the band where the{' '}
+          in-lieu fund, the bulk priced for households under 50% AMI.
+          That&rsquo;s the band where the{' '}
           <strong>4 in 10 Greater Boston households</strong> who can&rsquo;t
           afford the average T-stop rent actually sit.
         </div>
@@ -1533,7 +1679,6 @@ export default function PolicyGapPanels({ view = 'all' }) {
           Counterfactual model: 20% inclusionary floor with at least half of the affordable share
           targeted at &le;50% AMI, applied to the {totalUnits.toLocaleString()} MBTA-near units in
           the MassBuilds pipeline (Mar 2026). Peer policies:{' '}
-          <a href="https://montgomerycountymd.gov/DHCA/housing/singlefamily/mpdu/produced.html" target="_blank" rel="noopener noreferrer">Montgomery County MPDU</a>{' '}·{' '}
           <a href="https://www.seattle.gov/housing/housing-developers/mandatory-housing-affordability" target="_blank" rel="noopener noreferrer">Seattle MHA</a>{' '}·{' '}
           <a href="https://ternercenter.berkeley.edu/research-and-policy/sb-35-evaluation/" target="_blank" rel="noopener noreferrer">Terner Center SB 35 evaluation</a>{' '}·{' '}
           <a href="https://app.leg.wa.gov/billsummary?BillNumber=1491&Year=2025" target="_blank" rel="noopener noreferrer">Washington HB 1491</a>.
