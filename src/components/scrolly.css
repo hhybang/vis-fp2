@@ -550,6 +550,62 @@
   margin: 32px 0 8px;
 }
 
+/* Gate message that prefaces the T-line. The story locks scroll until the
+   reader has hovered/tapped each of the four stops, so this line is the
+   instruction that sets that expectation. */
+.t-line-gate-msg {
+  margin: 0 0 22px;
+  padding: 12px 18px;
+  border-left: 3px solid var(--paper-rule-strong);
+  background: color-mix(in srgb, var(--paper-card) 70%, transparent);
+  font-family: var(--font-body);
+  font-size: clamp(14px, 1.25vw, 16px);
+  line-height: 1.5;
+  color: var(--ink);
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  transition: border-color 0.4s ease, background 0.4s ease, color 0.4s ease;
+  animation: t-line-gate-pulse 2.2s ease-in-out infinite;
+}
+
+.t-line-gate-msg strong {
+  font-weight: 700;
+}
+
+.t-line-gate-progress {
+  font-family: var(--font-label);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+.t-line-gate-msg-done {
+  border-left-color: #00843D;
+  background: color-mix(in srgb, #00843D 8%, var(--paper-card));
+  color: var(--ink);
+  animation: none;
+}
+
+.t-line-gate-msg-done .t-line-gate-progress {
+  color: #00843D;
+}
+
+@keyframes t-line-gate-pulse {
+  0%, 100% { border-left-color: var(--paper-rule-strong); }
+  50%      { border-left-color: var(--ink); }
+}
+
+.t-line-gate-sentinel {
+  width: 100%;
+  height: 1px;
+  pointer-events: none;
+}
+
 .t-line-track {
   position: relative;
   display: flex;
@@ -608,6 +664,12 @@
 .t-line-stop:hover .t-line-dot {
   border-color: var(--station-color);
   transform: scale(1.1);
+}
+
+.t-line-stop-visited .t-line-dot {
+  background: var(--station-color);
+  border-color: var(--station-color);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--station-color) 18%, transparent);
 }
 
 .t-line-stop-active .t-line-dot {

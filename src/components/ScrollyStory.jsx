@@ -115,6 +115,21 @@ export default function ScrollyStory({ onComplete }) {
   // while the section itself is on screen, so they don't bleed into
   // adjacent sections after the reader scrolls past.
   const [activeStation, setActiveStation] = useState(null)
+  // Gate the rest of the story until the reader has hovered/tapped every
+  // stop on the T-line. We track which stations have been visited and lock
+  // downward scrolling once the t-line is in view but not yet complete.
+  const [visitedStations, setVisitedStations] = useState(() => new Set())
+  const allStationsVisited = visitedStations.size >= STATIONS.length
+  const gateSentinelRef = useRef(null)
+  const visitStation = (id) => {
+    setActiveStation(id)
+    setVisitedStations((prev) => {
+      if (prev.has(id)) return prev
+      const next = new Set(prev)
+      next.add(id)
+      return next
+    })
+  }
   const peopleSectionRef = useRef(null)
   const [mapOn, setMapOn] = useState(false)
   const costVisible = mapOn && activeStation === 'savings'
@@ -181,6 +196,58 @@ export default function ScrollyStory({ onComplete }) {
       if (peopleObs) peopleObs.disconnect()
     }
   }, [])
+
+  // Scroll-gate: while the t-line section is in view but the reader hasn't
+  // explored all four stops yet, block downward wheel/touch/keyboard scroll
+  // so they don't roll past the interactive without engaging with it.
+  useEffect(() => {
+    if (allStationsVisited) return
+    const sentinel = gateSentinelRef.current
+    if (!sentinel) return
+
+    const isLocked = () => {
+      const r = sentinel.getBoundingClientRect()
+      // Lock once the sentinel (just below the t-line) has scrolled into the
+      // lower portion of the viewport. Bottom check guards against the user
+      // somehow ending up past the section without unlocking.
+      return r.top <= window.innerHeight - 80 && r.bottom >= -200
+    }
+
+    const onWheel = (e) => {
+      if (e.deltaY <= 0) return
+      if (isLocked()) e.preventDefault()
+    }
+    let touchY = 0
+    const onTouchStart = (e) => {
+      if (e.touches.length) touchY = e.touches[0].clientY
+    }
+    const onTouchMove = (e) => {
+      if (!e.touches.length) return
+      const dy = touchY - e.touches[0].clientY
+      if (dy <= 0) return
+      if (isLocked()) e.preventDefault()
+    }
+    const blockedKeys = new Set([
+      'ArrowDown', 'PageDown', 'End', ' ', 'Spacebar',
+    ])
+    const onKey = (e) => {
+      if (!blockedKeys.has(e.key)) return
+      const t = e.target
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return
+      if (isLocked()) e.preventDefault()
+    }
+
+    window.addEventListener('wheel', onWheel, { passive: false })
+    window.addEventListener('touchstart', onTouchStart, { passive: true })
+    window.addEventListener('touchmove', onTouchMove, { passive: false })
+    window.addEventListener('keydown', onKey)
+    return () => {
+      window.removeEventListener('wheel', onWheel)
+      window.removeEventListener('touchstart', onTouchStart)
+      window.removeEventListener('touchmove', onTouchMove)
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [allStationsVisited])
 
   const quoteTimer = useRef(null)
   const quoteFadeTimer = useRef(null)
@@ -411,6 +478,20 @@ export default function ScrollyStory({ onComplete }) {
           </p>
 
           <div className="t-line" role="tablist" aria-label="Why your T stop matters">
+            <p
+              className={`t-line-gate-msg${allStationsVisited ? ' t-line-gate-msg-done' : ''}`}
+              role="status"
+              aria-live="polite"
+            >
+              <strong>
+                {allStationsVisited
+                  ? 'All four stops explored — keep scrolling.'
+                  : 'Hover each stop to reveal what’s at stake. All four perspectives must be explored before the story continues.'}
+              </strong>
+              <span className="t-line-gate-progress" aria-hidden="true">
+                {visitedStations.size} / {STATIONS.length} explored
+              </span>
+            </p>
             <div className="t-line-track">
               <span className="t-line-rail" aria-hidden="true" />
               {STATIONS.map((s) => {
@@ -423,11 +504,11 @@ export default function ScrollyStory({ onComplete }) {
                     aria-selected={isActive}
                     aria-controls="t-line-panel"
                     id={`t-line-tab-${s.id}`}
-                    className={`t-line-stop${isActive ? ' t-line-stop-active' : ''}`}
+                    className={`t-line-stop${isActive ? ' t-line-stop-active' : ''}${visitedStations.has(s.id) ? ' t-line-stop-visited' : ''}`}
                     style={{ '--station-color': s.color }}
-                    onMouseEnter={() => setActiveStation(s.id)}
-                    onFocus={() => setActiveStation(s.id)}
-                    onClick={() => setActiveStation(s.id)}
+                    onMouseEnter={() => visitStation(s.id)}
+                    onFocus={() => visitStation(s.id)}
+                    onClick={() => visitStation(s.id)}
                   >
                     <span className="t-line-dot" aria-hidden="true" />
                     <span className="t-line-label">{s.label}</span>
@@ -573,6 +654,7 @@ export default function ScrollyStory({ onComplete }) {
               )}
             </div>
           </div>
+          <div ref={gateSentinelRef} className="t-line-gate-sentinel" aria-hidden="true" />
 
         </div>
       </section>
