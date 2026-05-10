@@ -309,6 +309,19 @@ function App() {
           </div>
         </div>
       </div>
+      <footer className="app-partner-credit">
+        <p>
+          This project was developed with guidance and feedback from the{' '}
+          <a
+            href="https://www.mapc.org/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Metropolitan Area Planning Commission (MAPC)
+          </a>
+          .
+        </p>
+      </footer>
       <KeyTermsButton />
     </div>
   )

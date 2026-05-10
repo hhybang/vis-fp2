@@ -166,6 +166,31 @@ button.header-info:focus-visible {
   -webkit-overflow-scrolling: touch;
 }
 
+.app-partner-credit {
+  flex-shrink: 0;
+  padding: 8px 22px 14px;
+  padding-right: max(22px, 168px);
+  border-top: 1px solid var(--paper-rule);
+  background: var(--paper-card);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ink-muted);
+}
+
+.app-partner-credit p {
+  margin: 0;
+}
+
+.app-partner-credit a {
+  color: var(--ink);
+  text-decoration-skip-ink: auto;
+}
+
+.app-partner-credit a:hover {
+  text-decoration: underline;
+}
+
 /* Toolbar: neutral chrome */
 .toolbar {
   background: var(--paper-card);
@@ -1498,6 +1523,10 @@ button.header-info:focus-visible {
 }
 
 @media (max-width: 640px) {
+  .app-partner-credit {
+    padding-left: 14px;
+    padding-right: 76px;
+  }
   .key-terms-fab {
     right: 14px;
     bottom: 14px;
