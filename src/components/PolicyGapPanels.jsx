@@ -672,19 +672,19 @@ function ScoreboardChart({ pct, totalUnits, levers }) {
           are sourced from each peer&rsquo;s panel above.{' '}
           <strong>Sources:</strong>{' '}
           <a
-            href="https://www.seattle.gov/housing/housing-developers/mandatory-housing-affordability/mha-annual-reports"
+            href="https://www.seattle.gov/housing/housing-developers/mandatory-housing-affordability"
             target="_blank"
             rel="noopener noreferrer"
           >
-            Seattle Office of Housing &mdash; MHA Annual Reports (2019&ndash;2023)
+            Seattle Office of Housing &mdash; MHA program page &amp; annual reports
           </a>
           ;{' '}
           <a
-            href="https://ternercenter.berkeley.edu/research-and-policy/inclusionary-zoning-2023/"
+            href="https://ternercenter.berkeley.edu/research-and-policy/inclusionary-zoning-housing-production-modeling/"
             target="_blank"
             rel="noopener noreferrer"
           >
-            Terner Center &mdash; Inclusionary Zoning fee studies
+            Terner Center &mdash; Modeling Inclusionary Zoning&rsquo;s Impact on Housing Production (2024)
           </a>
           ;{' '}
           <a
@@ -696,11 +696,11 @@ function ScoreboardChart({ pct, totalUnits, levers }) {
           </a>
           ;{' '}
           <a
-            href="https://www.mhp.net/news/2023/the-cost-of-building-in-massachusetts"
+            href="https://www.mhp.net/news/2024/construction-costs-and-affordability"
             target="_blank"
             rel="noopener noreferrer"
           >
-            MHP &mdash; Cost of Building in Massachusetts
+            MHP &mdash; Construction Costs and Affordability (2024)
           </a>
           .
         </p>
