@@ -1373,7 +1373,7 @@ function PeerNarrative({ peer }) {
           units on-site or pays a per-unit fee into a city housing fund.
           That <strong>in-lieu fund</strong> stacks with federal LIHTC tax
           credits to build extra units at <strong>&le;50% AMI</strong> —
-          what the article calls <em>deep affordability</em>. The{' '}
+         called <em>deep affordability</em>. The{' '}
           <strong>AMI cap</strong> sets <em>how deep</em> the affordability
           goes; the fund finances units developers don&rsquo;t build
           directly. WA HB&nbsp;1491 took this statewide in 2025.
@@ -1511,7 +1511,6 @@ function PolicyExplorer({ activeKey, onSelect, peers, funnel, totalUnits }) {
 
         <PeerNarrative peer={active} />
 
-        <PeerModelStrip peer={active} totalUnits={totalUnits} />
 
         <div
           className="peer-receipts"

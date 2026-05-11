@@ -454,6 +454,17 @@ export default function ScrollyStory({ onComplete }) {
           <p className="scrolly-hero-authors">
             By Gabriela Miranda, Arnav Verma &amp; Hyemin (Helen) Bang
           </p>
+          <p className="scrolly-hero-acknowledgement">
+            This project was developed with guidance and feedback from the{' '}
+            <a
+              href="https://www.mapc.org/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Metropolitan Area Planning Commission (MAPC)
+            </a>
+            .
+          </p>
         </div>
         <div className="scroll-hint">Scroll to explore ↓</div>
       </div>
@@ -835,6 +846,410 @@ export default function ScrollyStory({ onComplete }) {
           </button>
         </div>
       </section>
+
+      {/* Sources & Acknowledgements — full citation list */}
+      <div className="section-divider" />
+      <section className="scrolly-sources" aria-labelledby="sources-heading">
+        <div className="scrolly-sources-inner">
+          <h3 id="sources-heading" className="scrolly-sources-title">
+            Sources &amp; Acknowledgements
+          </h3>
+          <p className="scrolly-sources-intro">
+            Inline source footers throughout this piece point to the specific
+            dataset behind each chart. The list below consolidates every
+            dataset, service, image, and library we relied on, with a
+            separate entry for each origin where a combined dataset draws on
+            more than one source.
+          </p>
+
+          <div className="scrolly-sources-grid">
+            <section>
+              <h4>Datasets</h4>
+              <ul>
+                <li>
+                  <strong>MBTA stops and route geometry &mdash;</strong>{' '}
+                  Massachusetts Bay Transportation Authority,{' '}
+                  <a
+                    href="https://www.mbta.com/developers/gtfs"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    MBTA GTFS feed
+                  </a>{' '}
+                  (published by MassDOT / MBTA, accessed Mar 2026).
+                </li>
+                <li>
+                  <strong>Affordable housing pipeline &mdash;</strong>{' '}
+                  Metropolitan Area Planning Commission,{' '}
+                  <a
+                    href="https://www.massbuilds.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    MassBuilds development inventory
+                  </a>{' '}
+                  (snapshot 2026-03-15), filtered to completed and
+                  under-construction projects tagged near MBTA rapid transit,
+                  commuter rail, ferry, or key bus routes.
+                </li>
+                <li>
+                  <strong>Household income distribution &mdash;</strong>{' '}
+                  U.S. Census Bureau,{' '}
+                  <a
+                    href="https://data.census.gov/table/ACSDP5Y2023.DP03"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    American Community Survey 5-Year Estimates, 2019&ndash;2023,
+                    table DP03 (Selected Economic Characteristics)
+                  </a>
+                  .
+                </li>
+                <li>
+                  <strong>Median gross rent and rent burden &mdash;</strong>{' '}
+                  U.S. Census Bureau,{' '}
+                  <a
+                    href="https://data.census.gov/table/ACSDP5Y2023.DP04"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    American Community Survey 5-Year Estimates, 2019&ndash;2023,
+                    table DP04 (Selected Housing Characteristics)
+                  </a>
+                  , fetched at the tract level via the Census Data API.
+                </li>
+                <li>
+                  <strong>Census tract boundaries &mdash;</strong>{' '}
+                  U.S. Census Bureau,{' '}
+                  <a
+                    href="https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    TIGER/Line Shapefiles
+                  </a>{' '}
+                  (2020 Decennial-vintage census tract geography for
+                  Massachusetts, GEOIDs aligned to the ACS 2019&ndash;2023
+                  tables above).
+                </li>
+                <li>
+                  <strong>Daily-needs amenities (groceries, clinics,
+                  schools, parks, pharmacies) &mdash;</strong>{' '}
+                  &copy;{' '}
+                  <a
+                    href="https://www.openstreetmap.org/copyright"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    OpenStreetMap contributors
+                  </a>
+                  , queried via the{' '}
+                  <a
+                    href="https://overpass-api.de/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Overpass API
+                  </a>{' '}
+                  (ODbL 1.0).
+                </li>
+                <li>
+                  <strong>Median wages by occupation &mdash;</strong>{' '}
+                  U.S. Bureau of Labor Statistics,{' '}
+                  <a
+                    href="https://www.bls.gov/oes/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Occupational Employment and Wage Statistics (OEWS)
+                  </a>
+                  , May 2023, Boston-Cambridge-Nashua MA-NH MSA, median annual
+                  wage by SOC code.
+                </li>
+                <li>
+                  <strong>Area Median Income (AMI) basis &mdash;</strong>{' '}
+                  U.S. Department of Housing and Urban Development,{' '}
+                  <a
+                    href="https://www.huduser.gov/portal/datasets/il.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    FY2024 Income Limits
+                  </a>
+                  , Boston-Cambridge-Quincy MA-NH HMFA (2-person 100% AMI =
+                  $127,200).
+                </li>
+                <li>
+                  <strong>LIHTC project cost benchmarks &mdash;</strong>{' '}
+                  HUD,{' '}
+                  <a
+                    href="https://www.huduser.gov/portal/datasets/lihtc.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Low-Income Housing Tax Credit (LIHTC) Database
+                  </a>
+                  .
+                </li>
+                <li>
+                  <strong>Driving cost benchmark &mdash;</strong>{' '}
+                  AAA,{' '}
+                  <a
+                    href="https://newsroom.aaa.com/auto/your-driving-costs/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Your Driving Costs
+                  </a>{' '}
+                  2024 (Northeast region averages).
+                </li>
+                <li>
+                  <strong>MBTA fare benchmark &mdash;</strong>{' '}
+                  MBTA,{' '}
+                  <a
+                    href="https://www.mbta.com/fares"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    published fare schedule
+                  </a>
+                  .
+                </li>
+                <li>
+                  <strong>Affordability rule of thumb &mdash;</strong>{' '}
+                  HUD&rsquo;s 30%-of-income standard for housing-cost burden.
+                </li>
+              </ul>
+            </section>
+
+            <section>
+              <h4>Policy &amp; peer-jurisdiction evidence</h4>
+              <ul>
+                <li>
+                  <a
+                    href="https://www.mass.gov/info-details/multi-family-zoning-requirement-for-mbta-communities"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Mass.gov &mdash; Multi-Family Zoning Requirement for MBTA
+                    Communities (Section 3A, Chapter 40A)
+                  </a>
+                  .
+                </li>
+                <li>
+                  <a
+                    href="https://www.mass.gov/info-details/the-affordable-homes-act-smart-housing-livable-communities"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Mass.gov &mdash; The Affordable Homes Act: Smart Housing,
+                    Livable Communities
+                  </a>
+                  .
+                </li>
+                <li>
+                  <a
+                    href="https://www.seattle.gov/housing/housing-developers/mandatory-housing-affordability"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Seattle Office of Housing &mdash; Mandatory Housing
+                    Affordability (MHA) program page and annual reports
+                  </a>
+                  .
+                </li>
+                <li>
+                  <a
+                    href="https://ternercenter.berkeley.edu/research-and-policy/inclusionary-zoning-housing-production-modeling/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Terner Center for Housing Innovation, UC Berkeley
+                    &mdash; Modeling Inclusionary Zoning&rsquo;s Impact on
+                    Housing Production (2024)
+                  </a>
+                  .
+                </li>
+                <li>
+                  <a
+                    href="https://www.mhp.net/news/2024/construction-costs-and-affordability"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Massachusetts Housing Partnership &mdash; Construction
+                    Costs and Affordability (2024)
+                  </a>
+                  .
+                </li>
+              </ul>
+            </section>
+
+            <section>
+              <h4>Reporting referenced in the story</h4>
+              <ul>
+                <li>
+                  WBUR &mdash; &ldquo;Somerville renters say the new MBTA
+                  stations could price them out of the neighborhood.&rdquo;
+                </li>
+                <li>
+                  GBH News &mdash; &ldquo;They Want To Push Us Out: Mattapan
+                  Renters Fear Eviction As New Rail Stops Drive Rent
+                  Increases.&rdquo;
+                </li>
+              </ul>
+            </section>
+
+            <section>
+              <h4>Mapping &amp; geocoding services</h4>
+              <ul>
+                <li>
+                  Basemap tiles &mdash;{' '}
+                  &copy;{' '}
+                  <a
+                    href="https://www.openstreetmap.org/copyright"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    OpenStreetMap contributors
+                  </a>
+                  , served via{' '}
+                  <a
+                    href="https://carto.com/attributions"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    CARTO
+                  </a>
+                  .
+                </li>
+                <li>
+                  Walking &amp; driving isochrones, routing, and primary
+                  geocoding &mdash;{' '}
+                  <a
+                    href="https://openrouteservice.org/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    OpenRouteService
+                  </a>{' '}
+                  (HeiGIT).
+                </li>
+                <li>
+                  Public-transit isochrones &mdash;{' '}
+                  <a
+                    href="https://traveltime.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    TravelTime
+                  </a>{' '}
+                  Time-Map API.
+                </li>
+                <li>
+                  Routing fallback &mdash;{' '}
+                  <a
+                    href="https://project-osrm.org/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Project OSRM
+                  </a>{' '}
+                  demo server.
+                </li>
+                <li>
+                  Geocoding fallback &mdash;{' '}
+                  <a
+                    href="https://photon.komoot.io/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Photon
+                  </a>{' '}
+                  by Komoot.
+                </li>
+              </ul>
+            </section>
+
+            <section>
+              <h4>Software &amp; libraries</h4>
+              <ul>
+                <li>
+                  <a href="https://react.dev/" target="_blank" rel="noopener noreferrer">React</a>{' '}
+                  and{' '}
+                  <a href="https://vite.dev/" target="_blank" rel="noopener noreferrer">Vite</a>{' '}
+                  for the application shell.
+                </li>
+                <li>
+                  <a href="https://leafletjs.com/" target="_blank" rel="noopener noreferrer">Leaflet</a>{' '}
+                  and{' '}
+                  <a href="https://react-leaflet.js.org/" target="_blank" rel="noopener noreferrer">React-Leaflet</a>{' '}
+                  for the interactive map.
+                </li>
+                <li>
+                  <a href="https://d3js.org/" target="_blank" rel="noopener noreferrer">D3.js</a>{' '}
+                  for charts and scales.
+                </li>
+                <li>
+                  <a href="https://turfjs.org/" target="_blank" rel="noopener noreferrer">Turf.js</a>{' '}
+                  for geospatial operations (point-in-polygon, isochrone
+                  approximation, distance).
+                </li>
+                <li>
+                  <a href="https://www.papaparse.com/" target="_blank" rel="noopener noreferrer">PapaParse</a>{' '}
+                  for in-browser CSV parsing.
+                </li>
+              </ul>
+            </section>
+
+            <section>
+              <h4>Media</h4>
+              <ul>
+                <li>
+                  Hero footage &mdash; &ldquo;Inbound test train leaving Union
+                  Square station, January 2022&rdquo; by Byron A. Nash, via{' '}
+                  <a
+                    href="https://commons.wikimedia.org/wiki/File:Inbound_test_train_leaving_Union_Square_station,_January_2022.webm"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Wikimedia Commons
+                  </a>
+                  , licensed under{' '}
+                  <a
+                    href="https://creativecommons.org/licenses/by/2.0/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    CC BY 2.0
+                  </a>
+                  .
+                </li>
+              </ul>
+            </section>
+
+            <section>
+              <h4>Domain guidance</h4>
+              <ul>
+                <li>
+                  This project was developed with guidance and feedback from
+                  the{' '}
+                  <a
+                    href="https://www.mapc.org/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Metropolitan Area Planning Commission (MAPC)
+                  </a>
+                  , the regional planning agency for Greater Boston. MAPC also
+                  publishes the MassBuilds dataset that drives the housing
+                  pipeline counts throughout the piece.
+                </li>
+              </ul>
+            </section>
+          </div>
+        </div>
+      </section>
+
       <KeyTermsButton />
     </div>
   )
